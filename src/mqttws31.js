@@ -11,7 +11,7 @@
  *   http://www.eclipse.org/org/documents/edl-v10.php.
  *
  * Contributors:
- *    Andrew Banks - initial API and implementation and/or initial documentation
+ *    Andrew Banks - initial API and implementation and initial documentation
  *******************************************************************************/
 
 
