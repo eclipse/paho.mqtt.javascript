@@ -1106,6 +1106,9 @@ Messaging = (function (global) {
             	// Client connected and ready for business.
             	if (wireMessage.returnCode === 0) {
         	        this.connected = true;
+        	        // Jump to the end of the list of hosts and stop looking for a good host.
+        	        if (this.connectOptions.hosts)
+        	            this.hostIndex = this.connectOptions.hosts.length;
                 } else {
                     this._disconnected(ERROR.CONNACK_RETURNCODE.code , format(ERROR.CONNACK_RETURNCODE, [wireMessage.returnCode, CONNACK_RC[wireMessage.returnCode]]));
                     break;
@@ -1494,12 +1497,12 @@ Messaging = (function (global) {
          * @config {boolean} [cleanSession] if true(default) the client and server persistent state is deleted on successful connect.
          * @config {boolean} [useSSL] if present and true, use an SSL Websocket connection.
          * @config {object} [invocationContext] passed to the onSuccess callback or onFailure callback.
-         * @config {function} [onSuccess] called when the message has been written to the network
+         * @config {function} [onSuccess] called when the connect acknowledgement has been received from the server.
          * A single response object parameter is passed to the onSuccess callback containing the following fields:
          * <ol>
          * <li>invocationContext as passed in to the onSuccess method in the connectOptions.       
          * </ol>
-         * @config {function} [onFailure] called when the unsubscribe request has failed or timed out.
+         * @config {function} [onFailure] called when the connect request has failed or timed out.
          * A single response object parameter is passed to the onFailure callback containing the following fields:
          * <ol>
          * <li>invocationContext as passed in to the onFailure method in the connectOptions.       
@@ -1557,7 +1560,7 @@ Messaging = (function (global) {
         			throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
         		for (var i = 0; i<connectOptions.hosts.length; i++) {
         			if (typeof connectOptions.hosts[i] !== "string")
-        	        	throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], "connectionstions.hosts["+i+"]"]));
+        	        	throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
         			if (typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0)
         	        	throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectionstions.ports["+i+"]"]));
         	    }
@@ -1577,12 +1580,12 @@ Messaging = (function (global) {
          * <p>
          * @config {number} [qos] the maiximum qos of any publications sent as a result of making this subscription.
          * @config {object} [invocationContext] passed to the onSuccess callback or onFailure callback.
-         * @config {function} [onSuccess] called when the message has been written to the network
+         * @config {function} [onSuccess] called when the subscribe acknowledgement has been received from the server.
          * A single response object parameter is passed to the onSuccess callback containing the following fields:
          * <ol>
          * <li>invocationContext if set in the subscribeOptions.       
          * </ol>
-         * @config {function} [onFailure] called when the unsubscribe request has failed or timed out.
+         * @config {function} [onFailure] called when the subscribe request has failed or timed out.
          * A single response object parameter is passed to the onFailure callback containing the following fields:
          * <ol>
          * <li>invocationContext if set in the subscribeOptions.       
@@ -1620,7 +1623,7 @@ Messaging = (function (global) {
          * @param {object} [unsubscribeOptions] used to control the subscription, as follows:
          * <p>
          * @config {object} [invocationContext] passed to the onSuccess callback or onFailure callback.
-         * @config {function} [onSuccess] called when the message has been written to the network
+         * @config {function} [onSuccess] called when the unsubscribe acknowledgement has been receive dfrom the server.
          * A single response object parameter is passed to the onSuccess callback containing the following fields:
          * <ol>
          * <li>invocationContext if set in the unsubscribeOptions.     
