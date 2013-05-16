@@ -1293,6 +1293,8 @@ Messaging = (function (global) {
      * @param {errorText} [string] the error text.
      */
     ClientImpl.prototype._disconnected = function (errorCode, errorText) {
+    	this._trace("Client._disconnected", errorCode, errorText);
+    	
     	this.pinger.cancel();
     	if (this._connectTimeout)
     	    this._connectTimeout.cancel();
@@ -1306,7 +1308,8 @@ Messaging = (function (global) {
             this.socket.onmessage = null;
             this.socket.onerror = null;
             this.socket.onclose = null;
-            this.socket.close();
+            if (this.socket.readyState === 1)
+                this.socket.close();
             delete this.socket;           
         }
         
