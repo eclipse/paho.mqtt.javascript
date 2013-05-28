@@ -1565,7 +1565,7 @@ Messaging = (function (global) {
         			if (typeof connectOptions.hosts[i] !== "string")
         	        	throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
         			if (typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0)
-        	        	throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectionstions.ports["+i+"]"]));
+        	        	throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectOptions.ports["+i+"]"]));
         	    }
         	}
 
