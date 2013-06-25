@@ -767,8 +767,10 @@ Messaging = (function (global) {
     ClientImpl.prototype.onMessageArrived;
     ClientImpl.prototype._msg_queue = null;
     ClientImpl.prototype._connectTimeout;
-    /* Send keep alive messages. */
-    ClientImpl.prototype.pinger = null;
+    /* The sendPinger monitors how long we allow before we send data to prove to the server that we are alive. */
+    ClientImpl.prototype.sendPinger = null;
+    /* The receivePinger monitors how long we allow before we require evidence that the server is alive. */
+    ClientImpl.prototype.receivePinger = null;
     
     ClientImpl.prototype._traceBuffer = null;
     ClientImpl.prototype._MAX_TRACE_ENTRIES = 100;
@@ -916,7 +918,8 @@ Messaging = (function (global) {
         this.socket.onerror = scope(this._on_socket_error, this);
         this.socket.onclose = scope(this._on_socket_close, this);
         
-        this.pinger = new Pinger(this, window, this.connectOptions.keepAliveInterval);
+        this.sendPinger = new Pinger(this, window, this.connectOptions.keepAliveInterval);
+        this.receivePinger = new Pinger(this, window, this.connectOptions.keepAliveInterval);
         
         this._connectTimeout = new Timeout(this, window, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
     };
@@ -1074,8 +1077,8 @@ Messaging = (function (global) {
     ClientImpl.prototype._on_socket_message = function (event) {
         this._trace("Client._on_socket_message", event.data);
         
-        // Reset the ping timer.
-        this.pinger.reset();
+        // Reset the receive ping timer, we now have evidence the server is alive.
+        this.receivePinger.reset();
         var byteArray = new Uint8Array(event.data);
         try {
             var wireMessage = decodeMessage(byteArray);
@@ -1217,6 +1220,8 @@ Messaging = (function (global) {
                 break;
                 
             case MESSAGE_TYPE.PINGRESP:
+            	/* The sendPinger or receivePinger may have sent a ping, the receivePinger has already been reset. */
+            	this.sendPinger.reset();
             	break;
             	
             case MESSAGE_TYPE.DISCONNECT:
@@ -1248,7 +1253,8 @@ Messaging = (function (global) {
     	else this._trace("Client._socket_send", wireMessage);
         
         this.socket.send(wireMessage.encode());
-        this.pinger.reset();
+        /* We have proved to the server we are alive. */
+        this.sendPinger.reset();
     };
     
     /** @ignore */
@@ -1295,7 +1301,8 @@ Messaging = (function (global) {
     ClientImpl.prototype._disconnected = function (errorCode, errorText) {
     	this._trace("Client._disconnected", errorCode, errorText);
     	
-    	this.pinger.cancel();
+    	this.sendPinger.cancel();
+    	this.receivePinger.cancel();
     	if (this._connectTimeout)
     	    this._connectTimeout.cancel();
     	// Clear message buffers.
