@@ -1329,7 +1329,7 @@ Messaging = (function (global) {
         
             if (errorCode === undefined) {
         	    errorCode = ERROR.OK.code;
-        	    errroText = format(ERROR.OK);
+        	    errorText = format(ERROR.OK);
             }
         	
             // Run any application callbacks last as they may attempt to reconnect and hence create a new socket.
