@@ -1,6 +1,6 @@
 if (typeof module !== 'undefined')
 	require('${basedir}/target/src/javascript/mqttws31n.js');
-var testServer = "9.20.123.96";
+var testServer = "${test.server}";
 var testPort = 1883;
 
 describe('client', function() {
