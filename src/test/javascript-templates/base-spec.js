@@ -41,7 +41,7 @@ describe('client', function() {
 
 		waitsFor(function() {
 			return connected;
-		}, "the client should connect", 2000);
+		}, "the client should connect", 10000);
 
 		runs(function() {
 			expect(connected).toBe(true);
