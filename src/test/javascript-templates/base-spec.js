@@ -2,6 +2,7 @@ if (typeof module !== 'undefined')
 	require('${basedir}/target/src/javascript/mqttws31n.js');
 var testServer = "${test.server}";
 var testPort = parseInt("${test.server.port}");
+var testPath = "${test.server.path}";
 console.log(testServer);
 console.log(testPort);
 
@@ -28,10 +29,13 @@ describe('client', function() {
 	};
 
 	it('should create a new client', function() {
-		client = new Messaging.Client(testServer, testPort, "testclientid");
+		client = new Messaging.Client(testServer, testPort, testPath, "testclientid");
 		client.onMessageArrived = messageArrived;
 
 		expect(client).not.toBe(null);
+		expect(client.host).toBe(testServer);
+		expect(client.port).toBe(testPort);
+		expect(client.path).toBe(testPath);
 	});
 
 	it('should connect to a server', function() {

@@ -697,16 +697,21 @@ Messaging = (function (global) {
 	 * @param {Number} port the port number for that host.
 	 * @param {String} clientId the MQ client identifier.
 	 */
-	var ClientImpl = function (host, port, clientId) {
+	var ClientImpl = function (uri, host, port, path, clientId) {
 		@clientimpl.checkDeps@
-		this._trace("Messaging.Client", host, port, clientId);
+		this._trace("Messaging.Client", uri, host, port, path, clientId);
 
 		this.host = host;
 		this.port = port;
+		this.path = path;
+		this.uri = uri;
 		this.clientId = clientId;
 
 		// Local storagekeys are qualified with the following string.
-		this._localKey=host+":"+port+":"+clientId+":";
+		// The conditional inclusion of path in the key is for backward
+		// compatibility to when the path was not configurable and assumed to
+		// be /mqtt
+		this._localKey=host+":"+port+(path!="/mqtt"?":"+path:"")+":"+clientId+":";
 
 		// Create private instance-only message queue
 		// Internal queue of messages to be sent, in sending order. 
@@ -742,6 +747,8 @@ Messaging = (function (global) {
 	// Messaging Client public instance members. 
 	ClientImpl.prototype.host;
 	ClientImpl.prototype.port;
+	ClientImpl.prototype.path;
+	ClientImpl.prototype.uri;
 	ClientImpl.prototype.clientId;
 
 	// Messaging Client private instance members.
@@ -778,11 +785,11 @@ Messaging = (function (global) {
 		
 		this.connectOptions = connectOptions;
 		
-		if (connectOptions.hosts) {
+		if (connectOptions.uris) {
 			this.hostIndex = 0;
-			this._doConnect(connectOptions.hosts[0], connectOptions.ports[0]);  
+			this._doConnect(connectOptions.uris[0]);  
 		} else {
-			this._doConnect(this.host, this.port);  		
+			this._doConnect(this.uri);  		
 		}
 		
 	};
@@ -896,13 +903,13 @@ Messaging = (function (global) {
 		delete this._traceBuffer;
 	};
 
-	ClientImpl.prototype._doConnect = function (host, port) { 	        
+	ClientImpl.prototype._doConnect = function (wsurl) { 	        
 		// When the socket is open, this client will send the CONNECT WireMessage using the saved parameters. 
-		if (this.connectOptions.useSSL)
-		  wsurl = ["wss://", host, ":", port, "/mqtt"].join("");
-		else
-		  wsurl = ["ws://", host, ":", port, "/ws"].join("");
-		console.log(wsurl);
+		if (this.connectOptions.useSSL) {
+		    var uriParts = wsurl.split(":");
+		    parts[0] = "wss";
+		    wsurl = parts.join(":");
+		}
 		this.connected = false;
 		@clientimpl.socket@
 		this.socket.binaryType = 'arraybuffer';
@@ -1104,9 +1111,9 @@ Messaging = (function (global) {
 				// Client connected and ready for business.
 				if (wireMessage.returnCode === 0) {
 					this.connected = true;
-					// Jump to the end of the list of hosts and stop looking for a good host.
-					if (this.connectOptions.hosts)
-						this.hostIndex = this.connectOptions.hosts.length;
+					// Jump to the end of the list of uris and stop looking for a good host.
+					if (this.connectOptions.uris)
+						this.hostIndex = this.connectOptions.uris.length;
 				} else {
 					this._disconnected(ERROR.CONNACK_RETURNCODE.code , format(ERROR.CONNACK_RETURNCODE, [wireMessage.returnCode, CONNACK_RC[wireMessage.returnCode]]));
 					break;
@@ -1320,10 +1327,10 @@ Messaging = (function (global) {
 			delete this.socket;           
 		}
 		
-		if (this.connectOptions.hosts && this.hostIndex < this.connectOptions.hosts.length-1) {
+		if (this.connectOptions.uris && this.hostIndex < this.connectOptions.uris.length-1) {
 			// Try the next host.
 			this.hostIndex++;
-			this._doConnect(this.connectOptions.hosts[this.hostIndex], this.connectOptions.ports[this.hostIndex]);
+			this._doConnect(this.connectOptions.uris[this.hostIndex]);
 		
 		} else {
 		
@@ -1405,12 +1412,14 @@ Messaging = (function (global) {
 	 * @constructor
 	 * Creates a Messaging.Client object that can be used to communicate with a Messaging server.
 	 *  
-	 * @param {string} host the address of the messaging server, as a DNS name or dotted decimal IP address.
-	 * @param {number} port the port number in the host to connect to.
+	 * @param {string} host the address of the messaging server, as a fully qualified WebSocket URI, as a DNS name or dotted decimal IP address.
+	 * @param {number} port the port number in the host to connect to - only required if host is not a URI
+	 * @param {string} path the path on the host to connect to - only used if host is not a URI. Default: '/mqtt'.
 	 * @param {string} clientId the Messaging client identifier, between 1 and 23 characters in length.
 	 * 
 	 * @property {string} host <i>read only</i> the server's DNS hostname or dotted decimal IP address.
 	 * @property {number} port <i>read only</i> the server's port.
+	 * @property {string} path <i>read only</i> the server's path.
 	 * @property {string} clientId <i>read only</i> used when connecting to the server.
 	 * @property {function} onConnectionLost called when a connection has been lost, 
 	 * after a connect() method has succeeded.
@@ -1438,11 +1447,41 @@ Messaging = (function (global) {
 	 * <li>Messaging.Message that has arrived.
 	 * </ol>    
 	 */
-	var Client = function (host, port, clientId) {
+	var Client = function (host, port, path, clientId) {
+	    
+	    var uri;
+	    
 		if (typeof host !== "string")
 			throw new Error(format(ERROR.INVALID_TYPE, [typeof host, "host"]));
-		if (typeof port !== "number" || port < 0)
-			throw new Error(format(ERROR.INVALID_TYPE, [typeof port, "port"]));
+	    
+	    if (arguments.length == 2) {
+	        // host: must be full ws:// uri
+	        // port: clientId
+	        clientId = port;
+	        uri = host;
+	        var match = uri.match(/^(wss?):\/\/((\[(.+)\])|([^\/]+?))(:(\d+))?(\/.*)$/);
+	        if (match) {
+	            host = match[4]||match[2];
+	            port = parseInt(match[7]);
+	            path = match[8];
+	        } else {
+	            throw new Error(format(ERROR.INVALID_ARGUMENT,[host,"host"]));
+	        }
+	    } else {
+	        if (arguments.length == 3) {
+                clientId = path;
+                path = "/mqtt";
+            }
+            
+            if (typeof port !== "number" || port < 0)
+                throw new Error(format(ERROR.INVALID_TYPE, [typeof port, "port"]));
+            if (typeof path !== "string")
+                throw new Error(format(ERROR.INVALID_TYPE, [typeof path, "path"]));
+            
+            var ipv6 = (host.indexOf(":") != -1);
+            uri = "ws://"+(ipv6?"["+host+"]":host)+":"+port+path;
+        }
+            
 		
 		var clientIdLength = 0;
 		for (var i = 0; i<clientId.length; i++) {
@@ -1455,12 +1494,18 @@ Messaging = (function (global) {
 		if (typeof clientId !== "string" || clientIdLength < 1 | clientIdLength > 23)
 			throw new Error(format(ERROR.INVALID_ARGUMENT, [clientId, "clientId"])); 
 		
-		var client = new ClientImpl(host, port, clientId);
-		this._getHost =  function() { return client.host; };
+		var client = new ClientImpl(uri, host, port, path, clientId);
+		this._getHost =  function() { return host; };
 		this._setHost = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
 			
-		this._getPort = function() { return client.port; };
+		this._getPort = function() { return port; };
 		this._setPort = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
+
+		this._getPath = function() { return path; };
+		this._setPath = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
+
+		this._getURI = function() { return uri; };
+		this._setURI = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
 		
 		this._getClientId = function() { return client.clientId; };
 		this._setClientId = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
@@ -1519,10 +1564,12 @@ Messaging = (function (global) {
 		 * <li>errorCode a number indicating the nature of the error.
 		 * <li>errorMessage text describing the error.      
 		 * </ol>
-		 * @config {Array} [hosts] If present this set of hostnames is tried in order in place 
-		 * of the host and port paramater on the construtor. The hosts and the matching ports are tried one at at time in order until
+		 * @config {Array} [hosts] If present this contains either a set of hostnames or fully qualified
+		 * WebSocket URIs (ws://example.com:1883/mqtt), that are tried in order in place 
+		 * of the host and port paramater on the construtor. The hosts are tried one at at time in order until
 		 * one of then succeeds.
-		 * @config {Array} [ports] If present this set of ports matching the hosts.
+		 * @config {Array} [ports] If present the set of ports matching the hosts. If hosts contains URIs, this property
+		 * is not used.
 		 * @throws {InvalidState} if the client is not in disconnected state. The client must have received connectionLost
 		 * or disconnected before calling connect for a second or subsequent time.
 		 */
@@ -1558,22 +1605,50 @@ Messaging = (function (global) {
 			if (typeof connectOptions.cleanSession === "undefined")
 				connectOptions.cleanSession = true;
 			if (connectOptions.hosts) {
-				if (!connectOptions.ports)
-					throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+			    
 				if (!(connectOptions.hosts instanceof Array) )
 					throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts, "connectOptions.hosts"]));
-				if (!(connectOptions.ports instanceof Array) )
-					throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
 				if (connectOptions.hosts.length <1 )
 					throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts, "connectOptions.hosts"]));
-				if (connectOptions.hosts.length != connectOptions.ports.length)
-					throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+				
+				var usingURIs = false;
 				for (var i = 0; i<connectOptions.hosts.length; i++) {
 					if (typeof connectOptions.hosts[i] !== "string")
 						throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
-					if (typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0)
-						throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectOptions.ports["+i+"]"]));
-				}
+                    if (/^(wss?):\/\/((\[(.+)\])|([^\/]+?))(:(\d+))?(\/.*)$/.test(connectOptions.hosts[i])) {
+                        if (i == 0) {
+                            usingURIs = true;
+                        } else if (!usingURIs) {
+                            throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
+                        }
+                    } else if (usingURIs) {
+                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
+                    }
+                }
+                
+                if (!usingURIs) {
+                    if (!connectOptions.ports)
+                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+                    if (!(connectOptions.ports instanceof Array) )
+                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+                    if (connectOptions.hosts.length != connectOptions.ports.length)
+                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+                    
+                    connectOptions.uris = [];
+                    
+                    for (var i = 0; i<connectOptions.hosts.length; i++) {
+                        if (typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0)
+                            throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectOptions.ports["+i+"]"]));
+                        var host = connectOptions.hosts[i];
+                        var port = connectOptions.ports[i];
+                        
+                        var ipv6 = (host.indexOf(":") != -1);
+                        uri = "ws://"+(ipv6?"["+host+"]":host)+":"+port+"/mqtt";
+                        connectOptions.uris.push(uri);
+                    }
+                } else {
+                    connectOptions.uris = connectOptions.hosts;
+                }
 			}
 
 			client.connect(connectOptions);
@@ -1730,6 +1805,9 @@ Messaging = (function (global) {
 			
 		get port() { return this._getPort(); },
 		set port(newPort) { this._setPort(newPort); },
+
+		get path() { return this._getPath(); },
+		set path(newPath) { this._setPath(newPath); },
 			
 		get clientId() { return this._getClientId(); },
 		set clientId(newClientId) { this._setClientId(newClientId); },
