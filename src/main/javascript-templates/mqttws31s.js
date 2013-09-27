@@ -901,7 +901,8 @@ Messaging = (function (global) {
 		if (this.connectOptions.useSSL)
 		  wsurl = ["wss://", host, ":", port, "/mqtt"].join("");
 		else
-		  wsurl = ["ws://", host, ":", port, "/mqtt"].join("");
+		  wsurl = ["ws://", host, ":", port, "/ws"].join("");
+		console.log(wsurl);
 		this.connected = false;
 		@clientimpl.socket@
 		this.socket.binaryType = 'arraybuffer';
