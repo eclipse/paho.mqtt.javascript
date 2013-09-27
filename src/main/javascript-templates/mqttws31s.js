@@ -412,12 +412,12 @@ Messaging = (function (global) {
 		return buffer;
 	}	
 
-	function decodeMessage(input) {
-		//var msg = new Object();  // message to be constructed
-		var first = input[0];
+	function decodeMessage(input,pos) {
+	    var startingPos = pos;
+		var first = input[pos];
 		var type = first >> 4;
 		var messageInfo = first &= 0x0f;
-		var pos = 1;
+		pos += 1;
 		
 
 		// Decode the remaining length (MBI format)
@@ -426,10 +426,18 @@ Messaging = (function (global) {
 		var remLength = 0;
 		var multiplier = 1;
 		do {
+			if (pos == input.length) {
+			    return [null,startingPos];
+			}
 			digit = input[pos++];
 			remLength += ((digit & 0x7F) * multiplier);
 			multiplier *= 128;
 		} while ((digit & 0x80) != 0);
+		
+		var endPos = pos+remLength;
+		if (endPos > input.length) {
+		    return [null,startingPos];
+		}
 
 		var wireMessage = new WireMessage(type);
 		switch(type) {
@@ -479,7 +487,7 @@ Messaging = (function (global) {
 				;
 		}
 				
-		return wireMessage;	
+		return [wireMessage,endPos];	
 	}
 
 	function writeUint16(input, buffer, offset) {
@@ -770,6 +778,8 @@ Messaging = (function (global) {
 	ClientImpl.prototype.sendPinger = null;
 	/* The receivePinger monitors how long we allow before we require evidence that the server is alive. */
 	ClientImpl.prototype.receivePinger = null;
+	
+	ClientImpl.prototype.receiveBuffer = null;
 	
 	ClientImpl.prototype._traceBuffer = null;
 	ClientImpl.prototype._MAX_TRACE_ENTRIES = 100;
@@ -1077,17 +1087,49 @@ Messaging = (function (global) {
 	 */
 	ClientImpl.prototype._on_socket_message = function (event) {
 		this._trace("Client._on_socket_message", event.data);
-		
 		// Reset the receive ping timer, we now have evidence the server is alive.
 		this.receivePinger.reset();
-		var byteArray = new Uint8Array(event.data);
+		var messages = this._deframeMessages(event.data);
+		for (var i = 0; i < messages.length; i+=1) {
+		    this._handleMessage(messages[i]);
+		}
+	}
+	
+	ClientImpl.prototype._deframeMessages = function(data) {
+        var byteArray = new Uint8Array(data);
+	    if (this.receiveBuffer) {
+	        var newData = new Uint8Array(this.receiveBuffer.length+byteArray.length);
+	        newData.set(this.receiveBuffer);
+	        newData.set(byteArray,this.receiveBuffer.length);
+	        byteArray = newData;
+	        delete this.receiveBuffer;
+	    }
 		try {
-			var wireMessage = decodeMessage(byteArray);
+		    var offset = 0;
+		    var messages = [];
+		    while(offset < byteArray.length) {
+		        var result = decodeMessage(byteArray,offset);
+		        var wireMessage = result[0];
+		        offset = result[1];
+		        if (wireMessage !== null) {
+		            messages.push(wireMessage);
+		        } else {
+		            break;
+		        }
+		    }
+		    if (offset < byteArray.length) {
+                this.receiveBuffer = byteArray.subarray(offset);
+		    }
 		} catch (error) {
 			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message]));
 			return;
 		}
-		this._trace("Client._on_socket_message", wireMessage);
+		return messages;
+    }
+	
+	ClientImpl.prototype._handleMessage = function(wireMessage) {
+		
+		this._trace("Client._handleMessage", wireMessage);
 
 		try {
 			switch(wireMessage.type) {
