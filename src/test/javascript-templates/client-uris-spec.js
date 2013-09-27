@@ -72,7 +72,10 @@ describe('client-uris', function() {
         expect(error).not.toBe(null);
 	});
 
-	
+	/*
+	// We don't yet expose setting the path element with the arrays of hosts/ports
+	// If you want a path other than /mqtt, you need to use the array of hosts-as-uris.
+	// Leaving this test here to remember this fact in case we add an array of paths to connopts
 	it('should connect and disconnect to a server using connectoptions hosts and ports', function() {
         client = new Messaging.Client(testServer, testPort, "testclientid");
         expect(client).not.toBe(null);
@@ -103,8 +106,14 @@ describe('client-uris', function() {
             expect(disconnectError.errorCode).toBe(0);
         });
 	});
+	*/
 	
 	it('should connect and disconnect to a server using connectoptions hosts', function() {
+        client = new Messaging.Client(testServer, testPort, "testclientid");
+        expect(client).not.toBe(null);
+
+		client.onMessageArrived = messageArrived;
+        client.onConnectionLost = onDisconnect;
 		
 		runs(function() {
 			client.connect({onSuccess:onConnect,hosts:["ws://"+testServer+":"+testPort+testPath]});
