@@ -110,7 +110,23 @@
 				<version>1.2.1</version>
 				<executions>
 					<execution>
-						<id>compile</id>
+						<id>set-cache</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>npm</executable>
+							<arguments>
+								<argument>config</argument>
+								<argument>set</argument>
+								<argument>cache</argument>
+								<argument>./.npm</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>install-modules</id>
 						<phase>compile</phase>
 						<goals>
 							<goal>exec</goal>
