@@ -3,8 +3,6 @@ if (typeof module !== 'undefined')
 var testServer = "${test.server}";
 var testPort = parseInt("${test.server.port}");
 var testPath = "${test.server.path}";
-console.log(testServer);
-console.log(testPort);
 
 describe('client', function() {
 	var client = this;
