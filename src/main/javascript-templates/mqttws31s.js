@@ -1284,7 +1284,7 @@ Messaging = (function (global) {
 	
 	/** @ignore */
 	ClientImpl.prototype._on_socket_error = function (error) {
-		this._disconnected(ERROR.SOCKET_ERROR.code , format(ERROR.SOCKET_ERROR, [error.data]));
+		this._disconnected(ERROR.SOCKET_ERROR.code , format(ERROR.SOCKET_ERROR@error_data@));
 	};
 
 	/** @ignore */
