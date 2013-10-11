@@ -917,8 +917,8 @@ Messaging = (function (global) {
 		// When the socket is open, this client will send the CONNECT WireMessage using the saved parameters. 
 		if (this.connectOptions.useSSL) {
 		    var uriParts = wsurl.split(":");
-		    parts[0] = "wss";
-		    wsurl = parts.join(":");
+		    uriParts[0] = "wss";
+		    wsurl = uriParts.join(":");
 		}
 		this.connected = false;
 		@clientimpl.socket@
