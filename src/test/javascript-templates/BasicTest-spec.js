@@ -136,8 +136,8 @@ describe('BasicTest', function() {
 	it('it should connect to a list of server(HA connection).',function(){
 		var defaultServer = "m2m.eclipse.org";
 		var defaultPort = 1883;
-		var arrHosts = ['m2m.eclipse.org',"localhost",'m2m.eclipse.org',];
-		var arrPorts = [1882,1883,1883];
+		var arrHosts = ["localhost",'m2m.eclipse.org',];
+		var arrPorts = [1883,1883];
 		
 		var client = new Messaging.Client(defaultServer, defaultPort,genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;
