@@ -6,7 +6,7 @@ var testPath = "${test.server.path}";
 
 var genStr = function(str){
 	var time = new Date();
-	return str + '-' + time.getTime();
+	return str + time.getTime();
 };
 
 describe('BasicTest', function() {
@@ -136,8 +136,8 @@ describe('BasicTest', function() {
 	it('it should connect to a list of server(HA connection).',function(){
 		var defaultServer = testServer;
 		var defaultPort = testPort;
-		var arrHosts = [testServer,testServer,];
-		var arrPorts = [1883,testPort];
+		var arrHosts = ["127.0.0.1",testServer,];
+		var arrPorts = [1882,testPort];
 		
 		var client = new Messaging.Client(defaultServer, defaultPort,genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;
