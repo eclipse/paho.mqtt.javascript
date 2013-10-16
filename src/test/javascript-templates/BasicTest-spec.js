@@ -10,7 +10,7 @@ var genStr = function(str){
 
 describe('BasicTest', function() {
 	//var client = null;
-	var clientId = "testclient" //this.description;
+	var clientId = this.description;
 	//console.log('...',this.description);
 	var connected = false;
 	var failure = false;
@@ -90,7 +90,7 @@ describe('BasicTest', function() {
 	});
 	*/
 	it('it should create and connect and disconnect to a server.', function() {
-		var client = new Messaging.Client(testServer, testPort, genStr(clientId));
+		var client = new Messaging.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 
@@ -138,7 +138,7 @@ describe('BasicTest', function() {
 		var arrHosts = ["127.0.0.1",testServer,];
 		var arrPorts = [1882,testPort];
 		
-		var client = new Messaging.Client(defaultServer, defaultPort,genStr(clientId) );
+		var client = new Messaging.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 		
@@ -166,7 +166,7 @@ describe('BasicTest', function() {
 	
 	it('it should publish and subscribe.',function(){
 		
-		var client = new Messaging.Client(testServer, testPort, genStr(clientId));
+		var client = new Messaging.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onMessageArrived = messageArrived;
 		client.onMessageDelivered = messageDelivered;
 		
