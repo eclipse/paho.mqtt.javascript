@@ -5,13 +5,12 @@ var testPort = parseInt("${test.server.port}");
 var testPath = "${test.server.path}";
 
 var genStr = function(str){
-	var time = new Date();
-	return str + time.getTime();
+	return str + Math.floor(Math.random()*100)
 };
 
 describe('BasicTest', function() {
 	//var client = null;
-	var clientId = this.description;
+	var clientId = "testclient" //this.description;
 	//console.log('...',this.description);
 	var connected = false;
 	var failure = false;
