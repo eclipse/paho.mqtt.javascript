@@ -12,7 +12,6 @@ var genStr = function(str){
 describe('BasicTest', function() {
 	//var client = null;
 	var clientId = this.description;
-	//console.log('...',this.description);
 	var connected = false;
 	var failure = false;
 	var disconnectError = null;
