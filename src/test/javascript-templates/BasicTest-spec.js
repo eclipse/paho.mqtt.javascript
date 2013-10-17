@@ -5,7 +5,8 @@ var testPort = parseInt("${test.server.port}");
 var testPath = "${test.server.path}";
 
 var genStr = function(str){
-	return str + Math.floor(Math.random()*100)
+	var time = new Date();
+	return str + '.' + time.getTime();
 };
 
 describe('BasicTest', function() {
@@ -97,7 +98,7 @@ describe('BasicTest', function() {
 		
 		console.log('Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure});
 		});
 		waitsFor(function() {
 			return connected;
@@ -129,14 +130,14 @@ describe('BasicTest', function() {
 		runs(function() {
 			expect(connected).toBe(true);
 		});
-		
+	
 	});
 	
 	it('it should connect to a list of server(HA connection).',function(){
 		var defaultServer = testServer;
 		var defaultPort = testPort;
-		var arrHosts = ["127.0.0.1",testServer,];
-		var arrPorts = [1882,testPort];
+		var arrHosts = ['localhost',testServer,];
+		var arrPorts = [1883,testPort];
 		
 		var client = new Messaging.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;
