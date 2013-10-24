@@ -21,6 +21,7 @@
 		<connection>scm:git://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.javascript.git</connection>
 	</scm>
 	<build>
+		<defaultGoal>process-resources</defaultGoal>
 		<plugins>
 			<plugin>
                 <groupId>org.codehaus.mojo</groupId>
