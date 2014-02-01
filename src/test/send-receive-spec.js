@@ -1,9 +1,8 @@
-if (typeof module !== 'undefined')
-	require('${basedir}/target/src/javascript/mqttws31n.js');
+var settings = require('./client-harness');
 
-var testServer = "${test.server}";
-var testPort = parseInt("${test.server.port}");
-var testPath = "${test.server.path}";
+var testServer = settings.server;
+var testPort = settings.port;
+var testPath = settings.path;
 
 //define a default clientID
 var clientId="testClient1";

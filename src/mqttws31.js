@@ -77,7 +77,6 @@ function onMessageArrived(message) {
  * <a href="/clients/java/doc/javadoc/index.html"><big>Java</big></a>,
  * <a href="/clients/c/doc/html/index.html"><big>C</big></a>.
  */
-@nodeDeps@
 
 Messaging = (function (global) {
 
@@ -706,7 +705,16 @@ Messaging = (function (global) {
 	 * @param {String} clientId the MQ client identifier.
 	 */
 	var ClientImpl = function (uri, host, port, path, clientId) {
-		@clientimpl.checkDeps@
+		// Check dependencies are satisfied in this browser.
+if (!("WebSocket" in global && global["WebSocket"] !== null)) {
+throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
+}
+if (!("localStorage" in global && global["localStorage"] !== null)) {
+throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
+}
+if (!("ArrayBuffer" in global && global["ArrayBuffer"] !== null)) {
+throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
+}
 		this._trace("Messaging.Client", uri, host, port, path, clientId);
 
 		this.host = host;
@@ -921,9 +929,9 @@ Messaging = (function (global) {
 		    wsurl = uriParts.join(":");
 		}
 		this.connected = false;
-		@clientimpl.socket@
+		this.socket = new WebSocket(wsurl, "mqttv3.1");
 		this.socket.binaryType = 'arraybuffer';
-		@clientimpl.nodews@
+		
 		this.socket.onopen = scope(this._on_socket_open, this);
 		this.socket.onmessage = scope(this._on_socket_message, this);
 		this.socket.onerror = scope(this._on_socket_error, this);
@@ -1284,7 +1292,7 @@ Messaging = (function (global) {
 	
 	/** @ignore */
 	ClientImpl.prototype._on_socket_error = function (error) {
-		this._disconnected(ERROR.SOCKET_ERROR.code , format(ERROR.SOCKET_ERROR@error_data@));
+		this._disconnected(ERROR.SOCKET_ERROR.code , format(ERROR.SOCKET_ERROR, [error.data]));
 	};
 
 	/** @ignore */
@@ -1294,14 +1302,14 @@ Messaging = (function (global) {
 
 	/** @ignore */
 	ClientImpl.prototype._socket_send = function (wireMessage) {
-		@client.nodeBuf@
+		
 		if (wireMessage.type == 1) {
 			var wireMessageMasked = this._traceMask(wireMessage, "password"); 
 			this._trace("Client._socket_send", wireMessageMasked);
 		}
 		else this._trace("Client._socket_send", wireMessage);
 		
-		@client.send@
+		this.socket.send(wireMessage.encode());
 		/* We have proved to the server we are alive. */
 		this.sendPinger.reset();
 	};
