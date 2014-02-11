@@ -1073,7 +1073,7 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		if (wireMessage.type === MESSAGE_TYPE.PUBLISH) {
 			this.store("Sent:", wireMessage);
 		}
-		if (this._message_identifier === this.maxMessagIdentifier) {
+		if (this._message_identifier === this.maxMessageIdentifier) {
 			this._message_identifier = 1;
 		}
 	};
