@@ -169,6 +169,36 @@
 							</arguments>
 						</configuration>
 					</execution>
+					<execution>
+						<id>install-jsdoc-modules</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>npm</executable>
+							<arguments>
+								<argument>install</argument>
+								<argument>jsdoc</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jsdoc</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>node</executable>
+							<arguments>
+								<argument>node_modules/jsdoc/jsdoc.js</argument>
+								<argument>target/mqttws31.js</argument>
+								<argument>-d</argument>
+								<argument>target/docs</argument>
+							</arguments>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
