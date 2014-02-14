@@ -21,7 +21,6 @@
 // a Messaging client object given connection details.
  
 /**
- * @namespace Messaging 
  * Send and receive messages using web browsers.
  * <p> 
  * This programming interface lets a JavaScript client application use the MQTT V3.1 protocol to 
@@ -36,16 +35,22 @@
  * <li>Publishing messages to MQTT Topics.
  * </ol>
  * <p>
- * <h2>The API consists of two main objects:</h2>
- * The <b>Messaging.Client</b> object. This contains methods that provide the functionality of the API,
- * including provision of callbacks that notify the application when a message arrives from or is delivered to the messaging server,
- * or when the status of its connection to the messaging server changes.
+ * The API consists of two main objects:
+ * <dl>
+ * <dt><b>{@link Messaging.Client}</b></dt>
+ * <dd>This contains methods that provide the functionality of the API,
+ * including provision of callbacks that notify the application when a message
+ * arrives from or is delivered to the messaging server,
+ * or when the status of its connection to the messaging server changes.</dd>
+ * <dt><b>{@link Messaging.Message}</b></dt>
+ * <dd>This encapsulates the payload of the message along with various attributes
+ * associated with its delivery, in particular the destination to which it has
+ * been (or is about to be) sent.</dd>
+ * </dl> 
  * <p>
- * The <b>Messaging.Message</b> object. This encapsulates the payload of the message along with various attributes
- * associated with its delivery, in particular the destination to which it has been (or is about to be) sent. 
- * <p>
- * The programming interface validates parameters passed to it, and will throw an Error containing an error message
- * intended for developer use, if it detects an error with any parameter.
+ * The programming interface validates parameters passed to it, and will throw
+ * an Error containing an error message intended for developer use, if it detects
+ * an error with any parameter.
  * <p>
  * Example:
  * 
@@ -72,10 +77,7 @@ function onMessageArrived(message) {
   client.disconnect(); 
 };	
  * </pre></code>
- * <p>
- * Other programming languages,
- * <a href="/clients/java/doc/javadoc/index.html"><big>Java</big></a>,
- * <a href="/clients/c/doc/html/index.html"><big>C</big></a>.
+ * @namespace Messaging 
  */
 
 Messaging = (function (global) {
@@ -116,8 +118,8 @@ Messaging = (function (global) {
 	 * match a list of expected variables name for this option
 	 * type. Used to ensure option object passed into the API don't
 	 * contain erroneous parameters.
-	 * @param {Object} obj User options object
-	 * @param {key:type, key2:type, ...} valid keys and types that may exist in obj. 
+	 * @param {Object} obj - User options object
+	 * @param {Object} keys - valid keys and types that may exist in obj. 
 	 * @throws {Error} Invalid option parameter found. 
 	 * @private 
 	 */
@@ -187,7 +189,7 @@ Messaging = (function (global) {
 		4:"Connection Refused: bad user name or password",
 		5:"Connection Refused: not authorized"
 	};
- 
+
 	/**
 	 * Format an error message text.
 	 * @private
@@ -215,7 +217,6 @@ Messaging = (function (global) {
 	var MqttProtoIdentifier = [0x00,0x06,0x4d,0x51,0x49,0x73,0x64,0x70,0x03];
 	
 	/**
-	 * @ignore
 	 * Construct an MQTT wire protocol message.
 	 * @param type MQTT packet type.
 	 * @param options optional wire message attributes.
@@ -237,6 +238,7 @@ Messaging = (function (global) {
 	 * keepAliveInterval:	integer [0..65535]  (CONNECT)
 	 *
 	 * @private
+	 * @ignore
 	 */
 	var WireMessage = function (type, options) { 	
 		this.type = type;
@@ -638,7 +640,10 @@ Messaging = (function (global) {
 		return output;
 	}
 	
-	/** @ignore Repeat keepalive requests, monitor responses.*/
+	/** 
+	 * Repeat keepalive requests, monitor responses.
+	 * @ignore
+	 */
 	var Pinger = function(client, window, keepAliveInterval) { 
 		this._client = client;        	
 		this._window = window;
@@ -678,7 +683,10 @@ Messaging = (function (global) {
 		}
 	 }; 
 
-	/** @ignore Monitor request completion. */
+	/**
+	 * Monitor request completion.
+	 * @ignore
+	 */
 	var Timeout = function(client, window, timeoutSeconds, action, args) {
 		this._window = window;
 		if (!timeoutSeconds)
@@ -706,15 +714,15 @@ Messaging = (function (global) {
 	 */
 	var ClientImpl = function (uri, host, port, path, clientId) {
 		// Check dependencies are satisfied in this browser.
-if (!("WebSocket" in global && global["WebSocket"] !== null)) {
-throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
-}
-if (!("localStorage" in global && global["localStorage"] !== null)) {
-throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
-}
-if (!("ArrayBuffer" in global && global["ArrayBuffer"] !== null)) {
-throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
-}
+		if (!("WebSocket" in global && global["WebSocket"] !== null)) {
+			throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
+		}
+		if (!("localStorage" in global && global["localStorage"] !== null)) {
+			throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
+		}
+		if (!("ArrayBuffer" in global && global["ArrayBuffer"] !== null)) {
+			throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
+		}
 		this._trace("Messaging.Client", uri, host, port, path, clientId);
 
 		this.host = host;
@@ -897,7 +905,7 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		this._schedule_message(wireMessage);
 	};
 	
-   ClientImpl.prototype.getTraceLog = function () {
+	ClientImpl.prototype.getTraceLog = function () {
 		if ( this._traceBuffer !== null ) {
 			this._trace("Client.getTraceLog", new Date());
 			this._trace("Client.getTraceLog in flight messages", this._sentMessages.length);
@@ -905,18 +913,18 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 				this._trace("_sentMessages ",key, this._sentMessages[key]);
 			for (key in this._receivedMessages)
 				this._trace("_receivedMessages ",key, this._receivedMessages[key]);
-
+			
 			return this._traceBuffer;
 		}
 	};
-
+	
 	ClientImpl.prototype.startTrace = function () {
 		if ( this._traceBuffer === null ) {
 			this._traceBuffer = [];
 		}
 		this._trace("Client.startTrace", new Date(), version);
 	};
-
+	
 	ClientImpl.prototype.stopTrace = function () {
 		delete this._traceBuffer;
 	};
@@ -1056,9 +1064,9 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	};
 
 	/**
-	 * @ignore
 	 * Expect an ACK response for this message. Add message to the set of in progress
 	 * messages and set an unused identifier in this message.
+	 * @ignore
 	 */
 	ClientImpl.prototype._requires_ack = function (wireMessage) {
 		var messageCount = Object.keys(this._sentMessages).length;
@@ -1079,8 +1087,8 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	};
 
 	/** 
-	 * @ignore
 	 * Called when the underlying websocket has been opened.
+	 * @ignore
 	 */
 	ClientImpl.prototype._on_socket_open = function () {        
 		// Create the CONNECT message object.
@@ -1090,8 +1098,8 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	};
 
 	/** 
-	 * @ignore
 	 * Called when the underlying websocket has received a complete packet.
+	 * @ignore
 	 */
 	ClientImpl.prototype._on_socket_message = function (event) {
 		this._trace("Client._on_socket_message", event.data);
@@ -1104,7 +1112,7 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	}
 	
 	ClientImpl.prototype._deframeMessages = function(data) {
-        var byteArray = new Uint8Array(data);
+		var byteArray = new Uint8Array(data);
 	    if (this.receiveBuffer) {
 	        var newData = new Uint8Array(this.receiveBuffer.length+byteArray.length);
 	        newData.set(this.receiveBuffer);
@@ -1126,14 +1134,14 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		        }
 		    }
 		    if (offset < byteArray.length) {
-                this.receiveBuffer = byteArray.subarray(offset);
+		    	this.receiveBuffer = byteArray.subarray(offset);
 		    }
 		} catch (error) {
 			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message]));
 			return;
 		}
 		return messages;
-    }
+	}
 	
 	ClientImpl.prototype._handleMessage = function(wireMessage) {
 		
@@ -1349,11 +1357,11 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	};
 
 	/**
-	 * @ignore
 	 * Client has disconnected either at its own request or because the server
 	 * or network disconnected it. Remove all non-durable state.
 	 * @param {errorCode} [number] the error number.
 	 * @param {errorText} [string] the error text.
+	 * @ignore
 	 */
 	ClientImpl.prototype._disconnected = function (errorCode, errorText) {
 		this._trace("Client._disconnected", errorCode, errorText);
@@ -1436,11 +1444,7 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	// ------------------------------------------------------------------------
 	
 	/** 
-	 * The JavaScript application communicates to the server using a Messaging.Client object. 
-	 * <p>
-	 * Other programming languages,
-	 * <a href="/clients/java/doc/javadoc/com/ibm/micro/client/mqttv3/MqttClient.html"><big>Java</big></a>,
-	 * <a href="/clients/c/doc/html/index.html"><big>C</big></a>.
+	 * The JavaScript application communicates to the server using a {@link Messaging.Client} object. 
 	 * <p>
 	 * Most applications will create just one Client object and then call its connect() method,
 	 * however applications can create more than one Client object if they wish. 
@@ -1453,49 +1457,48 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	 * Such callbacks are called at most once per method invocation and do not persist beyond the lifetime 
 	 * of the script that made the invocation.
 	 * <p>
-	 * In contrast there are some callback functions <i> most notably onMessageArrived</i> 
-	 * that are defined on the Messaging.Client object.  
+	 * In contrast there are some callback functions, most notably <i>onMessageArrived</i>, 
+	 * that are defined on the {@link Messaging.Client} object.  
 	 * These may get called multiple times, and aren't directly related to specific method invocations made by the client. 
 	 *
 	 * @name Messaging.Client    
 	 * 
 	 * @constructor
-	 * Creates a Messaging.Client object that can be used to communicate with a Messaging server.
 	 *  
-	 * @param {string} host the address of the messaging server, as a fully qualified WebSocket URI, as a DNS name or dotted decimal IP address.
-	 * @param {number} port the port number in the host to connect to - only required if host is not a URI
-	 * @param {string} path the path on the host to connect to - only used if host is not a URI. Default: '/mqtt'.
-	 * @param {string} clientId the Messaging client identifier, between 1 and 23 characters in length.
+	 * @param {string} host - the address of the messaging server, as a fully qualified WebSocket URI, as a DNS name or dotted decimal IP address.
+	 * @param {number} port - the port number to connect to - only required if host is not a URI
+	 * @param {string} path - the path on the host to connect to - only used if host is not a URI. Default: '/mqtt'.
+	 * @param {string} clientId - the Messaging client identifier, between 1 and 23 characters in length.
 	 * 
-	 * @property {string} host <i>read only</i> the server's DNS hostname or dotted decimal IP address.
-	 * @property {number} port <i>read only</i> the server's port.
-	 * @property {string} path <i>read only</i> the server's path.
-	 * @property {string} clientId <i>read only</i> used when connecting to the server.
-	 * @property {function} onConnectionLost called when a connection has been lost, 
-	 * after a connect() method has succeeded.
-	 * Establish the call back used when a connection has been lost. The connection may be
-	 * lost because the client initiates a disconnect or because the server or network 
-	 * cause the client to be disconnected. The disconnect call back may be called without 
-	 * the connectionComplete call back being invoked if, for example the client fails to 
-	 * connect.
-	 * A single response object parameter is passed to the onConnectionLost callback containing the following fields:
-	 * <ol>   
-	 * <li>errorCode
-	 * <li>errorMessage       
-	 * </ol>
+	 * @property {string} host - <i>read only</i> the server's DNS hostname or dotted decimal IP address.
+	 * @property {number} port - <i>read only</i> the server's port.
+	 * @property {string} path - <i>read only</i> the server's path.
+	 * @property {string} clientId - <i>read only</i> used when connecting to the server.
+	 * @property {function} onConnectionLost - called when a connection has been lost. 
+	 *                            after a connect() method has succeeded.
+	 *                            Establish the call back used when a connection has been lost. The connection may be
+	 *                            lost because the client initiates a disconnect or because the server or network 
+	 *                            cause the client to be disconnected. The disconnect call back may be called without 
+	 *                            the connectionComplete call back being invoked if, for example the client fails to 
+	 *                            connect.
+	 *                            A single response object parameter is passed to the onConnectionLost callback containing the following fields:
+	 *                            <ol>   
+	 *                            <li>errorCode
+	 *                            <li>errorMessage       
+	 *                            </ol>
 	 * @property {function} onMessageDelivered called when a message has been delivered. 
-	 * All processing that this Client will ever do has been completed. So, for example,
-	 * in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
-	 * and the message has been removed from persistent storage before this callback is invoked. 
-	 * Parameters passed to the onMessageDelivered callback are:
-	 * <ol>   
-	 * <li>Messaging.Message that was delivered.
-	 * </ol>    
+	 *                            All processing that this Client will ever do has been completed. So, for example,
+	 *                            in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
+	 *                            and the message has been removed from persistent storage before this callback is invoked. 
+	 *                            Parameters passed to the onMessageDelivered callback are:
+	 *                            <ol>   
+	 *                            <li>{@link Messaging.Message} that was delivered.
+	 *                            </ol>    
 	 * @property {function} onMessageArrived called when a message has arrived in this Messaging.client. 
-	 * Parameters passed to the onMessageArrived callback are:
-	 * <ol>   
-	 * <li>Messaging.Message that has arrived.
-	 * </ol>    
+	 *                            Parameters passed to the onMessageArrived callback are:
+	 *                            <ol>   
+	 *                            <li>{@link Messaging.Message} that has arrived.
+	 *                            </ol>    
 	 */
 	var Client = function (host, port, path, clientId) {
 	    
@@ -1519,20 +1522,18 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	        }
 	    } else {
 	        if (arguments.length == 3) {
-                clientId = path;
-                path = "/mqtt";
-            }
-            
-            if (typeof port !== "number" || port < 0)
-                throw new Error(format(ERROR.INVALID_TYPE, [typeof port, "port"]));
-            if (typeof path !== "string")
-                throw new Error(format(ERROR.INVALID_TYPE, [typeof path, "path"]));
-            
-            var ipv6 = (host.indexOf(":") != -1);
-            uri = "ws://"+(ipv6?"["+host+"]":host)+":"+port+path;
-        }
-            
-		
+				clientId = path;
+				path = "/mqtt";
+			}
+			if (typeof port !== "number" || port < 0)
+				throw new Error(format(ERROR.INVALID_TYPE, [typeof port, "port"]));
+			if (typeof path !== "string")
+				throw new Error(format(ERROR.INVALID_TYPE, [typeof path, "path"]));
+			
+			var ipv6 = (host.indexOf(":") != -1);
+			uri = "ws://"+(ipv6?"["+host+"]":host)+":"+port+path;
+		}
+
 		var clientIdLength = 0;
 		for (var i = 0; i<clientId.length; i++) {
 			var charCode = clientId.charCodeAt(i);                   
@@ -1589,20 +1590,23 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		 * 
 		 * @name Messaging.Client#connect
 		 * @function
-		 * @param {Object} [connectOptions] attributes used with the connection. 
-		 * <p>
-		 * Properties of the connect options are: 
-		 * @config {number} [timeout] If the connect has not succeeded within this number of seconds, it is deemed to have failed.
-		 *                            The default is 30 seconds.
-		 * @config {string} [userName] Authentication username for this connection.
-		 * @config {string} [password] Authentication password for this connection.
-		 * @config {Messaging.Message} [willMessage] sent by the server when the client disconnects abnormally.
-		 * @config {Number} [keepAliveInterval] the server disconnects this client if there is no activity for this
-		 *                number of seconds. The default value of 60 seconds is assumed if not set.
-		 * @config {boolean} [cleanSession] if true(default) the client and server persistent state is deleted on successful connect.
-		 * @config {boolean} [useSSL] if present and true, use an SSL Websocket connection.
-		 * @config {object} [invocationContext] passed to the onSuccess callback or onFailure callback.
-		 * @config {function} [onSuccess] called when the connect acknowledgement has been received from the server.
+		 * @param {Object} connectOptions - attributes used with the connection. 
+		 * @param {number} connectOptions.timeout - If the connect has not succeeded within this 
+		 *                    number of seconds, it is deemed to have failed.
+		 *                    The default is 30 seconds.
+		 * @param {string} connectOptions.userName - Authentication username for this connection.
+		 * @param {string} connectOptions.password - Authentication password for this connection.
+		 * @param {Messaging.Message} connectOptions.willMessage - sent by the server when the client
+		 *                    disconnects abnormally.
+		 * @param {Number} connectOptions.keepAliveInterval - the server disconnects this client if
+		 *                    there is no activity for this number of seconds.
+		 *                    The default value of 60 seconds is assumed if not set.
+		 * @param {boolean} connectOptions.cleanSession - if true(default) the client and server 
+		 *                    persistent state is deleted on successful connect.
+		 * @param {boolean} connectOptions.useSSL - if present and true, use an SSL Websocket connection.
+		 * @param {object} connectOptions.invocationContext - passed to the onSuccess callback or onFailure callback.
+		 * @param {function} connectOptions.onSuccess - called when the connect acknowledgement 
+		 *                    has been received from the server.
 		 * A single response object parameter is passed to the onSuccess callback containing the following fields:
 		 * <ol>
 		 * <li>invocationContext as passed in to the onSuccess method in the connectOptions.       
@@ -1665,42 +1669,42 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 				for (var i = 0; i<connectOptions.hosts.length; i++) {
 					if (typeof connectOptions.hosts[i] !== "string")
 						throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
-                    if (/^(wss?):\/\/((\[(.+)\])|([^\/]+?))(:(\d+))?(\/.*)$/.test(connectOptions.hosts[i])) {
-                        if (i == 0) {
-                            usingURIs = true;
-                        } else if (!usingURIs) {
-                            throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
-                        }
-                    } else if (usingURIs) {
-                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
-                    }
-                }
-                
-                if (!usingURIs) {
-                    if (!connectOptions.ports)
-                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
-                    if (!(connectOptions.ports instanceof Array) )
-                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
-                    if (connectOptions.hosts.length != connectOptions.ports.length)
-                        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
-                    
-                    connectOptions.uris = [];
-                    
-                    for (var i = 0; i<connectOptions.hosts.length; i++) {
-                        if (typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0)
-                            throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectOptions.ports["+i+"]"]));
-                        var host = connectOptions.hosts[i];
-                        var port = connectOptions.ports[i];
-                        
-                        var ipv6 = (host.indexOf(":") != -1);
-                        uri = "ws://"+(ipv6?"["+host+"]":host)+":"+port+path;
-                        connectOptions.uris.push(uri);
-                    }
-                } else {
-                    connectOptions.uris = connectOptions.hosts;
-                }
+					if (/^(wss?):\/\/((\[(.+)\])|([^\/]+?))(:(\d+))?(\/.*)$/.test(connectOptions.hosts[i])) {
+						if (i == 0) {
+							usingURIs = true;
+						} else if (!usingURIs) {
+							throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
+						}
+					} else if (usingURIs) {
+						throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts["+i+"]"]));
+					}
+				}
+				
+				if (!usingURIs) {
+					if (!connectOptions.ports)
+						throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+					if (!(connectOptions.ports instanceof Array) )
+						throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+					if (connectOptions.hosts.length != connectOptions.ports.length)
+						throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
+					
+					connectOptions.uris = [];
+					
+					for (var i = 0; i<connectOptions.hosts.length; i++) {
+						if (typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0)
+							throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectOptions.ports["+i+"]"]));
+						var host = connectOptions.hosts[i];
+						var port = connectOptions.ports[i];
+						
+						var ipv6 = (host.indexOf(":") != -1);
+						uri = "ws://"+(ipv6?"["+host+"]":host)+":"+port+path;
+						connectOptions.uris.push(uri);
+					}
+				} else {
+					connectOptions.uris = connectOptions.hosts;
+				}
 			}
-
+			
 			client.connect(connectOptions);
 		};
 	 
@@ -1711,24 +1715,29 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		 * @function
 		 * @param {string} filter describing the destinations to receive messages from.
 		 * <br>
-		 * @param {object} [subscribeOptions] used to control the subscription, as follows:
-		 * <p>
-		 * @config {number} [qos] the maiximum qos of any publications sent as a result of making this subscription.
-		 * @config {object} [invocationContext] passed to the onSuccess callback or onFailure callback.
-		 * @config {function} [onSuccess] called when the subscribe acknowledgement has been received from the server.
-		 * A single response object parameter is passed to the onSuccess callback containing the following fields:
-		 * <ol>
-		 * <li>invocationContext if set in the subscribeOptions.       
-		 * </ol>
-		 * @config {function} [onFailure] called when the subscribe request has failed or timed out.
-		 * A single response object parameter is passed to the onFailure callback containing the following fields:
-		 * <ol>
-		 * <li>invocationContext if set in the subscribeOptions.       
-		 * <li>errorCode a number indicating the nature of the error.
-		 * <li>errorMessage text describing the error.      
-		 * </ol>
-		 * @config {number} [timeout] which if present determines the number of seconds after which the onFailure calback is called
-		 * the presence of a timeout does not prevent the onSuccess callback from being called when the MQTT Suback is eventually received.         
+		 * @param {object} subscribeOptions - used to control the subscription
+		 *
+		 * @param {number} subscribeOptions.qos - the maiximum qos of any publications sent 
+		 *                                  as a result of making this subscription.
+		 * @param {object} subscribeOptions.invocationContext - passed to the onSuccess callback 
+		 *                                  or onFailure callback.
+		 * @param {function} subscribeOptions.onSuccess - called when the subscribe acknowledgement
+		 *                                  has been received from the server.
+		 *                                  A single response object parameter is passed to the onSuccess callback containing the following fields:
+		 *                                  <ol>
+		 *                                  <li>invocationContext if set in the subscribeOptions.       
+		 *                                  </ol>
+		 * @param {function} subscribeOptions.onFailure - called when the subscribe request has failed or timed out.
+		 *                                  A single response object parameter is passed to the onFailure callback containing the following fields:
+		 *                                  <ol>
+		 *                                  <li>invocationContext - if set in the subscribeOptions.       
+		 *                                  <li>errorCode - a number indicating the nature of the error.
+		 *                                  <li>errorMessage - text describing the error.      
+		 *                                  </ol>
+		 * @param {number} subscribeOptions.timeout - which, if present, determines the number of
+		 *                                  seconds after which the onFailure calback is called.
+		 *                                  The presence of a timeout does not prevent the onSuccess
+		 *                                  callback from being called when the subscribe completes.         
 		 * @throws {InvalidState} if the client is not in connected state.
 		 */
 		this.subscribe = function (filter, subscribeOptions) {
@@ -1754,24 +1763,27 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		 * 
 		 * @name Messaging.Client#unsubscribe
 		 * @function
-		 * @param {string} filter describing the destinations to receive messages from.
-		 * @param {object} [unsubscribeOptions] used to control the subscription, as follows:
-		 * <p>
-		 * @config {object} [invocationContext] passed to the onSuccess callback or onFailure callback.
-		 * @config {function} [onSuccess] called when the unsubscribe acknowledgement has been receive dfrom the server.
-		 * A single response object parameter is passed to the onSuccess callback containing the following fields:
-		 * <ol>
-		 * <li>invocationContext if set in the unsubscribeOptions.     
-		 * </ol>
-		 * @config {function} [onFailure] called when the unsubscribe request has failed or timed out.
-		 * A single response object parameter is passed to the onFailure callback containing the following fields:
-		 * <ol>
-		 * <li>invocationContext if set in the unsubscribeOptions.       
-		 * <li>errorCode a number indicating the nature of the error.
-		 * <li>errorMessage text describing the error.      
-		 * </ol>
-		 * @config {number} [timeout] which if present determines the number of seconds after which the onFailure callback is called, the
-		 * presence of a timeout does not prevent the onSuccess callback from being called when the MQTT UnSuback is eventually received.
+		 * @param {string} filter - describing the destinations to receive messages from.
+		 * @param {object} unsubscribeOptions - used to control the subscription
+		 * @param {object} unsubscribeOptions.invocationContext - passed to the onSuccess callback 
+		                                      or onFailure callback.
+		 * @param {function} unsubscribeOptions.onSuccess - called when the unsubscribe acknowledgement has been received from the server.
+		 *                                    A single response object parameter is passed to the 
+		 *                                    onSuccess callback containing the following fields:
+		 *                                    <ol>
+		 *                                    <li>invocationContext - if set in the unsubscribeOptions.     
+		 *                                    </ol>
+		 * @param {function} unsubscribeOptions.onFailure called when the unsubscribe request has failed or timed out.
+		 *                                    A single response object parameter is passed to the onFailure callback containing the following fields:
+		 *                                    <ol>
+		 *                                    <li>invocationContext - if set in the unsubscribeOptions.       
+		 *                                    <li>errorCode - a number indicating the nature of the error.
+		 *                                    <li>errorMessage - text describing the error.      
+		 *                                    </ol>
+		 * @param {number} unsubscribeOptions.timeout - which, if present, determines the number of seconds
+		 *                                    after which the onFailure callback is called. The presence of
+		 *                                    a timeout does not prevent the onSuccess callback from being
+		 *                                    called when the unsubscribe completes
 		 * @throws {InvalidState} if the client is not in connected state.
 		 */
 		this.unsubscribe = function (filter, unsubscribeOptions) {
@@ -1795,7 +1807,7 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		 * @function 
 		 * @param {Messaging.Message} message to send.
 		 
-		 * @throws {InvalidState} if the client is not in connected state.
+		 * @throws {InvalidState} if the client is not connected.
 		 */   
 		this.send = function (message) {       	
 			if (!(message instanceof Message))
@@ -1811,7 +1823,7 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		 * 
 		 * @name Messaging.Client#disconnect
 		 * @function
-		 * @throws {InvalidState} if the client is not in connected or connecting state.     
+		 * @throws {InvalidState} if the client is already disconnected.     
 		 */
 		this.disconnect = function () {
 			client.disconnect();
@@ -1874,10 +1886,6 @@ throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 	
 	/** 
 	 * An application message, sent or received.
-	 * <p>
-	 * Other programming languages,
-	 * <a href="/clients/java/doc/javadoc/com/ibm/micro/client/mqttv3/MqttMessage.html"><big>Java</big></a>,
-	 * <a href="/clients/c/doc/html/struct_m_q_t_t_client__message.html"><big>C</big></a>.
 	 * <p>
 	 * All attributes may be null, which implies the default values.
 	 * 
