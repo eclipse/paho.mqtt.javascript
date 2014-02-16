@@ -1,0 +1,39 @@
+{
+	"connections":{
+		"connection1":{
+			"id" : 'connection1',
+			"host":"localhost",
+			"port":1883,
+			"uri":"ws://localhost:1883/mqtt",
+			"clientId":"mquser01",
+			"options":{
+				"cleanSession":true,
+				"useSSL" : false,
+				
+				"keepAliveInterval" : 40,
+				"retryInterval":60,
+				"timeout":90,
+				"isHA" : false,
+				"arrHA" : {
+					"hosts":['9.119.156.85','localhost'],
+					"ports":[1883,1883]
+				},
+				"isLogin":false,
+				"user":{
+					"username":'zhtang',
+					"passwd":'passwd'
+				},
+				
+				"isLWT" : true,
+				"msgLWT":{
+					"topic" : 'lwtTopic',
+					"qos" : 1,
+					"msg" : "pity",
+					"retained" : true
+				}
+			}
+		}
+	
+	},
+	"count" : 1
+}

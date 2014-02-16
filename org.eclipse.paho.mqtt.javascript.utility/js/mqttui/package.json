@@ -1,0 +1,9 @@
+{
+  "name": "monitor",
+  
+  "description": "IBM WebSphere MQ Managerment",
+  "version": 0.1,
+  "maintainers":[{"name":"IBM"}],
+  "contributors":[{"name":"IBM"}],
+  "dojoBuild": "mqttui.profile.js"
+}
