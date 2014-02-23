@@ -43,7 +43,7 @@
         		<executions>
           			<execution>
 						<id>compress-js</id>
-						<phase>process-resources</phase>
+						<phase>process-sources</phase>
           				<configuration>
           					<force>true</force>
           					<sourceDirectory>src/</sourceDirectory>
@@ -64,7 +64,7 @@
 				<executions>
 					<execution>
 						<id>generate-js-output</id>
-						<phase>process-resources</phase>
+						<phase>process-sources</phase>
 						<configuration>
 							<tasks>
 								<copy file="src/mqttws31.js" toFile="target/mqttws31.js">
