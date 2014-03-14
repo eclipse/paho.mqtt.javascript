@@ -366,7 +366,7 @@ Messaging = (function (global) {
 					break;
 			}
 			var connectFlags = 0;
-			if (this.cleanSession && (this.clientId.length > 0)) 
+			if (this.cleanSession) 
 				connectFlags = 0x02;
 			if (this.willMessage != undefined ) {
 				connectFlags |= 0x04;
@@ -856,7 +856,7 @@ Messaging = (function (global) {
 			wireMessage.requestedQos = [0];
 		
 		if (subscribeOptions.onSuccess) {
-			wireMessage.callback = function() {subscribeOptions.onSuccess({invocationContext:subscribeOptions.invocationContext});};
+			wireMessage.callback = function(grantedQos) {subscribeOptions.onSuccess({invocationContext:subscribeOptions.invocationContext,grantedQos:grantedQos});};
 		}
 		if (subscribeOptions.timeout) {
 			wireMessage.timeOut = new Timeout(this, window, subscribeOptions.timeout, subscribeOptions.onFailure
@@ -1283,7 +1283,7 @@ Messaging = (function (global) {
 					if(sentMessage.timeOut)
 						sentMessage.timeOut.cancel();
 					if (sentMessage.callback) {
-						sentMessage.callback();
+						sentMessage.callback(wireMessage.grantedQos);
 					}
 					delete this._sentMessages[wireMessage.messageIdentifier];
 				}

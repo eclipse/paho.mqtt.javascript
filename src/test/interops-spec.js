@@ -12,9 +12,11 @@ var genStr = function(str){
 
 var topics = ["TopicA", "TopicA/B", "Topic/C", "TopicA/C", "/TopicA"];
 var wildtopics = ["TopicA/+", "+/C", "#", "/#", "/+", "+/+", "TopicA/#"];
+var nosubscribetopics = ["nosubscribe",];
 
 describe('InteropsTests', function() {
 	var clientId = this.description;
+	var client = null;
 	var failure = false;
 	var subscribed = false;
 	var disconnectError = null;
@@ -33,6 +35,15 @@ describe('InteropsTests', function() {
 		disconnectErrorMsg = null;
 		messageReceivedCount = 0
 		messagePublishedCount = 0;
+		sendingComplete = false;
+		receivingComplete = false;
+	});
+
+	afterEach(function(){
+		if (client !== null && client.isConnected()) {
+			client.disconnect();
+		}
+		client = null;
 	});
 
 	var callbacks = {
@@ -150,7 +161,6 @@ describe('InteropsTests', function() {
 	it('should connect, attempt to connect again and fail', function() {
 		var exception = false;
 		client = new Messaging.Client(testServer, testPort, testPath, "testclientid-js");
-
 		expect(client).not.toBe(null);
 
 		runs(function() {
@@ -176,5 +186,183 @@ describe('InteropsTests', function() {
 		runs(function() {
 			expect(exception).toBe(true);
 		});
-	})
+	});
+
+	it('should connect successfully with a 0 length clientid with cleansession true', function() {
+		client = new Messaging.Client(testServer, testPort, testPath, "");
+		expect(client).not.toBe(null);
+
+		runs(function() {
+			client.connect({cleanSession:true, onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion});
+		});
+		waitsFor(function() {
+			return client.isConnected();
+		}, "the client should connect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(true);
+		});
+
+		runs(function() {
+			client.disconnect();
+		});
+		waitsFor(function() {
+			return true;
+		}, "the client should disconnect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(false);
+		});
+	});
+
+	it('should fail to connect successfully with a 0 length clientid with cleansession false', function() {
+		var connectFail = false;
+		var failCallback = function(err) {
+			connectFail = true;
+		}
+		client = new Messaging.Client(testServer, testPort, testPath, "");
+		expect(client).not.toBe(null);
+
+		runs(function() {
+			client.connect({cleanSession:false, onFailure:failCallback, mqttVersion:testMqttVersion});
+		});
+		waitsFor(function() {
+			return connectFail
+		}, "the client should fail to connect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(false);
+		});
+	});
+
+	it('should queue up messages on the server for offline clients', function() {
+		client = new Messaging.Client(testServer, testPort, testPath, "testclientid-js");
+		client.onMessageArrived = callbacks.onMessageArrived;
+
+		expect(client).not.toBe(null);
+
+		runs(function() {
+			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:false});
+		});
+		waitsFor(function() {
+			return client.isConnected();
+		}, "the client should connect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(true);
+		});
+
+		runs(function() {
+			client.subscribe(wildtopics[5], {qos:2, onSuccess: callbacks.onSubscribeSuccess});
+		});
+		waitsFor(function() {
+			return subscribed;
+		}, "the client should subscribe", 2000);
+		runs(function() {
+			expect(subscribed).toBe(true);
+		});
+
+		runs(function() {
+			client.disconnect();
+		});
+		waitsFor(function() {
+			return true;
+		}, "the client should disconnect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(false);
+		});
+
+		bClient = new Messaging.Client(testServer, testPort, testPath, "testclientid-js-b");
+		bClient.onMessageDelivered = callbacks.onMessageDelivered;
+
+		runs(function() {
+			bClient.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:true});
+		});
+		waitsFor(function() {
+			return bClient.isConnected();
+		}, "the client should connect again", 5000);
+		runs(function() {
+			expect(bClient.isConnected()).toBe(true);
+		});
+
+		runs(function (){
+			for (var i = 0; i < 3; i++) {
+				var message = new Messaging.Message("qos " + i);
+				message.destinationName = topics[i+1];
+				message.qos=i;
+				bClient.send(message);
+			}
+		});
+		waitsFor(function() {
+			return sendingComplete;
+		}, "the client should send 3 messages", 5000);
+		runs(function() {
+			expect(messagePublishedCount).toBe(3);
+		});
+
+		runs(function() {
+			bClient.disconnect({onSuccess: callbacks.onDisconnectSuccess});
+		});
+		waitsFor(function() {
+			return connected;
+		}, "the client should disconnect", 5000);
+		runs(function() {
+			expect(bClient.isConnected()).toBe(false);
+		});
+
+		runs(function() {
+			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:false});
+		});
+		waitsFor(function() {
+			return client.isConnected();
+		}, "the client should connect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(true);
+		});
+		waitsFor(function() {
+			return (messageReceivedCount > 1);
+		}, "the client should receive 2/3 messages", 5000);
+		runs(function() {
+			expect(messageReceivedCount).toBeGreaterThan(1);
+		});
+		runs(function() {
+			client.disconnect();
+		});
+		waitsFor(function() {
+			return true;
+		}, "the client should disconnect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(false);
+		});
+	});
+
+	it('should get a return code for failure to subscribe', function() {
+		client = new Messaging.Client(testServer, testPort, testPath, "testclientid-js");
+		client.onMessageArrived = callbacks.onMessageArrived;
+
+		var subFailed = false;
+		var failSubscribe = function(response) {
+			if (response.grantedQos.get(0) == 0x80) {
+				subFailed = true;
+			}
+		}
+
+		expect(client).not.toBe(null);
+
+		runs(function() {
+			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:true});
+		});
+		waitsFor(function() {
+			return client.isConnected();
+		}, "the client should connect", 5000);
+		runs(function() {
+			expect(client.isConnected()).toBe(true);
+		});
+
+		runs(function() {
+			client.subscribe(nosubscribetopics[0], {qos:2, onSuccess: failSubscribe});
+		});
+		waitsFor(function() {
+			return subFailed;
+		}, "the client should fail to subscribe", 2000);
+		runs(function() {
+			expect(subFailed).toBe(true);
+		});
+	});
 })
