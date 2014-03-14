@@ -213,8 +213,10 @@ Messaging = (function (global) {
 		return text;
 	};
 	
-	//MQTT protocol and version        6    M    Q    I    s    d    p    3
-	var MqttProtoIdentifier = [0x00,0x06,0x4d,0x51,0x49,0x73,0x64,0x70,0x03];
+	//MQTT protocol and version          6    M    Q    I    s    d    p    3
+	var MqttProtoIdentifierv3 = [0x00,0x06,0x4d,0x51,0x49,0x73,0x64,0x70,0x03];
+	//MQTT proto/version for 311         4    M    Q    T    T    4
+	var MqttProtoIdentifierv4 = [0x00,0x04,0x4d,0x51,0x54,0x54,0x04];
 	
 	/**
 	 * Construct an MQTT wire protocol message.
@@ -268,7 +270,15 @@ Messaging = (function (global) {
 		switch(this.type) {
 			// If this a Connect then we need to include 12 bytes for its header
 			case MESSAGE_TYPE.CONNECT:
-				remLength += MqttProtoIdentifier.length + 3;
+				switch(this.mqttVersion) {
+					case 3:
+						remLength += MqttProtoIdentifierv3.length + 3;
+						break;
+					case 4:
+						remLength += MqttProtoIdentifierv4.length + 3;
+						break;
+				}
+
 				remLength += UTF8Length(this.clientId) + 2;
 				if (this.willMessage != undefined) {
 					remLength += UTF8Length(this.willMessage.destinationName) + 2;
@@ -279,7 +289,7 @@ Messaging = (function (global) {
 					remLength += willMessagePayloadBytes.byteLength +2;
 				}
 				if (this.userName != undefined)
-					remLength += UTF8Length(this.userName) + 2;
+					remLength += UTF8Length(this.userName) + 2;	
 				if (this.password != undefined)
 					remLength += UTF8Length(this.password) + 2;
 			break;
@@ -301,6 +311,10 @@ Messaging = (function (global) {
 					topicStrLength[i] = UTF8Length(this.topics[i]);
 					remLength += topicStrLength[i] + 2;
 				}
+				break;
+
+			case MESSAGE_TYPE.PUBREL:
+				first |= 0x02; // Qos = 1;
 				break;
 
 			case MESSAGE_TYPE.PUBLISH:
@@ -341,10 +355,18 @@ Messaging = (function (global) {
 		// If this is a CONNECT then the variable header contains the protocol name/version, flags and keepalive time
 		
 		else if (this.type == MESSAGE_TYPE.CONNECT) {
-			byteStream.set(MqttProtoIdentifier, pos);
-			pos += MqttProtoIdentifier.length;
+			switch (this.mqttVersion) {
+				case 3:
+					byteStream.set(MqttProtoIdentifierv3, pos);
+					pos += MqttProtoIdentifierv3.length;
+					break;
+				case 4:
+					byteStream.set(MqttProtoIdentifierv4, pos);
+					pos += MqttProtoIdentifierv4.length;
+					break;
+			}
 			var connectFlags = 0;
-			if (this.cleanSession) 
+			if (this.cleanSession && (this.clientId.length > 0)) 
 				connectFlags = 0x02;
 			if (this.willMessage != undefined ) {
 				connectFlags |= 0x04;
@@ -375,7 +397,7 @@ Messaging = (function (global) {
 					pos += willMessagePayloadBytes.byteLength;
 					
 				}
-			if (this.userName != undefined) 
+			if (this.userName != undefined)
 				pos = writeString(this.userName, UTF8Length(this.userName), byteStream, pos);
 			if (this.password != undefined) 
 				pos = writeString(this.password, UTF8Length(this.password), byteStream, pos);
@@ -1040,7 +1062,8 @@ Messaging = (function (global) {
 			  throw Error(format(ERROR.INVALID_STORED_DATA, [key, value]));
 		}
 							
-		if (key.indexOf("Sent:"+this._localKey) == 0) {      
+		if (key.indexOf("Sent:"+this._localKey) == 0) {
+			wireMessage.payloadMessage.duplicate = true;
 			this._sentMessages[wireMessage.messageIdentifier] = wireMessage;    		    
 		} else if (key.indexOf("Received:"+this._localKey) == 0) {
 			this._receivedMessages[wireMessage.messageIdentifier] = wireMessage;
@@ -1542,7 +1565,7 @@ Messaging = (function (global) {
 			}   		   
 			clientIdLength++;
 		}     	   	
-		if (typeof clientId !== "string" || clientIdLength < 1 | clientIdLength > 23)
+		if (typeof clientId !== "string" || clientIdLength > 65535)
 			throw new Error(format(ERROR.INVALID_ARGUMENT, [clientId, "clientId"])); 
 		
 		var client = new ClientImpl(uri, host, port, path, clientId);
@@ -1640,11 +1663,19 @@ Messaging = (function (global) {
 									   onSuccess:"function", 
 									   onFailure:"function",
 									   hosts:"object",
-									   ports:"object"});
+									   ports:"object",
+									   mqttVersion:"number"});
 			
 			// If no keep alive interval is set, assume 60 seconds.
 			if (connectOptions.keepAliveInterval === undefined)
 				connectOptions.keepAliveInterval = 60;
+
+			if (connectOptions.mqttVersion === undefined)
+				connectOptions.mqttVersion = 3;
+
+			//Check that if password is set, so is username
+			if (connectOptions.password === undefined && connectOptions.userName !== undefined)
+				throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.password, "connectOptions.password"]))
 
 			if (connectOptions.willMessage) {
 				if (!(connectOptions.willMessage instanceof Message))
@@ -1858,6 +1889,10 @@ Messaging = (function (global) {
 		 */
 		this.stopTrace = function () {
 			client.stopTrace();
+		};
+
+		this.isConnected = function() {
+			return client.connected;
 		};
 	};
 

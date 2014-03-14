@@ -65,8 +65,8 @@ function ensureValue(prop,value) {
 module.exports = {
     server: ensureValue("${test.server}","messagesight.demos.ibm.com"),
     port: parseInt(ensureValue("${test.server.port}","1883")),
-    path: ensureValue("${test.server.path}","/ws")
-    
+    path: ensureValue("${test.server.path}","/ws"),
+    mqttVersion: parseInt(ensureValue("${test.server.mqttVersion}","3"))
 }
 /*
 var connection = {

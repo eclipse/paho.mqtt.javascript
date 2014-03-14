@@ -3,6 +3,7 @@ var settings = require('./client-harness');
 var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
+var testMqttVersion = settings.mqttVersion;
 
 describe('client-uris', function() {
 	var client = this;
@@ -116,7 +117,7 @@ describe('client-uris', function() {
         client.onConnectionLost = onDisconnect;
 		
 		runs(function() {
-			client.connect({onSuccess:onConnect,hosts:["ws://"+testServer+":"+testPort+testPath]});
+			client.connect({onSuccess:onConnect,hosts:["ws://"+testServer+":"+testPort+testPath],mqttVersion:testMqttVersion});
 		});
 
 		waitsFor(function() {

@@ -3,6 +3,7 @@ var settings = require('./client-harness');
 var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
+var testMqttVersion = settings.mqttVersion;
 
 var genStr = function(str){
 	var time = new Date();
@@ -97,7 +98,7 @@ describe('BasicTest', function() {
 		
 		console.log('Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
 		});
 		waitsFor(function() {
 			return connected;
@@ -119,7 +120,7 @@ describe('BasicTest', function() {
 		
 		console.log('Re-Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess});
+			client.connect({onSuccess:onConnectSuccess,mqttVersion:testMqttVersion});
 		});
 
 		waitsFor(function() {
@@ -148,7 +149,8 @@ describe('BasicTest', function() {
 				onSuccess : onConnectSuccess,
 				onFailure : onConnectFailure,
 				hosts : arrHosts,
-				ports : arrPorts
+				ports : arrPorts,
+				mqttVersion: testMqttVersion
 			});
 		});
 
@@ -171,7 +173,7 @@ describe('BasicTest', function() {
 		client.onMessageDelivered = messageDelivered;
 		
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
 		});
 		waitsFor(function() {
 			return connected;

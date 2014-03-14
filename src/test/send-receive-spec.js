@@ -3,6 +3,7 @@ var settings = require('./client-harness');
 var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
+var testMqttVersion = settings.mqttVersion;
 
 //define a default clientID
 var clientId="testClient1";
@@ -73,6 +74,7 @@ describe('SendReceive', function() {
 		    connectOptions = connectOptions || {};
 			if(!connectOptions.hasOwnProperty("onSuccess")){
 				connectOptions.onSuccess=onConnect;
+				connectOptions.mqttVersion=testMqttVersion;
 			}
 		    runs(function() {
 			  client.connect(connectOptions);
@@ -198,7 +200,7 @@ describe('SendReceive', function() {
 	    var client= new MqttClient(clientId);
 		 
 		//connect and verify
-		client.connect();
+		client.connect({mqttVersion:testMqttVersion});
 		
 		//disconnect and verify
 		client.disconnect();	 
@@ -209,7 +211,7 @@ describe('SendReceive', function() {
 	    var client= new MqttClient(clientId);
 		
 	    //connect and verify
-		client.connect();
+		client.connect({mqttVersion:testMqttVersion});
 		
 		//subscribe and verify
 		var testTopic="pubsub/topic";
@@ -243,7 +245,7 @@ describe('SendReceive', function() {
 	    var client= new MqttClient(clientId);
 		
 	    //connect and verify
-		client.connect();
+		client.connect({mqttVersion:testMqttVersion});
 		
 		//subscribe and verify
 		var testTopics=["pubsub/topic1","pubsub/topic2","pubsub/topic3"];
@@ -275,7 +277,7 @@ describe('SendReceive', function() {
 		var publishersNum=2;
 		for(var i=0;i<publishersNum;i++){
 		   publishers[i]=new MqttClient("publisher-"+i);
-		   publishers[i].connect();
+		   publishers[i].connect({mqttVersion:testMqttVersion});
 		}
 		
 		//create subscribers and connect
@@ -284,7 +286,7 @@ describe('SendReceive', function() {
 		var subscribersNum=10;
 		for(var i=0;i<subscribersNum;i++){
 		   subscribers[i]=new MqttClient("subscriber-"+i);
-		   subscribers[i].connect();
+		   subscribers[i].connect({mqttVersion:testMqttVersion});
 		   subscribers[i].subscribe(topic,subscribedQoS);
 		}
 		
@@ -314,7 +316,7 @@ describe('SendReceive', function() {
 	it('should clean up before re-connecting if cleanSession flag is set.', function() { 
 	    //connect with cleanSession flag=false and verify
 		var client= new MqttClient("client-1");
-		client.connect({cleanSession:false});
+		client.connect({cleanSession:false,mqttVersion:testMqttVersion});
 		
 		//subscribe and verify
 		var testTopic="cleanSession/topic1";
@@ -331,14 +333,14 @@ describe('SendReceive', function() {
 		
 		// Send a message from another client, to our durable subscription.
 		var anotherClient= new MqttClient("anotherClient-1");
-		anotherClient.connect({cleanSession:true});
+		anotherClient.connect({cleanSession:true,mqttVersion:testMqttVersion});
 		anotherClient.subscribe(testTopic,subscribedQoS);
 		anotherClient.publish(testTopic,publishQoS,payload);
 		anotherClient.receive(testTopic,publishQoS,subscribedQoS,payload);
 		anotherClient.disconnect();
 		
 		//reconnect
-		client.connect({cleanSession:true});
+		client.connect({cleanSession:true,mqttVersion:testMqttVersion});
 		//check no msg is received
 		client.receiveNone();
 		

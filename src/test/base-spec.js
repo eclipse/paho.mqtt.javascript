@@ -3,6 +3,7 @@ var settings = require('./client-harness');
 var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
+var testMqttVersion = settings.mqttVersion;
 
 describe('client', function() {
 	var client = this;
@@ -38,7 +39,7 @@ describe('client', function() {
 
 	it('should connect to a server', function() {
 		runs(function() {
-			client.connect({onSuccess:onConnect});
+			client.connect({onSuccess:onConnect, mqttVersion:testMqttVersion});
 		});
 
 		waitsFor(function() {
