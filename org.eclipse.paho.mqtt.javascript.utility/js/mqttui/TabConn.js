@@ -681,14 +681,14 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				}
 			}else if(this.isUri){
 				try{
-					this.mqttClient = new Messaging.Client(this.uri,this.clientId)
+					this.mqttClient = new Messaging.Client(this.uri,this.clientId);
 				}catch(e){
 					dojoAlert(e);
 					console.log('create Messaging.Client error:',e);
 				}	
 			}else{
 				try{
-					this.mqttClient = new Messaging.Client(this.host,this.port,this.clientId)
+					this.mqttClient = new Messaging.Client(this.host,this.port,this.clientId);
 				}catch(e){
 					dojoAlert(e);
 					console.log('create Messaging.Client error:',e);
@@ -721,7 +721,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				connectOptions.ports = this.options.arrHA.ports;
 			}
 			
-			this.isLogin && (connectOptions.userName = dijit.byId('connUser-'+this.strConn).value)
+			this.options.isLogin && (connectOptions.userName = dijit.byId('connUser-'+this.strConn).value)
 				&& (connectOptions.password = dijit.byId('connPasswd-'+this.strConn).value);
 			console.log('connection option',this.options.isLWT,connectOptions);
 			try{
