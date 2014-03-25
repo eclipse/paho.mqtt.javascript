@@ -482,7 +482,7 @@ Messaging = (function (global) {
 					pos += 2;
 				}
 				
-				var message = new Messaging.Message(input.subarray(pos));
+				var message = new Messaging.Message(input.subarray(pos, endPos));
 				if ((messageInfo & 0x01) == 0x01) 
 					message.retained = true;
 				if ((messageInfo & 0x08) == 0x08)
@@ -503,7 +503,7 @@ Messaging = (function (global) {
 			case  MESSAGE_TYPE.SUBACK:
 				wireMessage.messageIdentifier = readUint16(input, pos);
 				pos += 2;
-				wireMessage.grantedQos = input.subarray(pos);	
+				wireMessage.grantedQos = input.subarray(pos, endPos);	
 				break;
 		
 			default:
