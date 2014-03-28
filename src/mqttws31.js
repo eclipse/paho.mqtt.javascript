@@ -1553,8 +1553,8 @@ Messaging = (function (global) {
 			if (typeof path !== "string")
 				throw new Error(format(ERROR.INVALID_TYPE, [typeof path, "path"]));
 			
-			var ipv6 = (host.indexOf(":") != -1);
-			uri = "ws://"+(ipv6?"["+host+"]":host)+":"+port+path;
+			var ipv6AddSBracket = (host.indexOf(":") != -1 && host.slice(0,1) != "[" && host.slice(-1) != "]");
+			uri = "ws://"+(ipv6AddSBracket?"["+host+"]":host)+":"+port+path;
 		}
 
 		var clientIdLength = 0;
