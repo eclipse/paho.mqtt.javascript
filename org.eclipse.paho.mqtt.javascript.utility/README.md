@@ -1,8 +1,8 @@
 How to deploy:
 1.Download open source libararies of Dojo toolkit and Gridx.
-	1.1 Download Dojo toolkit from http://download.dojotoolkit.org/. 
-	1.2 Download Gridx from https://github.com/oria/gridx/releases. Choose the version of v1.0.* . [Note: Not support Gridx above version 1.0.6]
-	1.3 Copy the MQTT JavaScript library "mqttws31s.js" to the folder "js/"
+	1.1 Download Dojo toolkit from http://download.dojotoolkit.org/. Choose the version 1.8.6.
+	1.2 Download Gridx from https://github.com/oria/gridx/releases. Choose the version 1.0.5.
+	1.3 Copy the MQTT JavaScript library "mqttws31.js" to the folder "js/"
 	1.4 Put dojo, dijit, dojox and gridx to the folder "js/", namely at the same level as mqttui, e.g:
 	* dojo
 	* dijit
@@ -11,8 +11,6 @@ How to deploy:
 	* mqttui
 	* mqttws31.js
 	* dojoConfig.js
-
-The Utility works best with [Dojo 1.8.3 , Gridx 1.0.5].
 
 How to work
 1: Directly open index.html in browser.
