@@ -215,7 +215,23 @@
 							</arguments>
 						</configuration>
 					</execution>
-					
+					<execution>
+						<id>test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>node_modules/jasmine-node/bin/jasmine-node</executable>
+							<arguments>
+								<argument>--forceexit</argument>
+								<argument>target/test</argument>
+								<argument>--junitreport</argument>
+								<argument>--output</argument>
+								<argument>target/failsafe-reports/</argument>
+							</arguments>
+						</configuration>
+					</execution>
 					<execution>
 						<id>install-jsdoc-modules</id>
 						<phase>generate-resources</phase>
