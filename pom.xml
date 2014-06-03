@@ -17,6 +17,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<build.level>${maven.build.timestamp}</build.level>
 		<download.location>/home/data/httpd/download.eclipse.org/paho/releases/${paho.version}</download.location>
+		<deployfile.name>${project.artifactId}-incubation-${paho.version}.zip</deployfile.name>
 	</properties>
 	<scm>
 		<url>http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git</url>
@@ -126,6 +127,7 @@
 				<configuration>
 					<descriptor>src/assembly/package.xml</descriptor>
 					<appendAssemblyId>false</appendAssemblyId>
+					<finalName>${deployfile.name}</finalName>
 				</configuration>
 				<executions>
 					<execution>
@@ -173,7 +175,7 @@
 								<resource>
 									<directory>target</directory>
 									<includes>
-										<include>${project.artifactId}-${paho.version}.zip</include>
+										<include>${deployfile.name}</include>
 									</includes>
 								</resource>
 							</resources>
