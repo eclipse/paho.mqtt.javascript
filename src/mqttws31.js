@@ -1685,7 +1685,7 @@ Paho.MQTT = (function (global) {
 				connectOptions.keepAliveInterval = 60;
 
 			if (connectOptions.mqttVersion === undefined)
-				connectOptions.mqttVersion = 3;
+				connectOptions.mqttVersion = 4;
 
 			//Check that if password is set, so is username
 			if (connectOptions.password === undefined && connectOptions.userName !== undefined)
