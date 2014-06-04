@@ -963,7 +963,7 @@ Paho.MQTT = (function (global) {
 		    wsurl = uriParts.join(":");
 		}
 		this.connected = false;
-		this.socket = new WebSocket(wsurl, "mqttv3.1");
+		this.socket = new WebSocket(wsurl, ["mqtt","mqttv3.1"]);
 		this.socket.binaryType = 'arraybuffer';
 		
 		this.socket.onopen = scope(this._on_socket_open, this);
