@@ -507,7 +507,7 @@ Paho.MQTT = (function (global) {
 			case  MESSAGE_TYPE.SUBACK:
 				wireMessage.messageIdentifier = readUint16(input, pos);
 				pos += 2;
-				wireMessage.grantedQos = input[pos];	
+				wireMessage.grantedQos = input.subarray(pos, endPos);	
 				break;
 		
 			default:

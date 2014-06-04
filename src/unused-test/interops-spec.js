@@ -338,7 +338,7 @@ describe('InteropsTests', function() {
 
 		var subFailed = false;
 		var failSubscribe = function(response) {
-			if (response.grantedQos == 0x80) {
+			if (response.grantedQos.get(0) == 0x80) {
 				subFailed = true;
 			}
 		}
