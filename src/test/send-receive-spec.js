@@ -14,7 +14,7 @@ describe('SendReceive', function() {
     // Client wrapper - define a client wrapper to ease testing
 	//*************************************************************************
 	var MqttClient= function(clientId){
-	    var client = new Messaging.Client(testServer, testPort, testPath, clientId);
+	    var client = new Paho.MQTT.Client(testServer, testPort, testPath, clientId);
 		//states
 		var connected = false;
 	    var subscribed = false;
@@ -141,7 +141,7 @@ describe('SendReceive', function() {
 		//publish and verify
 		this.publish=function(topic,qos,payload){
 			runs(function() {
-				var message = new Messaging.Message(payload);
+				var message = new Paho.MQTT.Message(payload);
 				message.destinationName = topic;
 				message.qos=qos;
 				client.send(message); 

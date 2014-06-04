@@ -11,7 +11,7 @@ describe('LiveTakeOver', function() {
     // Client wrapper - define a client wrapper to ease testing
 	//*************************************************************************
 	var MqttClient= function(clientId){
-	    var client = new Messaging.Client(testServer, testPort, testPath, clientId);
+	    var client = new Paho.MQTT.Client(testServer, testPort, testPath, clientId);
 		//states
 		var connected = false;
 	    var subscribed = false;
@@ -140,7 +140,7 @@ describe('LiveTakeOver', function() {
 		//publish and verify
 		this.publish=function(topic,qos,payload){
 			runs(function() {
-				var message = new Messaging.Message(payload);
+				var message = new Paho.MQTT.Message(payload);
 				message.destinationName = topic;
 				message.qos=qos;
 				client.send(message); 
@@ -203,7 +203,7 @@ describe('LiveTakeOver', function() {
 		var payload="TakeOverPayload";
 		
 		//will msg
-		var willMessage= new Messaging.Message("will-payload");
+		var willMessage= new Paho.MQTT.Message("will-payload");
 	    willMessage.destinationName = "willTopic";
 	    willMessage.qos = 2;
 		willMessage.retained=true;

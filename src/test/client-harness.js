@@ -74,7 +74,7 @@ var connection = {
     "port" : "1883"
 };
 
-var broker = new Messaging.Client(connection.hostname, Number(connection.port), "clientId");
+var broker = new Paho.MQTT.Client(connection.hostname, Number(connection.port), "clientId");
 broker.onConnectionLost = onConnectionLost;
 broker.onMessageArrived = onMessageArrived;
 broker.connect({onSuccess:onConnect,onFailure : onConnectFailure});

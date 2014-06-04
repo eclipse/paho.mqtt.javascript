@@ -80,7 +80,7 @@ describe('BasicTest', function() {
 		disconnectError = null;
 		disconnectErrorMsg = null;
 		//if(!client){
-		//	client = new Messaging.Client(testServer, testPort, clientId);
+		//	client = new Paho.MQTT.Client(testServer, testPort, clientId);
 		//}
 	});
 	
@@ -91,7 +91,7 @@ describe('BasicTest', function() {
 	});
 	*/
 	it('it should create and connect and disconnect to a server.', function() {
-		var client = new Messaging.Client(testServer, testPort, testPath, genStr(clientId));
+		var client = new Paho.MQTT.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 
@@ -139,7 +139,7 @@ describe('BasicTest', function() {
 		var arrHosts = ['localhost',testServer,];
 		var arrPorts = [1883,testPort];
 		
-		var client = new Messaging.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
+		var client = new Paho.MQTT.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 		
@@ -168,7 +168,7 @@ describe('BasicTest', function() {
 	
 	it('it should publish and subscribe.',function(){
 		
-		var client = new Messaging.Client(testServer, testPort, testPath, genStr(clientId));
+		var client = new Paho.MQTT.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onMessageArrived = messageArrived;
 		client.onMessageDelivered = messageDelivered;
 		
@@ -197,7 +197,7 @@ describe('BasicTest', function() {
 			
 		console.log('Send and receive message...');
 		runs(function() {
-			var message = new Messaging.Message(strMessageSend);
+			var message = new Paho.MQTT.Message(strMessageSend);
 			message.destinationName = strTopic;
 			client.send(message); 
 		});
@@ -240,7 +240,7 @@ describe('BasicTest', function() {
 			strMessageReceived = '';
 			strTopicReceived = '';
 			
-			var message = new Messaging.Message(genStr(strMessageSend));
+			var message = new Paho.MQTT.Message(genStr(strMessageSend));
 			message.destinationName = strTopic;
 			client.send(message); 
 		})
@@ -267,7 +267,7 @@ describe('BasicTest', function() {
 	it('check message properties.',function(){
 		var strMsg = 'test Msg';
 		var strDes = '/test';
-		var message = new Messaging.Message(strMsg);
+		var message = new Paho.MQTT.Message(strMsg);
 		message.destinationName = strDes;
 		
 		console.log('Check default for message with payload.');
@@ -280,7 +280,7 @@ describe('BasicTest', function() {
 		
 		console.log('Check empty msg to throw error');
 		expect(function(){
-			var empMsg = new Messaging.Message();
+			var empMsg = new Paho.MQTT.Message();
 		}).toThrow();
 		
 		console.log('Check message qos');
@@ -326,7 +326,7 @@ describe('BasicTest', function() {
 		//dataView.setInt
 		console.log(dataView.getInt32(0).toString(16));
 		//var arrbufPayload = new ArrayBuffer
-		var msg = new Messaging.Message(buffer);
+		var msg = new Paho.MQTT.Message(buffer);
 		console.log(msg.payloadBytes,msg.payloadString);
 		*/
 	});

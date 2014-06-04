@@ -37,12 +37,12 @@
  * <p>
  * The API consists of two main objects:
  * <dl>
- * <dt><b>{@link Messaging.Client}</b></dt>
+ * <dt><b>{@link Paho.MQTT.Client}</b></dt>
  * <dd>This contains methods that provide the functionality of the API,
  * including provision of callbacks that notify the application when a message
  * arrives from or is delivered to the messaging server,
  * or when the status of its connection to the messaging server changes.</dd>
- * <dt><b>{@link Messaging.Message}</b></dt>
+ * <dt><b>{@link Paho.MQTT.Message}</b></dt>
  * <dd>This encapsulates the payload of the message along with various attributes
  * associated with its delivery, in particular the destination to which it has
  * been (or is about to be) sent.</dd>
@@ -55,7 +55,7 @@
  * Example:
  * 
  * <code><pre>
-client = new Messaging.Client(location.hostname, Number(location.port), "clientId");
+client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
 client.connect({onSuccess:onConnect});
@@ -64,7 +64,7 @@ function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
   client.subscribe("/World");
-  message = new Messaging.Message("Hello");
+  message = new Paho.MQTT.Message("Hello");
   message.destinationName = "/World";
   client.send(message); 
 };
@@ -77,10 +77,14 @@ function onMessageArrived(message) {
   client.disconnect(); 
 };	
  * </pre></code>
- * @namespace Messaging 
+ * @namespace Paho.MQTT 
  */
 
-Messaging = (function (global) {
+if (typeof Paho === "undefined") {
+	Paho = {};
+}
+
+Paho.MQTT = (function (global) {
 
 	// Private variables below, these are only visible inside the function closure
 	// which is used to define the module. 
@@ -482,7 +486,7 @@ Messaging = (function (global) {
 					pos += 2;
 				}
 				
-				var message = new Messaging.Message(input.subarray(pos, endPos));
+				var message = new Paho.MQTT.Message(input.subarray(pos, endPos));
 				if ((messageInfo & 0x01) == 0x01) 
 					message.retained = true;
 				if ((messageInfo & 0x08) == 0x08)
@@ -729,7 +733,7 @@ Messaging = (function (global) {
 	/*
 	 * Internal implementation of the Websockets MQTT V3.1 client.
 	 * 
-	 * @name Messaging.ClientImpl @constructor 
+	 * @name Paho.MQTT.ClientImpl @constructor 
 	 * @param {String} host the DNS nameof the webSocket host. 
 	 * @param {Number} port the port number for that host.
 	 * @param {String} clientId the MQ client identifier.
@@ -745,7 +749,7 @@ Messaging = (function (global) {
 		if (!("ArrayBuffer" in global && global["ArrayBuffer"] !== null)) {
 			throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		}
-		this._trace("Messaging.Client", uri, host, port, path, clientId);
+		this._trace("Paho.MQTT.Client", uri, host, port, path, clientId);
 
 		this.host = host;
 		this.port = port;
@@ -1046,7 +1050,7 @@ Messaging = (function (global) {
 				  hex = hex.substring(2, hex.length);
 				  byteStream[i++] = x;
 			  }
-			  var payloadMessage = new Messaging.Message(byteStream);
+			  var payloadMessage = new Paho.MQTT.Message(byteStream);
 			  
 			  payloadMessage.qos = storedMessage.payloadMessage.qos;
 			  payloadMessage.destinationName = storedMessage.payloadMessage.destinationName;
@@ -1428,8 +1432,18 @@ Messaging = (function (global) {
 					this.onConnectionLost({errorCode:errorCode, errorMessage:errorText});      	
 			} else {
 				// Otherwise we never had a connection, so indicate that the connect has failed.
-				if(this.connectOptions.onFailure)
+				if (this.connectOptions.mqttVersion === 4) {
+					this._trace("Failed to connect V4, dropping back to V3")
+					this.connectOptions.mqttVersion = 3;
+					if (this.connectOptions.uris) {
+						this.hostIndex = 0;
+						this._doConnect(this.connectOptions.uris[0]);  
+					} else {
+						this._doConnect(this.uri);
+					}	
+				} else if(this.connectOptions.onFailure) {
 					this.connectOptions.onFailure({invocationContext:this.connectOptions.invocationContext, errorCode:errorCode, errorMessage:errorText});
+				}
 			}
 		}
 	};
@@ -1467,7 +1481,7 @@ Messaging = (function (global) {
 	// ------------------------------------------------------------------------
 	
 	/** 
-	 * The JavaScript application communicates to the server using a {@link Messaging.Client} object. 
+	 * The JavaScript application communicates to the server using a {@link Paho.MQTT.Client} object. 
 	 * <p>
 	 * Most applications will create just one Client object and then call its connect() method,
 	 * however applications can create more than one Client object if they wish. 
@@ -1481,10 +1495,10 @@ Messaging = (function (global) {
 	 * of the script that made the invocation.
 	 * <p>
 	 * In contrast there are some callback functions, most notably <i>onMessageArrived</i>, 
-	 * that are defined on the {@link Messaging.Client} object.  
+	 * that are defined on the {@link Paho.MQTT.Client} object.  
 	 * These may get called multiple times, and aren't directly related to specific method invocations made by the client. 
 	 *
-	 * @name Messaging.Client    
+	 * @name Paho.MQTT.Client    
 	 * 
 	 * @constructor
 	 *  
@@ -1515,12 +1529,12 @@ Messaging = (function (global) {
 	 *                            and the message has been removed from persistent storage before this callback is invoked. 
 	 *                            Parameters passed to the onMessageDelivered callback are:
 	 *                            <ol>   
-	 *                            <li>{@link Messaging.Message} that was delivered.
+	 *                            <li>{@link Paho.MQTT.Message} that was delivered.
 	 *                            </ol>    
-	 * @property {function} onMessageArrived called when a message has arrived in this Messaging.client. 
+	 * @property {function} onMessageArrived called when a message has arrived in this Paho.MQTT.client. 
 	 *                            Parameters passed to the onMessageArrived callback are:
 	 *                            <ol>   
-	 *                            <li>{@link Messaging.Message} that has arrived.
+	 *                            <li>{@link Paho.MQTT.Message} that has arrived.
 	 *                            </ol>    
 	 */
 	var Client = function (host, port, path, clientId) {
@@ -1611,7 +1625,7 @@ Messaging = (function (global) {
 		/** 
 		 * Connect this Messaging client to its server. 
 		 * 
-		 * @name Messaging.Client#connect
+		 * @name Paho.MQTT.Client#connect
 		 * @function
 		 * @param {Object} connectOptions - attributes used with the connection. 
 		 * @param {number} connectOptions.timeout - If the connect has not succeeded within this 
@@ -1619,7 +1633,7 @@ Messaging = (function (global) {
 		 *                    The default is 30 seconds.
 		 * @param {string} connectOptions.userName - Authentication username for this connection.
 		 * @param {string} connectOptions.password - Authentication password for this connection.
-		 * @param {Messaging.Message} connectOptions.willMessage - sent by the server when the client
+		 * @param {Paho.MQTT.Message} connectOptions.willMessage - sent by the server when the client
 		 *                    disconnects abnormally.
 		 * @param {Number} connectOptions.keepAliveInterval - the server disconnects this client if
 		 *                    there is no activity for this number of seconds.
@@ -1742,7 +1756,7 @@ Messaging = (function (global) {
 		/** 
 		 * Subscribe for messages, request receipt of a copy of messages sent to the destinations described by the filter.
 		 * 
-		 * @name Messaging.Client#subscribe
+		 * @name Paho.MQTT.Client#subscribe
 		 * @function
 		 * @param {string} filter describing the destinations to receive messages from.
 		 * <br>
@@ -1792,7 +1806,7 @@ Messaging = (function (global) {
 		/**
 		 * Unsubscribe for messages, stop receiving messages sent to destinations described by the filter.
 		 * 
-		 * @name Messaging.Client#unsubscribe
+		 * @name Paho.MQTT.Client#unsubscribe
 		 * @function
 		 * @param {string} filter - describing the destinations to receive messages from.
 		 * @param {object} unsubscribeOptions - used to control the subscription
@@ -1834,9 +1848,9 @@ Messaging = (function (global) {
 		/**
 		 * Send a message to the consumers of the destination in the Message.
 		 * 
-		 * @name Messaging.Client#send
+		 * @name Paho.MQTT.Client#send
 		 * @function 
-		 * @param {Messaging.Message} message to send.
+		 * @param {Paho.MQTT.Message} message to send.
 		 
 		 * @throws {InvalidState} if the client is not connected.
 		 */   
@@ -1852,7 +1866,7 @@ Messaging = (function (global) {
 		/** 
 		 * Normal disconnect of this Messaging client from its server.
 		 * 
-		 * @name Messaging.Client#disconnect
+		 * @name Paho.MQTT.Client#disconnect
 		 * @function
 		 * @throws {InvalidState} if the client is already disconnected.     
 		 */
@@ -1863,7 +1877,7 @@ Messaging = (function (global) {
 		/** 
 		 * Get the contents of the trace log.
 		 * 
-		 * @name Messaging.Client#getTraceLog
+		 * @name Paho.MQTT.Client#getTraceLog
 		 * @function
 		 * @return {Object[]} tracebuffer containing the time ordered trace records.
 		 */
@@ -1874,7 +1888,7 @@ Messaging = (function (global) {
 		/** 
 		 * Start tracing.
 		 * 
-		 * @name Messaging.Client#startTrace
+		 * @name Paho.MQTT.Client#startTrace
 		 * @function
 		 */
 		this.startTrace = function () {
@@ -1884,7 +1898,7 @@ Messaging = (function (global) {
 		/** 
 		 * Stop tracing.
 		 * 
-		 * @name Messaging.Client#stopTrace
+		 * @name Paho.MQTT.Client#stopTrace
 		 * @function
 		 */
 		this.stopTrace = function () {
@@ -1924,7 +1938,7 @@ Messaging = (function (global) {
 	 * <p>
 	 * All attributes may be null, which implies the default values.
 	 * 
-	 * @name Messaging.Message
+	 * @name Paho.MQTT.Message
 	 * @constructor
 	 * @param {String|ArrayBuffer} payload The message data to be sent.
 	 * <p>

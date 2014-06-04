@@ -28,7 +28,7 @@ describe('client', function() {
 	};
 
 	it('should create a new client', function() {
-		client = new Messaging.Client(testServer, testPort, testPath, "testclientid");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid");
 		client.onMessageArrived = messageArrived;
 
 		expect(client).not.toBe(null);
@@ -67,7 +67,7 @@ describe('client', function() {
 
 	it('should send and receive a message', function() {
 		runs(function() {
-			message = new Messaging.Message("Hello");
+			message = new Paho.MQTT.Message("Hello");
 			message.destinationName = "/World";
 			client.send(message); 
 		})
