@@ -128,14 +128,14 @@ Paho.MQTT = (function (global) {
 	 * @private 
 	 */
 	var validate = function(obj, keys) {
-		for(key in obj) {
+		for (var key in obj) {
 			if (obj.hasOwnProperty(key)) {       		
 				if (keys.hasOwnProperty(key)) {
 					if (typeof obj[key] !== keys[key])
 					   throw new Error(format(ERROR.INVALID_TYPE, [typeof obj[key], key]));
 				} else {	
 					var errorStr = "Unknown property, " + key + ". Valid properties are:";
-					for (key in keys)
+					for (var key in keys)
 						if (keys.hasOwnProperty(key))
 							errorStr = errorStr+" "+key;
 					throw new Error(errorStr);
@@ -248,7 +248,7 @@ Paho.MQTT = (function (global) {
 	 */
 	var WireMessage = function (type, options) { 	
 		this.type = type;
-		for(name in options) {
+		for (var name in options) {
 			if (options.hasOwnProperty(name)) {
 				this[name] = options[name];
 			}
@@ -790,7 +790,7 @@ Paho.MQTT = (function (global) {
 		
 
 		// Load the local state, if any, from the saved version, only restore state relevant to this client.   	
-		for(key in localStorage)
+		for (var key in localStorage)
 			if (   key.indexOf("Sent:"+this._localKey) == 0  		    
 				|| key.indexOf("Received:"+this._localKey) == 0)
 			this.restore(key);
@@ -937,9 +937,9 @@ Paho.MQTT = (function (global) {
 		if ( this._traceBuffer !== null ) {
 			this._trace("Client.getTraceLog", new Date());
 			this._trace("Client.getTraceLog in flight messages", this._sentMessages.length);
-			for (key in this._sentMessages)
+			for (var key in this._sentMessages)
 				this._trace("_sentMessages ",key, this._sentMessages[key]);
-			for (key in this._receivedMessages)
+			for (var key in this._receivedMessages)
 				this._trace("_receivedMessages ",key, this._receivedMessages[key]);
 			
 			return this._traceBuffer;
@@ -1183,13 +1183,13 @@ Paho.MQTT = (function (global) {
 				
 				// If we have started using clean session then clear up the local state.
 				if (this.connectOptions.cleanSession) {
-					for (key in this._sentMessages) {	    		
+					for (var key in this._sentMessages) {	    		
 						var sentMessage = this._sentMessages[key];
 						localStorage.removeItem("Sent:"+this._localKey+sentMessage.messageIdentifier);
 					}
 					this._sentMessages = {};
 
-					for (key in this._receivedMessages) {
+					for (var key in this._receivedMessages) {
 						var receivedMessage = this._receivedMessages[key];
 						localStorage.removeItem("Received:"+this._localKey+receivedMessage.messageIdentifier);
 					}
