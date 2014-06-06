@@ -469,7 +469,9 @@ Paho.MQTT = (function (global) {
 		var wireMessage = new WireMessage(type);
 		switch(type) {
 			case MESSAGE_TYPE.CONNACK:
-				wireMessage.topicNameCompressionResponse = input[pos++];
+				var connectAcknowledgeFlags = input[pos++];
+				if (connectAcknowledgeFlags & 0x01)
+					wireMessage.sessionPresent = true;
 				wireMessage.returnCode = input[pos++];
 				break;
 			
