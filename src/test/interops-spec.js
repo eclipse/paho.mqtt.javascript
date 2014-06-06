@@ -82,7 +82,7 @@ describe('InteropsTests', function() {
 	};
 
 	it('should connect, disconnect, subscribe, publish and receive messages', function() {
-		client = new Messaging.Client(testServer, testPort, testPath, "testclientid-js");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js");
 		client.onMessageArrived = callbacks.onMessageArrived;
 		client.onMessageDelivered = callbacks.onMessageDelivered;
 
@@ -130,7 +130,7 @@ describe('InteropsTests', function() {
 
 		runs(function (){
 			for (var i = 0; i < 3; i++) {
-				var message = new Messaging.Message("qos " + i);
+				var message = new Paho.MQTT.Message("qos " + i);
 				message.destinationName = topics[0];
 				message.qos=i;
 				client.send(message);
@@ -160,7 +160,7 @@ describe('InteropsTests', function() {
 
 	it('should connect, attempt to connect again and fail', function() {
 		var exception = false;
-		client = new Messaging.Client(testServer, testPort, testPath, "testclientid-js");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js");
 		expect(client).not.toBe(null);
 
 		runs(function() {
@@ -189,7 +189,7 @@ describe('InteropsTests', function() {
 	});
 
 	it('should connect successfully with a 0 length clientid with cleansession true', function() {
-		client = new Messaging.Client(testServer, testPort, testPath, "");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "");
 		expect(client).not.toBe(null);
 
 		runs(function() {
@@ -218,7 +218,7 @@ describe('InteropsTests', function() {
 		var failCallback = function(err) {
 			connectFail = true;
 		}
-		client = new Messaging.Client(testServer, testPort, testPath, "");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "");
 		expect(client).not.toBe(null);
 
 		runs(function() {
@@ -233,7 +233,7 @@ describe('InteropsTests', function() {
 	});
 
 	it('should queue up messages on the server for offline clients', function() {
-		client = new Messaging.Client(testServer, testPort, testPath, "testclientid-js");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js");
 		client.onMessageArrived = callbacks.onMessageArrived;
 
 		expect(client).not.toBe(null);
@@ -268,7 +268,7 @@ describe('InteropsTests', function() {
 			expect(client.isConnected()).toBe(false);
 		});
 
-		bClient = new Messaging.Client(testServer, testPort, testPath, "testclientid-js-b");
+		bClient = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js-b");
 		bClient.onMessageDelivered = callbacks.onMessageDelivered;
 
 		runs(function() {
@@ -283,7 +283,7 @@ describe('InteropsTests', function() {
 
 		runs(function (){
 			for (var i = 0; i < 3; i++) {
-				var message = new Messaging.Message("qos " + i);
+				var message = new Paho.MQTT.Message("qos " + i);
 				message.destinationName = topics[i+1];
 				message.qos=i;
 				bClient.send(message);
@@ -333,7 +333,7 @@ describe('InteropsTests', function() {
 	});
 
 	it('should get a return code for failure to subscribe', function() {
-		client = new Messaging.Client(testServer, testPort, testPath, "testclientid-js");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js");
 		client.onMessageArrived = callbacks.onMessageArrived;
 
 		var subFailed = false;

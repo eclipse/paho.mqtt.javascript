@@ -16,15 +16,15 @@
 
 
 // Only expose a single object name in the global namespace.
-// Everything must go through this module. Global Messaging module
+// Everything must go through this module. Global Paho.MQTT module
 // only has a single public function, client, which returns
-// a Messaging client object given connection details.
+// a Paho.MQTT client object given connection details.
  
 /**
  * Send and receive messages using web browsers.
  * <p> 
- * This programming interface lets a JavaScript client application use the MQTT V3.1 protocol to 
- * connect to an MQTT-supporting messaging server.
+ * This programming interface lets a JavaScript client application use the MQTT V3.1 or
+ * V3.1.1 protocol to connect to an MQTT-supporting messaging server.
  *  
  * The function supported includes:
  * <ol>
@@ -1434,7 +1434,7 @@ Paho.MQTT = (function (global) {
 					this.onConnectionLost({errorCode:errorCode, errorMessage:errorText});      	
 			} else {
 				// Otherwise we never had a connection, so indicate that the connect has failed.
-				if (this.connectOptions.mqttVersion === 4) {
+				if (this.connectOptions.mqttVersion === 4 && this.connectOptions.mqttVersionExplicit === false) {
 					this._trace("Failed to connect V4, dropping back to V3")
 					this.connectOptions.mqttVersion = 3;
 					if (this.connectOptions.uris) {
@@ -1686,8 +1686,12 @@ Paho.MQTT = (function (global) {
 			if (connectOptions.keepAliveInterval === undefined)
 				connectOptions.keepAliveInterval = 60;
 
-			if (connectOptions.mqttVersion === undefined)
+			if (connectOptions.mqttVersion === undefined) {
+				connectOptions.mqttVersionExplicit = false;
 				connectOptions.mqttVersion = 4;
+			} else {
+				connectOptions.mqttVersionExplicit = true;
+			}
 
 			//Check that if password is set, so is username
 			if (connectOptions.password === undefined && connectOptions.userName !== undefined)
