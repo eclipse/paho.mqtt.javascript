@@ -22,6 +22,8 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
     "dojo/parser",
 	"dojo/ready",
 	"dojo/topic",
+	"dojo/dom",
+	'dojo/dom-construct',
 	
 	"dijit/form/Button",
 	"dijit/form/CheckBox",
@@ -46,7 +48,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 	
 	
 	
-],function(declare,resource,lang,event,on,parser,ready,topic,
+],function(declare,resource,lang,event,on,parser,ready,topic,dom,domCreate,
 			Button,CheckBox,TextBox,Textarea,Select,ComboBox,Toolbar,
 			ContentPane,BorderContainer,TabContainer,
 			Memory,Observable,ObjectStoreModel,Tree,Menu,MenuItem,InlineEditBox,
@@ -117,7 +119,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 				menu.destroyRecursive();
 			}
 			
-			dojo.byId('navConn').appendChild(dojo.create('div',{id:'connTree'}));
+			dom.byId('navConn').appendChild(domCreate.create('div',{id:'connTree'}));
 			var that = this;
 			var connections = this._getCookie();
 			console.log('get conn form cookie',connections);
@@ -137,7 +139,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 				);
 			}
 			//newConnection link
-			dojo.connect(dojo.byId('aNewConn'),'onclick',dojo.hitch(this,function(){
+			dojo.connect(dom.byId('aNewConn'),'onclick',dojo.hitch(this,function(){
 				console.log('click new conn');
 				this.showCreateConnBox();
 			}));
@@ -388,7 +390,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 			}else{
 				this.TAB_CONN[objConn.name] = new TabConn({
 					parentPaneId : parentTabId,
-					objConn:objConn,
+					objConn:objConn
 					//onClose : dojo.hitch(this,function(){
 					//	console.log('closing the tab');
 					//	this.closeAConnTab(objConn.name);
