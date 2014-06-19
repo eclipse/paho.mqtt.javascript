@@ -140,7 +140,6 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 			}
 			//newConnection link
 			dojo.connect(dom.byId('aNewConn'),'onclick',dojo.hitch(this,function(){
-				console.log('click new conn');
 				this.showCreateConnBox();
 			}));
 			
@@ -199,7 +198,6 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 					return;
 				},
 				onBlur : function(evt){
-					console.log('tree onbulr');
 				},
 				onDblClick : lang.hitch(this,function(item,node,evt){
 					console.debug('doublue click tree item',item);
@@ -233,7 +231,6 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 				iconClass : "dijitIconEditTask",
 				onClick : function(){
 					var tn = dijit.byNode(this.getParent().currentTarget);
-					console.log('menu click for item',tn);
 					var treeItem = tn.item;
 					
 					var domNode = tn.domNode;
@@ -267,7 +264,6 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 							self._renameTreeItem(self.navConnStore,treeItem,editBox.value);
 						}),
 						onBlur : function(evt){
-							console.log('onbulr');
 						},
 						onCancel : function(evt) {
 							editBox.destroy();
