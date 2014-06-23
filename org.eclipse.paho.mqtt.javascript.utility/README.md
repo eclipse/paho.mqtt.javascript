@@ -14,7 +14,7 @@ How to deploy:
 
 How to work
 1: Directly open index.html in browser.
-2: If can not open directly in a browser, please put the folder 'mqttUtility' in Web Server. This is due to more restrictive handling of HTTP requests from local file system than from a web server.You can disable web security when starting the browser. 
+2: If can not open directly in a browser, please put the folder of utility in Web Server. This is due to more restrictive handling of HTTP requests from local file system than from a web server.You can disable web security when starting the browser. 
    e.g. Chrome:
    'chrome --disable-web-security ' or 'chrome --allow-file-access-from-files'
 

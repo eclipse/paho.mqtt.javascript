@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="copyright" content="© Copyright IBM Corporation 2014" />
+<meta name="DC.Rights.Owner" content="© Copyright IBM Corporation 2014" />
+<meta name="security" content="public" />
+<meta name="Robots" content="index,follow" />
+<meta name="DC.Type" content="concept" />
+<meta name="DC.Title" content="Using the iOS MQTT client sample" />
+<meta name="abstract" content="It is easy to use the sample that is supplied with the iOS MQTT for Objective C client." />
+<meta name="Description" content="It is easy to use the sample that is supplied with the iOS MQTT for Objective C client." />
+<meta name="DC.Date" scheme="iso8601" content="2014-04-02" />
+<meta name="DC.Format" content="XHTML" />
+<meta name="DC.Identifier" content="iOSSample01" />
+<meta name="DC.Language" content="en-us" />
+<meta name="IBM.Country" content="ZZ" />
+<!-- Licensed Materials - Property of IBM --><!-- US Government Users Restricted Rights --><!-- Use, duplication or disclosure restricted by --><!-- GSA ADP Schedule Contract with IBM Corp. -->
+<link rel="stylesheet" type="text/css" href="resource/ibmdita.css" /><title>Using the JS MQTT client utility</title>
+
+</head>
+
+
+<body role="main" id="iOSSample01">
+<h1 style="font-family: Helvetica,Arial,sans-serif;" class="title topictitle1">Using the JS MQTT client utility</h1>
+<div style="font-family: Helvetica,Arial,sans-serif;" class="body conbody">
+<p class="shortdesc">It is easy to use the utility that is
+supplied with the
+MQTT for JS client.</p>
+<div class="p">The utility helps you to get your
+JS client to connect to an MQTT server, subscribe to a topic, receive a message,
+publish to a topic, view lastest received messages and add the message to a log. 
+The utility can also hold many connections to the server.
+Getting the utility up and running is very straighforward.
+<h2 style="font-family: Helvetica,Arial,sans-serif;" class="title topictitle2">How to deploy</h2>
+<ol class="ol">
+<li class="li">Download open source libararies of Dojo toolkit and Gridx.
+	<ul >
+		<li class='li'>Download Dojo toolkit from <a href='http://download.dojotoolkit.org/'>http://download.dojotoolkit.org/</a>. Choose the version above 1.8.3.</li>
+		<li class='li'>Download Gridx from <a href=' https://github.com/oria/gridx/releases'>https://github.com/oria/gridx/releases</a>. Choose the version above 1.2.</li>
+	</ul>
+<li class='li'>Copy the MQTT JavaScript library <strong>mqttws31.js</strong> to the folder <strong>js/</strong></li>
+<li class='li'>Put <strong class='ph b'>dojo, dijit, dojox </strong>and<strong class='ph b'> gridx</strong> to the folder <strong class='ph b'>js/</strong>, namely at the same level as <strong>mqttui</strong>, e.g:</li>
+	<ul>
+		<li>dojo</li>
+		<li>dijit</li>
+		<li> dojox</li>
+		<li>gridx</li>
+		<li>mqttui</li>
+		<li>mqttws31.js</li>
+		<li>dojoConfig.js</li>
+	</ul>
+</li>
+<li class="li"> Directly open <strong>index.html</strong> in browser.</li>
+<li class="li"> If can not open directly in a browser, please put the folder of utility in Web Server. This is due to more restrictive handling of HTTP requests from local file system than from a web server.You can disable web security when starting the browser.</li>
+<ul class='ul'> e.g. Chrome:<br>
+   <strong class='ph b'>chrome --disable-web-security </strong> or <strong class='ph b'>chrome --allow-file-access-from-files</strong>
+</ul>
+</ol>
+<h2 style="font-family: Helvetica,Arial,sans-serif;" class="title topictitle2">How to work</h2>
+<ol class="ol">
+
+<li class='li'>Click <strong>connection1</strong> to open the connection. It is a demo of a connection to the server.
+	<p><img class='image' src='resource/mqttimages/firstpage.png'></p>
+</li>
+<li class='li'>Click <strong>New Connection</strong> to create a new connection. The connection metadata is persisted in cookie.
+	<p><img class='image' src='resource/mqttimages/newConn.png'></p>
+</li>
+<li class='ul'>Right click <strong>newConn</strong> to rename or delete.
+	<p><img class='image' src='resource/mqttimages/renameConn.png'></p>
+</li>
+<li class='li'>Use one connection to connect, subscribe, and publish.
+	<ol class='ol' type='a'>
+		<li class='li'>Connect to a server. 
+			<ol class='ol' type='i'>
+				<li>Input client id, host and port or use server URI to connect. If connect successfully, the red icon on the left of <strong>Client ID</strong> will turn to green.
+					<p><img class='image' src='resource/mqttimages/connect.png'></p>
+					<p><img class='image' src='resource/mqttimages/connectSu.png'></p>
+				</li>
+				<li>Click the <strong>Options</strong> tab to set connect options include basic options, HA,and LWT.
+					<p><img class='image' src='resource/mqttimages/option1.png'></p>
+					<p><img class='image' src='resource/mqttimages/option2.png'></p>
+					<p><img class='image' src='resource/mqttimages/option3.png'></p>
+				</li>
+			</ol>
+		</li>
+		<li class='li'>Subscribe to a topic.
+			<p><img class='image' src='resource/mqttimages/subscribe.png'></p>
+		</li>
+		<li class='li'>Publish to a topic. 
+			<p><img class='image' src='resource/mqttimages/publish.png'></p>
+		</li>
+		<li class='li'>Receive a message. Click the <strong>Last Message</strong> tab to view recevied messages.
+			<p><img class='image' src='resource/mqttimages/received.png'></p>
+		</li>
+		<li class='li'>Click the <strong>Histroy</strong> tab. It includes actions, event and messages.
+			<p><img class='image' src='resource/mqttimages/histroy.png'></p>
+		</li>
+		<li class='li'>View message detail. Double click message item in <strong>Last Message</strong> or <strong>Histroy</strong>.
+			<p><img class='image' src='resource/mqttimages/viewmessage.png'></p>
+		</li>
+		<li class='li'>Disconnect the connection. Click the <strong>Disconnect</strong> button.
+			<p><img class='image' src='resource/mqttimages/disconnect.png'></p>
+		</li>
+	</ol>
+	
+</li>
+</ol>
+
+<h2 style="font-family: Helvetica,Arial,sans-serif;" class="title topictitle2">Development suggestion</h2>
+<p>If you want to develp your own apps using MQTT JS library, you can refer to the file of <strong>mqttui/TabConn.js</strong>   </p>
+</div>
+</div>
+</body></html>
