@@ -509,7 +509,7 @@ Paho.MQTT = (function (global) {
 			case  MESSAGE_TYPE.SUBACK:
 				wireMessage.messageIdentifier = readUint16(input, pos);
 				pos += 2;
-				wireMessage.grantedQos = input.subarray(pos, endPos);	
+				wireMessage.returnCode = input.subarray(pos, endPos);	
 				break;
 		
 			default:
@@ -862,8 +862,13 @@ Paho.MQTT = (function (global) {
 			wireMessage.requestedQos = [0];
 		
 		if (subscribeOptions.onSuccess) {
-			wireMessage.callback = function(grantedQos) {subscribeOptions.onSuccess({invocationContext:subscribeOptions.invocationContext,grantedQos:grantedQos});};
+			wireMessage.onSuccess = function(grantedQos) {subscribeOptions.onSuccess({invocationContext:subscribeOptions.invocationContext,grantedQos:grantedQos});};
 		}
+
+		if (subscribeOptions.onFailure) {
+			wireMessage.onFailure = function(errorCode) {subscribeOptions.onFailure({invocationContext:subscribeOptions.invocationContext,errorCode:errorCode});};
+		}
+
 		if (subscribeOptions.timeout) {
 			wireMessage.timeOut = new Timeout(this, window, subscribeOptions.timeout, subscribeOptions.onFailure
 					, [{invocationContext:subscribeOptions.invocationContext, 
@@ -1119,7 +1124,7 @@ Paho.MQTT = (function (global) {
 	 * Called when the underlying websocket has been opened.
 	 * @ignore
 	 */
-	ClientImpl.prototype._on_socket_open = function () {        
+	ClientImpl.prototype._on_socket_open = function () {      
 		// Create the CONNECT message object.
 		var wireMessage = new WireMessage(MESSAGE_TYPE.CONNECT, this.connectOptions); 
 		wireMessage.clientId = this.clientId;
@@ -1288,8 +1293,13 @@ Paho.MQTT = (function (global) {
 				if (sentMessage) {
 					if(sentMessage.timeOut)
 						sentMessage.timeOut.cancel();
-					if (sentMessage.callback) {
-						sentMessage.callback(wireMessage.grantedQos);
+					wireMessage.returnCode.indexOf = Array.prototype.indexOf;
+					if (wireMessage.returnCode.indexOf(0x80) !== -1) {
+						if (sentMessage.onFailure) {
+							sentMessage.onFailure(wireMessage.returnCode);
+						} 
+					} else if (sentMessage.onSuccess) {
+						sentMessage.onSuccess(wireMessage.returnCode);
 					}
 					delete this._sentMessages[wireMessage.messageIdentifier];
 				}
@@ -1685,6 +1695,10 @@ Paho.MQTT = (function (global) {
 			// If no keep alive interval is set, assume 60 seconds.
 			if (connectOptions.keepAliveInterval === undefined)
 				connectOptions.keepAliveInterval = 60;
+
+			if (connectOptions.mqttVersion > 4 || connectOptions.mqttVersion < 3) {
+				throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.mqttVersion, "connectOptions.mqttVersion"]));
+			}
 
 			if (connectOptions.mqttVersion === undefined) {
 				connectOptions.mqttVersionExplicit = false;

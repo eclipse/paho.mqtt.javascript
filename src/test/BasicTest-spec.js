@@ -52,7 +52,7 @@ describe('BasicTest', function() {
 	
 	function onSubscribeFailure(err) {
 		subscribed = false;
-		console.log("subscrib fail. ErrorCode: %s, ErrorMsg: %s",err.errCode,err.errorMessage);
+		console.log("subscribe fail. ErrorCode: %s, ErrorMsg: %s",err.errCode,err.errorMessage);
 	};
 	function onUnsubscribeSuccess() {
 		subscribed = false;
@@ -132,12 +132,40 @@ describe('BasicTest', function() {
 		});
 	
 	});
+
+	it('it should fallback from MQTTv3.1.1 to v3.1',function(){
+		var client = new Paho.MQTT.Client(testServer, testPort, testPath, genStr(clientId));
+		client.onConnectionLost = onConnectionLost;
+		expect(client).not.toBe(null);
+
+		console.log('Connecting...');
+		runs(function() {
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,timeout:1});
+		});
+		waitsFor(function() {
+			return connected;
+		}, "the client should connect", 4000);
+		runs(function() {
+			expect(connected).toBe(true);
+		});
+		
+		console.log('Disconnecting...');
+		runs(function() {
+			client.disconnect();
+		});
+		waitsFor(function() {
+			return (connected==false);
+		}, "the client should disconnect", 2000);
+		runs(function() {
+			expect(connected).not.toBe(true);
+		});
+	});
 	
 	it('it should connect to a list of server(HA connection).',function(){
 		var defaultServer = testServer;
 		var defaultPort = testPort;
 		var arrHosts = ['localhost',testServer,];
-		var arrPorts = [1883,testPort];
+		var arrPorts = [2000,testPort];
 		
 		var client = new Paho.MQTT.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;

@@ -1,9 +1,9 @@
 var settings = require('./client-harness');
 
-var testServer = settings.server;
-var testPort = settings.port;
-var testPath = settings.path;
-var testMqttVersion = settings.mqttVersion;
+var testServer = settings.interopServer;
+var testPort = settings.interopPort;
+var testPath = settings.interopPath;
+var testMqttVersion = 4;
 
 var genStr = function(str){
 	var time = new Date();
@@ -12,7 +12,7 @@ var genStr = function(str){
 
 var topics = ["TopicA", "TopicA/B", "Topic/C", "TopicA/C", "/TopicA"];
 var wildtopics = ["TopicA/+", "+/C", "#", "/#", "/+", "+/+", "TopicA/#"];
-var nosubscribetopics = ["nosubscribe",];
+var nosubscribetopics = ["test/nosubscribe",];
 
 describe('InteropsTests', function() {
 	var clientId = this.description;
@@ -338,7 +338,7 @@ describe('InteropsTests', function() {
 
 		var subFailed = false;
 		var failSubscribe = function(response) {
-			if (response.grantedQos.get(0) == 0x80) {
+			if (response.errorCode.get(0) == 0x80) {
 				subFailed = true;
 			}
 		}
@@ -356,7 +356,7 @@ describe('InteropsTests', function() {
 		});
 
 		runs(function() {
-			client.subscribe(nosubscribetopics[0], {qos:2, onSuccess: failSubscribe});
+			client.subscribe(nosubscribetopics[0], {qos:2, onFailure: failSubscribe});
 		});
 		waitsFor(function() {
 			return subFailed;
