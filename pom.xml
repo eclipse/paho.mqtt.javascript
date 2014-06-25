@@ -13,11 +13,11 @@
 		</license>
 	</licenses>
 	<properties>
-		<paho.version>0.9.0-SNAPSHOT</paho.version>
+		<paho.version>1.0.0</paho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<build.level>${maven.build.timestamp}</build.level>
 		<download.location>/home/data/httpd/download.eclipse.org/paho/releases/${paho.version}</download.location>
-		<deployfile.name>${project.artifactId}-incubation-${paho.version}.zip</deployfile.name>
+		<deployfile.name>${project.artifactId}-${paho.version}</deployfile.name>
 	</properties>
 	<scm>
 		<url>http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git</url>
