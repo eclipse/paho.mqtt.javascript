@@ -63,10 +63,13 @@ function ensureValue(prop,value) {
 }
 
 module.exports = {
-    server: ensureValue("${test.server}","messagesight.demos.ibm.com"),
+    server: ensureValue("${test.server}","127.0.0.1"),
     port: parseInt(ensureValue("${test.server.port}","1883")),
-    path: ensureValue("${test.server.path}","/ws")
-    
+    path: ensureValue("${test.server.path}","/mqtt"),
+    mqttVersion: parseInt(ensureValue("${test.server.mqttVersion}","3")),
+    interopServer: ensureValue("${test.interopServer}","127.0.0.1"),
+    interopPort: parseInt(ensureValue("${test.interopPort}","1883")),
+    interopPath: ensureValue("${test.interopPath}","/mqtt")
 }
 /*
 var connection = {
@@ -74,7 +77,7 @@ var connection = {
     "port" : "1883"
 };
 
-var broker = new Messaging.Client(connection.hostname, Number(connection.port), "clientId");
+var broker = new Paho.MQTT.Client(connection.hostname, Number(connection.port), "clientId");
 broker.onConnectionLost = onConnectionLost;
 broker.onMessageArrived = onMessageArrived;
 broker.connect({onSuccess:onConnect,onFailure : onConnectFailure});

@@ -3,6 +3,7 @@ var settings = require('./client-harness');
 var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
+var testMqttVersion = settings.mqttVersion;
 
 describe('client', function() {
 	var client = this;
@@ -27,7 +28,7 @@ describe('client', function() {
 	};
 
 	it('should create a new client', function() {
-		client = new Messaging.Client(testServer, testPort, testPath, "testclientid");
+		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid");
 		client.onMessageArrived = messageArrived;
 
 		expect(client).not.toBe(null);
@@ -38,7 +39,7 @@ describe('client', function() {
 
 	it('should connect to a server', function() {
 		runs(function() {
-			client.connect({onSuccess:onConnect});
+			client.connect({onSuccess:onConnect, mqttVersion:testMqttVersion});
 		});
 
 		waitsFor(function() {
@@ -66,7 +67,7 @@ describe('client', function() {
 
 	it('should send and receive a message', function() {
 		runs(function() {
-			message = new Messaging.Message("Hello");
+			message = new Paho.MQTT.Message("Hello");
 			message.destinationName = "/World";
 			client.send(message); 
 		})
