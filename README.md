@@ -7,6 +7,10 @@ to an MQTT server.
 The source of the client is in:
 
     src/mqttws31.js
+    
+## Compatibility
+
+The client should work in any browser fully supporting WebSockets, [](http://caniuse.com/websockets) lists browser compatibility.
 
 ## Building
 
