@@ -816,6 +816,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype.onConnectionLost;
 	ClientImpl.prototype.onMessageDelivered;
 	ClientImpl.prototype.onMessageArrived;
+	ClientImpl.prototype.traceFunction;
 	ClientImpl.prototype._msg_queue = null;
 	ClientImpl.prototype._connectTimeout;
 	/* The sendPinger monitors how long we allow before we send data to prove to the server that we are alive. */
@@ -1466,6 +1467,18 @@ Paho.MQTT = (function (global) {
 
 	/** @ignore */
 	ClientImpl.prototype._trace = function () {
+		// Pass trace message back to client's callback function
+		if (this.traceFunction) {
+			for (i in arguments)
+			{	
+				if (typeof arguments[i] !== "undefined")
+					arguments[i] = JSON.stringify(arguments[i]);
+			}
+			var record = Array.prototype.slice.call(arguments).join("");
+			this.traceFunction ({severity: "Debug", message: record	});
+		}
+
+		//buffer style trace
 		if ( this._traceBuffer !== null ) {  
 			for (var i = 0, max = arguments.length; i < max; i++) {
 				if ( this._traceBuffer.length == this._MAX_TRACE_ENTRIES ) {    
@@ -1636,6 +1649,15 @@ Paho.MQTT = (function (global) {
 				client.onMessageArrived = newOnMessageArrived;
 			else 
 				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
+		};
+
+		this._getTrace = function() { return client.traceFunction; };
+		this._setTrace = function(trace) {
+			if(typeof trace === "function"){
+				client.traceFunction = trace;
+			}else{
+				throw new Error(format(ERROR.INVALID_TYPE, [typeof trace, "onTrace"]));
+			}
 		};
 		
 		/** 
@@ -1954,7 +1976,11 @@ Paho.MQTT = (function (global) {
 		set onMessageDelivered(newOnMessageDelivered) { this._setOnMessageDelivered(newOnMessageDelivered); },
 		
 		get onMessageArrived() { return this._getOnMessageArrived(); },
-		set onMessageArrived(newOnMessageArrived) { this._setOnMessageArrived(newOnMessageArrived); }
+		set onMessageArrived(newOnMessageArrived) { this._setOnMessageArrived(newOnMessageArrived); },
+
+		get trace() { return this._getTrace(); },
+		set trace(newTraceFunction) { this._setTrace(newTraceFunction); }	
+
 	};
 	
 	/** 
