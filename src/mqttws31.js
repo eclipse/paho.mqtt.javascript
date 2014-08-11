@@ -169,7 +169,7 @@ Paho.MQTT = (function (global) {
 		SUBSCRIBE_TIMEOUT: {code:2, text:"AMQJS0002E Subscribe timed out."}, 
 		UNSUBSCRIBE_TIMEOUT: {code:3, text:"AMQJS0003E Unsubscribe timed out."},
 		PING_TIMEOUT: {code:4, text:"AMQJS0004E Ping timed out."},
-		INTERNAL_ERROR: {code:5, text:"AMQJS0005E Internal error."},
+		INTERNAL_ERROR: {code:5, text:"AMQJS0005E Internal error. Error Message: {0}, Stack trace: {1}"},
 		CONNACK_RETURNCODE: {code:6, text:"AMQJS0006E Bad Connack return code:{0} {1}."},
 		SOCKET_ERROR: {code:7, text:"AMQJS0007E Socket error:{0}."},
 		SOCKET_CLOSE: {code:8, text:"AMQJS0008I Socket closed."},
@@ -1176,7 +1176,7 @@ Paho.MQTT = (function (global) {
 		    	this.receiveBuffer = byteArray.subarray(offset);
 		    }
 		} catch (error) {
-			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message]));
+			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,error.stack.toString()]));
 			return;
 		}
 		return messages;
@@ -1337,7 +1337,7 @@ Paho.MQTT = (function (global) {
 				this._disconnected(ERROR.INVALID_MQTT_MESSAGE_TYPE.code , format(ERROR.INVALID_MQTT_MESSAGE_TYPE, [wireMessage.type]));
 			};
 		} catch (error) {
-			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message]));
+			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,error.stack.toString()]));
 			return;
 		}
 	};
