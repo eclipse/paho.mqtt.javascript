@@ -153,7 +153,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 		},
 		
 		startup : function(){
-			console.log('startup');
 
 			//title pane do not load its widget automatically 
 			parser.parse(dom.byId('forLoad-'+this.strConn)).then(dojo.hitch(this,function(instances){
@@ -179,7 +178,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 		
 		_bindEvent : function(){
 			//Connect button
-			console.log('btnConn-'+this.strConn,dijit.byId('btnConn-'+this.strConn));
 			dijit.byId('btnConn-'+this.strConn).on('click',dojo.hitch(this,function(){
 				this.mqttConnect();
 				console.log('client connect');
@@ -208,25 +206,21 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			dijit.byId('connSubTopic-'+this.strConn).on('change',dojo.hitch(this,function(value){
 				var item = this.subTopicHis.get(value); // id = name(value)
 				if(item && isNumber(item.qos)){
-					console.log('change,',value,item);
 					dijit.byId('connSubQos-'+this.strConn).setValue(item.qos);
 				}
 			}));
 			dijit.byId('connPubTopic-'+this.strConn).on('change',dojo.hitch(this,function(value){
 				var item = this.pubTopicHis.get(value); // id = name(value)
 				if(item && isNumber(item.qos)){
-					console.log('change,',value,item);
 					dijit.byId('connPubQos-'+this.strConn).setValue(item.qos);
 				}
 				if(item && isBoolean(item.retained)){
-					console.log('change,',value,item);
 					dijit.byId('connIsRetain-'+this.strConn).setChecked(item.retained);
 				}
 				
 			}));
 			//Radio for uri or host&port
 			dijit.byId('radioUri-'+this.strConn).on('change',dojo.hitch(this,function(){
-				console.log('radio uri changed');
 				if(dijit.byId('radioUri-'+this.strConn).checked){
 					dijit.byId('connHost-'+this.strConn).setDisabled(true);
 					dijit.byId('connPort-'+this.strConn).setDisabled(true);
@@ -240,7 +234,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			//OPTIONS
 			//using HA
 			dijit.byId('connIsHA-'+this.strConn).on('change',dojo.hitch(this,function(){
-				console.log('check box HA changed');
 				if(dijit.byId('connIsHA-'+this.strConn).checked){
 					dijit.byId("titlepaneHA-"+this.strConn).set('open',true);
 				}else{
@@ -249,7 +242,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			}));
 			//using LWT
 			dijit.byId('connIsLWT-'+this.strConn).on('change',dojo.hitch(this,function(){
-				console.log('check box LWT changed');
 				if(dijit.byId('connIsLWT-'+this.strConn).checked){
 					dijit.byId("titlepaneLWT-"+this.strConn).set('open',true);
 				}else{
@@ -258,7 +250,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			}));
 			//using login
 			dijit.byId('connIsLogin-'+this.strConn).on('change',dojo.hitch(this,function(){
-				console.log('check box login changed');
 				if(dijit.byId('connIsLogin-'+this.strConn).checked){
 					dijit.byId('connUser-'+this.strConn).setDisabled(false);
 					dijit.byId('connPasswd-'+this.strConn).setDisabled(false);
@@ -308,7 +299,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				}
 			}
 			//Subscription title pane
-			console.log(dijit.byId('connSubTopic-'+this.strConn));
 			dijit.byId('connSubTopic-'+this.strConn).set('store',this.subTopicHis);
 			
 			//Publication title pane
@@ -317,7 +307,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			//Conenction options
 			var options = objConn.options;
 			if(!options || isEmpty(options)){
-				console.log('empyt opitons');
 				return;
 			}
 			if(options.cleanSession && isBoolean(options.cleanSession)){
@@ -338,7 +327,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				&& options.arrHA.hosts.length === options.arrHA.ports.length)
 			{
 				var num = options.arrHA.hosts.length;
-				console.log('....set ha grid',num);
 				for(var i=0; i<num; i++){
 					this.HAMem.add({
 						choose : true,
@@ -405,7 +393,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 					this.options.arrHA.ports.push(selected[i].port);
 				}
 			}
-			console.log('connection options',this.options);
+			console.log('connection options:',this.options);
 			//persist to files;
 			
 		},
@@ -472,7 +460,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				}
 			});
 			//add content
-			console.log('view msg',msg);
 			this.createMsgItem('Event',msg.event,'tbViewMsg');
 			this.createMsgItem('Topic',msg.topic,'tbViewMsg');
 			this.createMsgItem('Message',msg.message,'tbViewMsg');
@@ -540,7 +527,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				iconClass: 'buttonDelete gray',
 				onClick: dojo.hitch(this,function() {
 					this.clearLastMsg();
-					console.log('clear last msgs');
 				})
 			}));
 			
@@ -591,7 +577,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				iconClass: 'buttonAdd gray',
 				onClick: dojo.hitch(this,function() {
 					//this.clearLastMsg();
-					console.log('add a ha');
 					this.addAHA({
 						choose: true,
 						host:'',
@@ -900,7 +885,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				retained : DEFAULT_TB_STRING,
 				time : dojo.date.locale.format(new Date(), {formatLength: "short"})
 			});
-			console.log('ddddd');
 			var item = this.subTopicHis.get(this.currSubTopic.id);
 			if(!item || item.qos!==this.currSubTopic.qos){
 				this.subTopicHis.put(this.currSubTopic);
@@ -977,7 +961,6 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				retained : msg.retained
 			}
 			console.log("[client]:%s ,[delivered message]: %s, [qos]:%s",this.clientId,msg);
-			console.log(msg,item);
 			this.pubTopicHis.put(item);
 		   //add a history
 		},
