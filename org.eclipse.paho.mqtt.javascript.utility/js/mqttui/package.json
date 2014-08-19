@@ -1,9 +1,9 @@
 {
-  "name": "monitor",
+  "name": "Mqtt Web Utility",
   
-  "description": "IBM WebSphere MQ Managerment",
-  "version": 0.1,
-  "maintainers":[{"name":"IBM"}],
-  "contributors":[{"name":"IBM"}],
+  "description": "Mqtt Web Utility",
+  "version": 1.0,
+  "maintainers":[{"name":"Paho"}],
+  "contributors":[{"name":"Paho"}],
   "dojoBuild": "mqttui.profile.js"
 }

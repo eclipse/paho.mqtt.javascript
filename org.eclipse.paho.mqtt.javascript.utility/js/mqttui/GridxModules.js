@@ -20,8 +20,10 @@ define([
 	'gridx/modules/VirtualVScroller',
 	//'idx/gridx/modules/Sort',
 	'gridx/modules/select/Row',
-	'gridx/modules/pagination/Pagination',
-	'gridx/modules/filter/Filter',
+//	'gridx/modules/pagination/Pagination', //gridx 1.8 module path
+//	'gridx/modules/filter/Filter', 		//gridx 1.8 module path
+	'gridx/modules/Pagination',
+	'gridx/modules/Filter',
 	'gridx/modules/CellWidget',
 	'gridx/modules/RowHeader',
 	'gridx/modules/IndirectSelect',

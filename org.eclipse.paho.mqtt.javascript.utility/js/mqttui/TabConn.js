@@ -20,6 +20,8 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 						"dojo/topic",
 						"dojo/query",
 						"dojo/date/locale",
+						"dojo/dom",
+						"dojo/dom-construct",
 	
 						"dijit/form/Button",
 						"dijit/form/CheckBox",
@@ -42,7 +44,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 						//templates
 						"dojo/text!./templates/connectionTabTpl.html"
 						
-], function(declare, resource, lang, parser, topic,query, locale,
+], function(declare, resource, lang, parser, topic,query, locale,dom,domCreate,
 			Button,	CheckBox,TextBox,Textarea,Select,ComboBox,Dialog,
 			ContentPane,BorderContainer,TabContainer,
 			Grid, Cache, gridModules, Memory,Observable,
@@ -154,7 +156,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			console.log('startup');
 
 			//title pane do not load its widget automatically 
-			parser.parse(dojo.byId('forLoad-'+this.strConn)).then(dojo.hitch(this,function(instances){
+			parser.parse(dom.byId('forLoad-'+this.strConn)).then(dojo.hitch(this,function(instances){
 				this._bindEvent();
 				this._setData(this.objConn);
 			}));
@@ -353,7 +355,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				dijit.byId('connLwtTopic-'+this.strConn).setValue(options.msgLWT.topic);
 				dijit.byId('connLwtQos-'+this.strConn).setValue(options.msgLWT.qos);
 				dijit.byId('connLwtIsRetain-'+this.strConn).setValue(options.msgLWT.retained);
-				dojo.byId('connLwtMsg-'+this.strConn).value = options.msgLWT.msg;
+				dom.byId('connLwtMsg-'+this.strConn).value = options.msgLWT.msg;
 			}
 			if(options.isLogin && isBoolean(options.isLogin)){
 				dijit.byId('connIsLogin-'+this.strConn).setChecked(options.isLogin);
@@ -391,7 +393,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				this.options.msgLWT.topic = dijit.byId('connLwtTopic-'+this.strConn).getValue();
 				this.options.msgLWT.qos = parseInt(dijit.byId('connLwtQos-'+this.strConn).value);
 				this.options.msgLWT.retained = dijit.byId('connLwtIsRetain-'+this.strConn).checked;
-				this.options.msgLWT.msg = dojo.byId('connLwtMsg-'+this.strConn).value.trim();
+				this.options.msgLWT.msg = dom.byId('connLwtMsg-'+this.strConn).value.trim();
 			}
 			if(this.options.isHA){
 				this.options.arrHA = {};
@@ -484,23 +486,23 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			if(!isString(key) || value===undefined || value===DEFAULT_TB_STRING){
 				return false;
 			}
-			var tr = dojo.create('tr');
-			var domLabel = dojo.create('td',{'class':'label2'});
+			var tr = domCreate.create('tr');
+			var domLabel = domCreate.create('td',{'class':'label2'});
 			
-			domLabel.appendChild(dojo.create('label',{'class':'label-font','for':'viewMsg-'+key,innerHTML:key}));
+			domLabel.appendChild(domCreate.create('label',{'class':'label-font','for':'viewMsg-'+key,innerHTML:key}));
 			tr.appendChild(domLabel);
 			
 			if('message' === key.toLowerCase()){
-				var domValue = dojo.create('td',{'colspan':6,'class':'widget2'});
-				domValue.appendChild(dojo.create('textarea',{id:'viewMsg-'+key,readonly:true,value:value,style:'width:96%'}));
+				var domValue = domCreate.create('td',{'colspan':6,'class':'widget2'});
+				domValue.appendChild(domCreate.create('textarea',{id:'viewMsg-'+key,readonly:true,value:value,style:'width:96%'}));
 				tr.appendChild(domValue);
-				dojo.byId(domTb).appendChild(tr);
+				dom.byId(domTb).appendChild(tr);
 			}else{
-				var domValue = dojo.create('td',{'class':'widget2'});
-				domValue.appendChild(dojo.create('div',{id:'viewMsg-'+key}));
+				var domValue = domCreate.create('td',{'class':'widget2'});
+				domValue.appendChild(domCreate.create('div',{id:'viewMsg-'+key}));
 				tr.appendChild(domValue);
 				
-				dojo.byId(domTb).appendChild(tr);
+				dom.byId(domTb).appendChild(tr);
 				
 				var text = new TextBox({
 					value : value,
@@ -674,24 +676,24 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			}
 			if(this.options.isHA){
 				try{	
-					this.mqttClient = new Messaging.Client(this.host,this.port,this.clientId);
+					this.mqttClient = new Paho.MQTT.Client(this.host,this.port,this.clientId);
 				}catch(e){
 					dojoAlert(e);
-					console.log('create Messaging.Client error:',e);
+					console.log('create Paho.MQTT.Client error:',e);
 				}
 			}else if(this.isUri){
 				try{
-					this.mqttClient = new Messaging.Client(this.uri,this.clientId);
+					this.mqttClient = new Paho.MQTT.Client(this.uri,this.clientId);
 				}catch(e){
 					dojoAlert(e);
-					console.log('create Messaging.Client error:',e);
+					console.log('create Paho.MQTT.Client error:',e);
 				}	
 			}else{
 				try{
-					this.mqttClient = new Messaging.Client(this.host,this.port,this.clientId);
+					this.mqttClient = new Paho.MQTT.Client(this.host,this.port,this.clientId);
 				}catch(e){
 					dojoAlert(e);
-					console.log('create Messaging.Client error:',e);
+					console.log('create Paho.MQTT.Client error:',e);
 				}	
 			}
 			
@@ -709,7 +711,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 			};
 			var msgLwt = null;
 			if(this.options.isLWT){
-				msgLwt = new Messaging.Message(this.options.msgLWT.msg);
+				msgLwt = new Paho.MQTT.Message(this.options.msgLWT.msg);
 				msgLwt.destinationName = this.options.msgLWT.topic;
 				msgLwt.qos = this.options.msgLWT.qos;
 				msgLwt.retained = this.options.msgLWT.retained;
@@ -789,7 +791,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 		mqttPub : function(){
 			var topic = dijit.byId('connPubTopic-'+this.strConn).getValue();
 			var isHex = dijit.byId('connIsMsgHex-'+this.strConn).checked;
-			var strMsg = dojo.byId('connPubMsg-'+this.strConn).value.trim();
+			var strMsg = dom.byId('connPubMsg-'+this.strConn).value.trim();
 			var qos = parseInt(dijit.byId('connPubQos-'+this.strConn).value);
 			var isRetained = dijit.byId('connIsRetain-'+this.strConn).checked;
 			this.currPubTopic = {
@@ -798,7 +800,7 @@ define("mqttui/TabConn", ["dojo/_base/declare",
 				qos : qos,
 				retained : isRetained
 			};
-			var message = new Messaging.Message(strMsg);
+			var message = new Paho.MQTT.Message(strMsg);
 			message.destinationName = topic;
 			message.qos=qos;
 			message.retained = isRetained;
