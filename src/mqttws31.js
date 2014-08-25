@@ -1896,17 +1896,49 @@ Paho.MQTT = (function (global) {
 		 * 
 		 * @name Paho.MQTT.Client#send
 		 * @function 
-		 * @param {Paho.MQTT.Message} message to send.
-		 
+		 * @param {string|Paho.MQTT.Message} topic - <b>mandatory</b> The name of the destination to which the message is to be sent. 
+		 * 					   - If it is the only parameter, used as Paho.MQTT.Message object.
+		 * @param {String|ArrayBuffer} payload - The message data to be sent. 
+		 * @param {number} qos The Quality of Service used to deliver the message.
+		 * 		<dl>
+		 * 			<dt>0 Best effort (default).
+		 *     			<dt>1 At least once.
+		 *     			<dt>2 Exactly once.     
+		 * 		</dl>
+		 * @param {Boolean} retained If true, the message is to be retained by the server and delivered 
+		 *                     to both current and future subscriptions.
+		 *                     If false the server only delivers the message to current subscribers, this is the default for new Messages. 
+		 *                     A received message has the retained boolean set to true if the message was published 
+		 *                     with the retained boolean set to true
+		 *                     and the subscrption was made after the message has been published. 
 		 * @throws {InvalidState} if the client is not connected.
 		 */   
-		this.send = function (message) {       	
-			if (!(message instanceof Message))
-				throw new Error("Invalid argument:"+typeof message);
-			if (typeof message.destinationName === "undefined")
-				throw new Error("Invalid parameter Message.destinationName:"+message.destinationName);
-		   
-			client.send(message);   
+		this.send = function (topic,payload,qos,retained) {   
+			var message ;  
+			
+			if(arguments.length == 0){
+				throw new Error("Invalid argument."+"length");
+
+			}else if(arguments.length == 1) {
+
+				if (!(topic instanceof Message) && (typeof topic !== "string"))
+					throw new Error("Invalid argument:"+ typeof topic);
+
+				message = topic;
+				if (typeof message.destinationName === "undefined")
+					throw new Error(format(ERROR.INVALID_ARGUMENT,[message.destinationName,"Message.destinationName"]));
+				client.send(message); 
+
+			}else {
+				//parameter checking in Message object 
+				message = new Message(payload);
+				message.destinationName = topic;
+				if(arguments.length >= 3)
+					message.qos = qos;
+				if(arguments.length >= 4)
+					message.retained = retained;
+				client.send(message); 
+			}
 		};
 		
 		/** 
