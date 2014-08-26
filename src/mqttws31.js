@@ -204,6 +204,7 @@ Paho.MQTT = (function (global) {
 	var format = function(error, substitutions) {
 		var text = error.text;
 		if (substitutions) {
+		  var field,start;
 		  for (var i=0; i<substitutions.length; i++) {
 			field = "{"+i+"}";
 			start = text.indexOf(field);
@@ -264,8 +265,9 @@ Paho.MQTT = (function (global) {
 		 * of all the component parts
 		 */
 
-		remLength = 0;
-		topicStrLength = new Array();
+		var remLength = 0;
+		var topicStrLength = new Array();
+		var destinationNameLength = 0;
 		
 		// if the message contains a messageIdentifier then we need two bytes for that
 		if (this.messageIdentifier != undefined)
@@ -593,7 +595,7 @@ Paho.MQTT = (function (global) {
 			
 			// Check for a surrogate pair.
 			if (0xD800 <= charCode && charCode <= 0xDBFF) {
-				lowCharCode = input.charCodeAt(++i);
+				var lowCharCode = input.charCodeAt(++i);
 				if (isNaN(lowCharCode)) {
 					throw new Error(format(ERROR.MALFORMED_UNICODE, [charCode, lowCharCode]));
 				}
@@ -1004,7 +1006,7 @@ Paho.MQTT = (function (global) {
 	};
 
 	ClientImpl.prototype.store = function(prefix, wireMessage) {
-		storedMessage = {type:wireMessage.type, messageIdentifier:wireMessage.messageIdentifier, version:1};
+		var storedMessage = {type:wireMessage.type, messageIdentifier:wireMessage.messageIdentifier, version:1};
 		
 		switch(wireMessage.type) {
 		  case MESSAGE_TYPE.PUBLISH:
@@ -1279,10 +1281,8 @@ Paho.MQTT = (function (global) {
 					delete this._receivedMessages[wireMessage.messageIdentifier];
 				}
 				// Always flow PubComp, we may have previously flowed PubComp but the server lost it and restarted.
-				pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier:wireMessage.messageIdentifier});
+				var pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier:wireMessage.messageIdentifier});
 				this._schedule_message(pubCompMessage);                    
-					
-				
 				break;
 
 			case MESSAGE_TYPE.PUBCOMP: 
@@ -1469,7 +1469,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype._trace = function () {
 		// Pass trace message back to client's callback function
 		if (this.traceFunction) {
-			for (i in arguments)
+			for (var i in arguments)
 			{	
 				if (typeof arguments[i] !== "undefined")
 					arguments[i] = JSON.stringify(arguments[i]);
