@@ -22,6 +22,8 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
     "dojo/parser",
 	"dojo/ready",
 	"dojo/topic",
+	"dojo/dom",
+	'dojo/dom-construct',
 	
 	"dijit/form/Button",
 	"dijit/form/CheckBox",
@@ -46,7 +48,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 	
 	
 	
-],function(declare,resource,lang,event,on,parser,ready,topic,
+],function(declare,resource,lang,event,on,parser,ready,topic,dom,domCreate,
 			Button,CheckBox,TextBox,Textarea,Select,ComboBox,Toolbar,
 			ContentPane,BorderContainer,TabContainer,
 			Memory,Observable,ObjectStoreModel,Tree,Menu,MenuItem,InlineEditBox,
@@ -117,7 +119,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 				menu.destroyRecursive();
 			}
 			
-			dojo.byId('navConn').appendChild(dojo.create('div',{id:'connTree'}));
+			dom.byId('navConn').appendChild(domCreate.create('div',{id:'connTree'}));
 			var that = this;
 			var connections = this._getCookie();
 			console.log('get conn form cookie',connections);
@@ -137,8 +139,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 				);
 			}
 			//newConnection link
-			dojo.connect(dojo.byId('aNewConn'),'onclick',dojo.hitch(this,function(){
-				console.log('click new conn');
+			dojo.connect(dom.byId('aNewConn'),'onclick',dojo.hitch(this,function(){
 				this.showCreateConnBox();
 			}));
 			
@@ -197,7 +198,6 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 					return;
 				},
 				onBlur : function(evt){
-					console.log('tree onbulr');
 				},
 				onDblClick : lang.hitch(this,function(item,node,evt){
 					console.debug('doublue click tree item',item);
@@ -231,7 +231,6 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 				iconClass : "dijitIconEditTask",
 				onClick : function(){
 					var tn = dijit.byNode(this.getParent().currentTarget);
-					console.log('menu click for item',tn);
 					var treeItem = tn.item;
 					
 					var domNode = tn.domNode;
@@ -265,7 +264,6 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 							self._renameTreeItem(self.navConnStore,treeItem,editBox.value);
 						}),
 						onBlur : function(evt){
-							console.log('onbulr');
 						},
 						onCancel : function(evt) {
 							editBox.destroy();
@@ -388,7 +386,7 @@ define("mqttui/ControllerConnection",["dojo/_base/declare",
 			}else{
 				this.TAB_CONN[objConn.name] = new TabConn({
 					parentPaneId : parentTabId,
-					objConn:objConn,
+					objConn:objConn
 					//onClose : dojo.hitch(this,function(){
 					//	console.log('closing the tab');
 					//	this.closeAConnTab(objConn.name);

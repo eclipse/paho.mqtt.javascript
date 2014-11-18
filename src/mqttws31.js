@@ -169,7 +169,7 @@ Paho.MQTT = (function (global) {
 		SUBSCRIBE_TIMEOUT: {code:2, text:"AMQJS0002E Subscribe timed out."}, 
 		UNSUBSCRIBE_TIMEOUT: {code:3, text:"AMQJS0003E Unsubscribe timed out."},
 		PING_TIMEOUT: {code:4, text:"AMQJS0004E Ping timed out."},
-		INTERNAL_ERROR: {code:5, text:"AMQJS0005E Internal error."},
+		INTERNAL_ERROR: {code:5, text:"AMQJS0005E Internal error. Error Message: {0}, Stack trace: {1}"},
 		CONNACK_RETURNCODE: {code:6, text:"AMQJS0006E Bad Connack return code:{0} {1}."},
 		SOCKET_ERROR: {code:7, text:"AMQJS0007E Socket error:{0}."},
 		SOCKET_CLOSE: {code:8, text:"AMQJS0008I Socket closed."},
@@ -204,6 +204,7 @@ Paho.MQTT = (function (global) {
 	var format = function(error, substitutions) {
 		var text = error.text;
 		if (substitutions) {
+		  var field,start;
 		  for (var i=0; i<substitutions.length; i++) {
 			field = "{"+i+"}";
 			start = text.indexOf(field);
@@ -264,8 +265,9 @@ Paho.MQTT = (function (global) {
 		 * of all the component parts
 		 */
 
-		remLength = 0;
-		topicStrLength = new Array();
+		var remLength = 0;
+		var topicStrLength = new Array();
+		var destinationNameLength = 0;
 		
 		// if the message contains a messageIdentifier then we need two bytes for that
 		if (this.messageIdentifier != undefined)
@@ -593,7 +595,7 @@ Paho.MQTT = (function (global) {
 			
 			// Check for a surrogate pair.
 			if (0xD800 <= charCode && charCode <= 0xDBFF) {
-				lowCharCode = input.charCodeAt(++i);
+				var lowCharCode = input.charCodeAt(++i);
 				if (isNaN(lowCharCode)) {
 					throw new Error(format(ERROR.MALFORMED_UNICODE, [charCode, lowCharCode]));
 				}
@@ -816,6 +818,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype.onConnectionLost;
 	ClientImpl.prototype.onMessageDelivered;
 	ClientImpl.prototype.onMessageArrived;
+	ClientImpl.prototype.traceFunction;
 	ClientImpl.prototype._msg_queue = null;
 	ClientImpl.prototype._connectTimeout;
 	/* The sendPinger monitors how long we allow before we send data to prove to the server that we are alive. */
@@ -970,7 +973,11 @@ Paho.MQTT = (function (global) {
 		    wsurl = uriParts.join(":");
 		}
 		this.connected = false;
-		this.socket = new WebSocket(wsurl, ["mqtt","mqttv3.1"]);
+		if (this.connectOptions.mqttVersion < 4) {
+			this.socket = new WebSocket(wsurl, ["mqttv3.1"]);
+		} else {
+			this.socket = new WebSocket(wsurl, ["mqtt"]);
+		}
 		this.socket.binaryType = 'arraybuffer';
 		
 		this.socket.onopen = scope(this._on_socket_open, this);
@@ -999,7 +1006,7 @@ Paho.MQTT = (function (global) {
 	};
 
 	ClientImpl.prototype.store = function(prefix, wireMessage) {
-		storedMessage = {type:wireMessage.type, messageIdentifier:wireMessage.messageIdentifier, version:1};
+		var storedMessage = {type:wireMessage.type, messageIdentifier:wireMessage.messageIdentifier, version:1};
 		
 		switch(wireMessage.type) {
 		  case MESSAGE_TYPE.PUBLISH:
@@ -1171,7 +1178,7 @@ Paho.MQTT = (function (global) {
 		    	this.receiveBuffer = byteArray.subarray(offset);
 		    }
 		} catch (error) {
-			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message]));
+			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,error.stack.toString()]));
 			return;
 		}
 		return messages;
@@ -1274,10 +1281,8 @@ Paho.MQTT = (function (global) {
 					delete this._receivedMessages[wireMessage.messageIdentifier];
 				}
 				// Always flow PubComp, we may have previously flowed PubComp but the server lost it and restarted.
-				pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier:wireMessage.messageIdentifier});
+				var pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier:wireMessage.messageIdentifier});
 				this._schedule_message(pubCompMessage);                    
-					
-				
 				break;
 
 			case MESSAGE_TYPE.PUBCOMP: 
@@ -1332,7 +1337,7 @@ Paho.MQTT = (function (global) {
 				this._disconnected(ERROR.INVALID_MQTT_MESSAGE_TYPE.code , format(ERROR.INVALID_MQTT_MESSAGE_TYPE, [wireMessage.type]));
 			};
 		} catch (error) {
-			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message]));
+			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,error.stack.toString()]));
 			return;
 		}
 	};
@@ -1462,6 +1467,18 @@ Paho.MQTT = (function (global) {
 
 	/** @ignore */
 	ClientImpl.prototype._trace = function () {
+		// Pass trace message back to client's callback function
+		if (this.traceFunction) {
+			for (var i in arguments)
+			{	
+				if (typeof arguments[i] !== "undefined")
+					arguments[i] = JSON.stringify(arguments[i]);
+			}
+			var record = Array.prototype.slice.call(arguments).join("");
+			this.traceFunction ({severity: "Debug", message: record	});
+		}
+
+		//buffer style trace
 		if ( this._traceBuffer !== null ) {  
 			for (var i = 0, max = arguments.length; i < max; i++) {
 				if ( this._traceBuffer.length == this._MAX_TRACE_ENTRIES ) {    
@@ -1632,6 +1649,15 @@ Paho.MQTT = (function (global) {
 				client.onMessageArrived = newOnMessageArrived;
 			else 
 				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
+		};
+
+		this._getTrace = function() { return client.traceFunction; };
+		this._setTrace = function(trace) {
+			if(typeof trace === "function"){
+				client.traceFunction = trace;
+			}else{
+				throw new Error(format(ERROR.INVALID_TYPE, [typeof trace, "onTrace"]));
+			}
 		};
 		
 		/** 
@@ -1870,17 +1896,49 @@ Paho.MQTT = (function (global) {
 		 * 
 		 * @name Paho.MQTT.Client#send
 		 * @function 
-		 * @param {Paho.MQTT.Message} message to send.
-		 
+		 * @param {string|Paho.MQTT.Message} topic - <b>mandatory</b> The name of the destination to which the message is to be sent. 
+		 * 					   - If it is the only parameter, used as Paho.MQTT.Message object.
+		 * @param {String|ArrayBuffer} payload - The message data to be sent. 
+		 * @param {number} qos The Quality of Service used to deliver the message.
+		 * 		<dl>
+		 * 			<dt>0 Best effort (default).
+		 *     			<dt>1 At least once.
+		 *     			<dt>2 Exactly once.     
+		 * 		</dl>
+		 * @param {Boolean} retained If true, the message is to be retained by the server and delivered 
+		 *                     to both current and future subscriptions.
+		 *                     If false the server only delivers the message to current subscribers, this is the default for new Messages. 
+		 *                     A received message has the retained boolean set to true if the message was published 
+		 *                     with the retained boolean set to true
+		 *                     and the subscrption was made after the message has been published. 
 		 * @throws {InvalidState} if the client is not connected.
 		 */   
-		this.send = function (message) {       	
-			if (!(message instanceof Message))
-				throw new Error("Invalid argument:"+typeof message);
-			if (typeof message.destinationName === "undefined")
-				throw new Error("Invalid parameter Message.destinationName:"+message.destinationName);
-		   
-			client.send(message);   
+		this.send = function (topic,payload,qos,retained) {   
+			var message ;  
+			
+			if(arguments.length == 0){
+				throw new Error("Invalid argument."+"length");
+
+			}else if(arguments.length == 1) {
+
+				if (!(topic instanceof Message) && (typeof topic !== "string"))
+					throw new Error("Invalid argument:"+ typeof topic);
+
+				message = topic;
+				if (typeof message.destinationName === "undefined")
+					throw new Error(format(ERROR.INVALID_ARGUMENT,[message.destinationName,"Message.destinationName"]));
+				client.send(message); 
+
+			}else {
+				//parameter checking in Message object 
+				message = new Message(payload);
+				message.destinationName = topic;
+				if(arguments.length >= 3)
+					message.qos = qos;
+				if(arguments.length >= 4)
+					message.retained = retained;
+				client.send(message); 
+			}
 		};
 		
 		/** 
@@ -1950,7 +2008,11 @@ Paho.MQTT = (function (global) {
 		set onMessageDelivered(newOnMessageDelivered) { this._setOnMessageDelivered(newOnMessageDelivered); },
 		
 		get onMessageArrived() { return this._getOnMessageArrived(); },
-		set onMessageArrived(newOnMessageArrived) { this._setOnMessageArrived(newOnMessageArrived); }
+		set onMessageArrived(newOnMessageArrived) { this._setOnMessageArrived(newOnMessageArrived); },
+
+		get trace() { return this._getTrace(); },
+		set trace(newTraceFunction) { this._setTrace(newTraceFunction); }	
+
 	};
 	
 	/** 

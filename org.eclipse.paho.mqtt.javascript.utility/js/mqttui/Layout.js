@@ -18,18 +18,19 @@ define("mqttui/Layout",[
 		"dojo/_base/declare",
 		"dojo/i18n!mqttui/nls/resource",
 		"dojo/_base/lang", 
+		"dojo/dom",
+		'dojo/dom-construct',
 		"dijit/layout/StackContainer", 
 		"dijit/layout/ContentPane",
 		"dijit/layout/AccordionContainer", 
 		"dijit/layout/BorderContainer",
 		"dijit/layout/TabContainer",
-		
 		'dijit/form/Button',
 		'dijit/form/TextBox',
 		'dijit/form/Form',
 		"dojo/text!./templates/introduction.html"
 
-	],  function(declare, resource,  lang,  
+	],  function(declare, resource,  lang, dom,domCreate,
 				StackContainer, ContentPane,AccordionContainer,BorderContainer,
 				TabContainer,Button,TextBox,Form,intrTpl){
 	
@@ -82,12 +83,12 @@ define("mqttui/Layout",[
 					splitter : true
 				});
 			
-				var domLeft = dojo.create('div');
+				var domLeft = domCreate.create('div');
 			
 			//	domLeft.appendChild(dojo.create('div',{'"class"':'straight-line'}));
-				domLeft.appendChild(dojo.create('div',{'id':'navConn'}));
-				domLeft.appendChild(dojo.create('h3',{innerText:'&nbsp'}));
-				domLeft.appendChild(dojo.create('h3',{innerText:'&nbsp'}));
+				domLeft.appendChild(domCreate.create('div',{'id':'navConn'}));
+				domLeft.appendChild(domCreate.create('h3',{innerText:'&nbsp'}));
+				domLeft.appendChild(domCreate.create('h3',{innerText:'&nbsp'}));
 				
 			
 				var leftPane = new ContentPane({
@@ -137,7 +138,7 @@ define("mqttui/Layout",[
 				//	splitter : 'toggle',
 					style : 'height:125px;padding-top:5px'
 				});
-				var divFoot = dojo.create('div',{
+				var divFoot = domCreate.create('div',{
 					'class':'footer',
 					innerHTML : "<div style='text-align:center;margin:0' >" + resource.layout.copyright + "</div>"
 				});

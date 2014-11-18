@@ -1,0 +1,264 @@
+.unresolved { background-color: #9be; }
+.noTemplate { background-color: #fe2; }
+
+.toc {font-size: small; }
+
+body { color: black; background-color: white; }
+.base { background-color: #ffffff; }
+.breadcrumb { font-size : smaller;}
+dt.prereq { margin-left : 20px;}
+.hierarchy { display: block; border-style: solid; padding-left: 3px; border-width: 2px; padding-right: 3px; border-color: #aaa;}
+
+.nested0 {margin-top: 1em;}
+
+.p {margin-top: 1em;}
+
+.tableborder { margin-top: 1em; margin-bottom: 1em; }
+.tablenoborder { margin-top: 1em; margin-bottom: 1em; }
+caption { text-align: left; font-style: italic; }
+.simpletable { margin-top: 1em; margin-bottom: 1em; }
+.simpletableborder { margin-top: 1em; margin-bottom: 1em; }
+.simpletablenoborder { margin-top: 1em; margin-bottom: 1em; }
+.choicetableborder { margin-top: 1em; margin-bottom: 1em; }
+.choicetablenoborder { margin-top: 1em; margin-bottom: 1em; }
+/*.cellrowborder { border-right: solid 1pt; border-bottom: solid 1pt }
+.row-nocellborder { border-right: hidden; border-bottom: solid 1pt }
+.cell-norowborder { border-bottom: hidden; border-right: solid 1pt }*/
+/* Unable to turn border back on, without setting a size, which breaks some tables */
+.row-nocellborder { border-right: hidden; }
+.cell-norowborder { border-bottom: hidden;}
+.nocellnorowborder { border-right: hidden; border-bottom: hidden; }
+.nocellborder { border-right: hidden; }
+.norowborder { border-bottom: hidden; }
+
+div.qualifstart { padding: 1px 5px 5px 5px; border-top: solid; border-left: solid; border-right: solid; border-width: thin; font-weight: bold; margin-top: 2px; margin-bottom: 2px; text-align: center; }
+div.qualifend { padding: 5px 5px 1px 5px; border-bottom: solid; border-left: solid; border-right: solid; border-width: thin; font-weight: bold; margin-bottom: 2px; text-align: center; }
+
+dt.qualifstart { padding: 1px 5px 5px 5px; border-top: solid; border-left: solid; border-right: solid; border-width: thin; font-weight: bold; margin-top: 2px; margin-bottom: 2px; text-align: center; }
+dt.qualifend { padding: 5px 5px 1px 5px; border-bottom: solid; border-left: solid; border-right: solid; border-width: thin; font-weight: bold; margin-bottom: 2px; text-align: center; }
+
+.figcap { font-style: italic; }
+.figdesc { font-style: normal; }
+
+.fignone {margin-top: 1em;}
+.figborder { border-style: solid; padding-left : 3px; border-width : 2px; padding-right : 3px; margin-top: 1em; border-color : #aaa;}
+.figsides { border-left : 2px solid; padding-left : 3px; border-right : 2px solid; padding-right : 3px; margin-top: 1em; border-color : #aaa;}
+.figtop { border-top : 2px solid; margin-top: 1em; border-color : #aaa;}
+.figbottom { border-bottom : 2px solid; border-color : #aaa;}
+.figtopbot { border-top : 2px solid; border-bottom : 2px solid; margin-top: 1em; border-color : #aaa;}
+
+.synnone {margin-top: 1em;}
+.synborder { border-style: solid; padding-left : 3px; border-width : 2px; padding-right : 3px; margin-top: 1em; border-color : #aaa;}
+.synsides { border-left : 2px solid; padding-left : 3px; border-right : 2px solid; padding-right : 3px; margin-top: 1em; border-color : #aaa;}
+.syntop { border-top : 2px solid; margin-top: 1em; border-color : #aaa;}
+.synbottom { border-bottom : 2px solid; border-color : #aaa;}
+.syntopbot { border-top : 2px solid; border-bottom : 2px solid; margin-top: 1em; border-color : #aaa;}
+
+.skip { margin-top: 1em; }
+.skipspace { margin-top: 1em; margin-bottom: 1em; }
+.ullinks { list-style-type: none; }
+.ulchildlink { margin-top: 1em; margin-bottom: 1em; }
+.ulchildlinktext { font-weight: bold; }
+.olchildlink { margin-top: 1em; margin-bottom: 1em; }
+.linklist { margin-top: 1em; margin-bottom: 1em; }
+.linklistwithchild { margin-left: 1.5em; margin-bottom: 1em;  }
+.sublinklist { margin-left: 1.5em; margin-bottom: 1em;	}
+.relconcepts { margin-top: 1em; margin-bottom: 1em; }
+.reltasks { margin-top: 1em; margin-bottom: 1em; }
+.relref { margin-top: 1em; margin-bottom: 1em; }
+.relinfo { margin-top: 1em; margin-bottom: 1em; }
+div.breadcrumb {margin-bottom: 1em; }
+div.tasklabel { margin-top: 1em; margin-bottom: 1em; }
+h2.tasklabel, h3.tasklabel, h4.tasklabel, h5.tasklabel, h6.tasklabel { font-size: 100%; }
+
+.topictitle1 { margin-top: 0pc; margin-bottom: .1em; font-size: 1.34em; }
+.topictitle2 { margin-top: 1pc; margin-bottom: .45em; font-size: 1.17em; }
+.topictitle3 { margin-top: 1pc; margin-bottom: .17em; font-size: 1.17em; font-weight: bold; }
+.topictitle4 { margin-top: .83em; font-size: 1.17em; font-weight: bold; }
+.topictitle5 { font-size: 1.17em; font-weight: bold; }
+.topictitle6 { font-size: 1.17em; font-style: italic; }
+.sectiontitle { margin-top: 1em; margin-bottom: 0em; color: black; font-size: 1.17em; font-weight: bold;}
+.section { margin-top: 1em; margin-bottom: 1em; }
+.example { margin-top: 1em; margin-bottom: 1em; }
+
+.note { margin-top: 1em; margin-bottom : 1em;}
+.notetitle { font-weight: bold; }
+.notelisttitle { font-weight: bold; }
+.tip { margin-top: 1em; margin-bottom : 1em;}
+.tiptitle { font-weight: bold; }
+.fastpath { margin-top: 1em; margin-bottom : 1em;}
+.fastpathtitle { font-weight: bold; }
+.important { margin-top: 1em; margin-bottom : 1em;}
+.importanttitle { font-weight: bold; }
+.remember { margin-top: 1em; margin-bottom : 1em;}
+.remembertitle { font-weight: bold; }
+.restriction { margin-top: 1em; margin-bottom : 1em;}
+.restrictiontitle { font-weight: bold; }
+.attention { margin-top: 1em; margin-bottom : 1em;}
+.attentiontitle { font-weight: bold; }
+.dangertitle { margin-top: 1em; font-weight: bold; }
+.danger { padding: 5px 5px 5px 5px; border: solid; border-width: thin; font-weight: bold; margin-top: 2px; margin-bottom : 1em; }
+.cautiontitle { margin-top: 1em; font-weight: bold; }
+.caution { font-weight: bold; margin-bottom : 1em; }
+
+ul.simple { list-style-type: none; }
+
+.firstcol { font-weight: bold;}
+
+.bold { font-weight: bold; }
+.boldItalic { font-weight: bold; font-style: italic; }
+.italic { font-style: italic; }
+.underlined { text-decoration: underline; }
+.uicontrol { font-weight: bold; }
+.filepath { font-family: monospace, monospace; }
+.option { font-family: monospace, monospace; }
+.cmdname { font-weight: bold; font-family: monospace, monospace; }
+.defparmname { font-weight: bold; text-decoration: underline; font-family: monospace, monospace; }
+.kwd { font-weight: bold; }
+.defkwd { font-weight: bold; text-decoration: underline; }
+.var { font-style : italic;}
+.shortcut { text-decoration: underline; }
+.calloutlabel { color : White; background-color : Black; font-weight : bold; }
+.strongwintitle { font-weight : bold; }
+.parmname { font-weight: bold; font-family: monospace, monospace; white-space: nowrap; }
+dt.pt { font-weight: bold; font-family: monospace, monospace; }
+code { font-family: monospace, monospace; }
+pre { font-family: monospace, monospace; }
+
+div.glossdef > ol { margin:0; padding:0; list-style-position: inside;}
+
+.ptocH1 {font-size: x-small; }
+.ptocH2 {font-size: x-small; }
+
+.smallCaps { text-transform: uppercase; font-size: smaller; }
+.stitle { font-style: italic; text-decoration: underline; }
+
+.dlterm { font-weight: bold; }
+.dltermexpand { font-weight: bold; margin-top: 1em; }
+.defListHead { font-weight: bold; text-decoration: underline; }
+.parmListKwd { font-weight: bold; }
+.parmListVar { font-style: italic; }
+.pk { font-weight: bold; text-decoration: underline; }
+
+*[compact="yes"]>li { margin-top: 0em;}
+*[compact="no"]>li { margin-top: .53em;}
+.liexpand { margin-top: 1em; margin-bottom: 1em; }
+.sliexpand { margin-top: 1em; margin-bottom: 1em; }
+.dlexpand { margin-top: 1em; margin-bottom: 1em; }
+.ddexpand { margin-top: 1em; margin-bottom: 1em; }
+.step { margin-top: 0.5em; margin-bottom: 0.5em; }
+.substep { margin-top: 0.5em; margin-bottom: 0.5em; }
+.stepexpand { margin-top: 0.5em; margin-bottom: 0.5em; }
+.substepexpand { margin-top: 0.5em; margin-bottom: 0.5em; }
+
+div.image {margin-top: 1em; }
+div.imageleft { margin-top: 1em; text-align: left; }
+div.imagecenter { margin-top: 1em; text-align: center; }
+div.imageright { margin-top: 1em; text-align: right; }
+div.imagejustify { margin-top: 1em; text-align: justify; }
+
+/* When browsers improperly display the contents of an object,
+   at least try to put the contents in a block. */
+object > span {margin-top: 1em; margin-bottom: 1em; display:block;}
+
+pre.screen { padding: 5px 5px 5px 5px; border: outset; background-color: #CCCCCC; margin-top: 2px; margin-bottom : 2px; white-space: pre;}
+
+div.msg { padding: 1px 5px 5px 5px; border-top: solid; border-width: thin; margin-top: 2px; margin-bottom: 2px; }
+div.msgId { float: left; font-weight: bold; margin-bottom: 1em; margin-right: 1em; }
+div.msgText { font-weight: bold; margin-bottom: 1em; }
+
+CITE { font-style: italic; }
+EM { font-style: italic; }
+STRONG { font-weight: bold; }
+VAR { font-style: italic; }
+
+/************************************************************************
+   Styles added to support .NET output. Not used by standard processing.
+ ************************************************************************/
+
+body.dotnet /* This body tag requires the use of one of the sets of banner and/or text div ids */
+	{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	background: #ffffff;
+	color: #000000;
+	width: 100%;
+	}
+
+div.nstext /* Creates the scrolling text area for Nonscrolling region topic */
+	{
+	padding: 5px 10px 0px 22px;
+	}
+
+div.nsbanner /* Creates Nonscrolling banner region */
+	{
+	position: relative;
+	left: 0px;
+	padding: 0px 0px 0px 0px;
+	border-bottom: 1px solid #999999;
+	}
+
+div.bannerrow1 /* provides full-width color to top row in running head */
+	{
+	background-color: #99ccff;
+	}
+
+/*	 STYLES FOR RUNNING HEADS      */
+
+table.bannerparthead, table.bannertitle /* General values for the Running Head tables */
+	{
+	position: relative;
+	left: 0px;
+	top: 0px;
+	padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+	width: 100%;
+	height: 21px;
+	border-collapse: collapse;
+	border-style: solid;
+	border-width: 0px;
+	background-color: #99ccff;
+	font-size: 100%;
+	}
+table.bannerparthead td /* General Values for cells in the top row of running head */
+	{
+	margin: 0px 0px 0px 0px;
+	padding: 2px 0px 0px 4px;
+	vertical-align: middle;
+	/*border-width: 0px 0px 1px 0px; */
+	border-width: 0px;
+	border-style: solid;
+	border-color: #999999;
+	background: transparent;
+	font-style: italic;
+	font-weight: normal;
+	}
+table.bannerparthead td.product /* Values for top right cell in running head */
+	{			/* Allows for a second text block in the running head */
+	text-align: right;
+	padding: 2px 5px 0px 5px;
+	}
+
+h1.dtH1 {
+	margin-left: -18px;
+	}
+div.titlerow /* provides non-scroll topic title area (requires script) */
+	{
+	width: 100%; /* Forces tables to have correct right margin */
+	padding: 0px 10px 0px 22px;
+	background-color: #99ccff;
+	}
+div.titlerow h1
+	{
+	margin-top: 0em;
+	font-weight: bold;
+	margin-bottom: .2em;
+	}
+
+/* Styles for Tutorial Specialization */
+div.tutorialTimeRequired { margin-top: 1em; margin-bottom: 0em; }
+div.tutorialrelinfo { margin-top: 0em; margin-bottom: 1em; }
+div.tutorialPrevNext { margin-top: 1em; margin-bottom: 1em; font-weight: bold; }
+/*a.tutorialPrev {}
+a.tutorialNext {}*/
+
