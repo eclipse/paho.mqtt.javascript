@@ -181,7 +181,7 @@ Paho.MQTT = (function (global) {
 		UNSUPPORTED_OPERATION: {code:14, text:"AMQJS0014E Unsupported operation."},
 		INVALID_STORED_DATA: {code:15, text:"AMQJS0015E Invalid data in local storage key={0} value={1}."},
 		INVALID_MQTT_MESSAGE_TYPE: {code:16, text:"AMQJS0016E Invalid MQTT message type {0}."},
-		MALFORMED_UNICODE: {code:17, text:"AMQJS0017E Malformed Unicode string:{0} {1}."},
+		MALFORMED_UNICODE: {code:17, text:"AMQJS0017E Malformed Unicode string:{0} {1}."}
 	};
 	
 	/** CONNACK RC Meaning. */
