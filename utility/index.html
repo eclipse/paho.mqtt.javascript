@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Eclipse Paho MQTT JavaScript Client Example</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <!-- Custom Styles theme -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Nav Bar -->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#">
+                            <img alt="Paho" src="paho-small-logo.png">
+                        </a>
+                        <span class="navbar-brand">Javascript Client Utility</span>
+                    </div>
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="https://www.eclipse.org/paho/clients/js/" target="_blank">Paho Project</a>
+                        </li>
+                        <li>
+                            <a href="http://www.eclipse.org/paho/files/jsdoc/index.html" target="_blank">Documentation</a>
+                        </li>
+                        <li>
+                            <a href="http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git/" target="_blank">Repository</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- Nav Bar End -->
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <span id="connectionStatus">Connection - Disconnected.</span>
+                    </div>
+                    <div class="panel-body fixed-height-panel" id="serverCollapse">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="hostnameInput" class="col-sm-2 control-label">Server</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="hostnameInput" value="localhost">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="portInput" class="col-sm-2 control-label">Port</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="portInput" value="9001">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientIdInput" class="col-sm-2 control-label">Client ID</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="clientIdInput" value="clientId">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button id="clientConnectButton" type="button" class="btn btn-default" onclick="connect();">Connect</button>
+                                    <button id="clientDisconnectButton" type="button" class="btn btn-default" onclick="disconnect();" disabled>Disconnect</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Subscribe
+                    </div>
+                    <div class="panel-body fixed-height-panel" id="subscribeCollapse" >
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="subscribeTopicInput" class="col-sm-2 control-label">Topic</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="subscribeTopicInput" value="/test" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="subscribeQosInput" class="col-sm-2 control-label">QoS</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" id="subscribeQosInput" disabled>
+                                        <option>0</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button id="subscribeButton" type="button" class="btn btn-default" onclick="subscribe();" disabled>Subscribe</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Publish Message
+                    </div>
+                    <div class="panel-body fixed-height-panel" id="publishCollapse" >
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="publishTopicInput" class="col-sm-2 control-label">Topic</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="publishTopicInput" value="/test" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="publishQosInput" class="col-sm-2 control-label">QoS</label>
+                                <div class="col-sm-10">
+                                    <select class="form-control" id="publishQosInput" disabled>
+                                        <option>0</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="publishMessageInput" class="col-sm-2 control-label">Message</label>
+                                <div class="col-sm-10">
+                                    <textarea class="form-control" id="publishMessageInput" rows="2" disabled></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button id="publishButton" type="button" class="btn btn-default" onclick="publish();" disabled>Publish</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+
+
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <a class="chevron-toggle" data-toggle="collapse" data-target="#subscriptionsCollapse" href="#collapseOne">
+                        Subscriptions
+                    </a>
+                    </div>
+                    <div class="panel-body collapse in fixed-height-panel" id="subscriptionsCollapse">
+                        <table class="table table-hover table-condensed tableSection" id="subscriptionTable">
+                            <thead>
+                                <tr>
+                                    <th>Topic</th>
+                                    <th>Last Message</th>
+                                    <th>Time</th>
+                                    <th>Unsubscribe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="row">
+
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <a class="chevron-toggle" data-toggle="collapse" data-target="#historyCollapse" href="#collapseOne">
+                        History
+                        </a>
+                    </div>
+                    <div class="panel-body collapse in fixed-height-panel" id="historyCollapse">
+                        <span class="right"><a href="#" onclick="clearHistory()">Clear History</a></span>
+                        <table class="table table-hover table-condensed  tableSection" id="incomingMessageTable">
+
+                            <thead>
+                                <tr>
+                                    <th>Topic</th>
+                                    <th>Payload</th>
+                                    <th>Time</th>
+                                    <th>Qos</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Source Paho MQTT Client-->
+    <script src="../src/mqttws31.js"></script>
+
+    <!-- Utility Javascript -->
+    <script src="utility.js"></script>
+
+    <!-- Javascript used for Bootstrap Theme -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</body>
+
+</html>
