@@ -1,0 +1,79 @@
+body {
+    padding-top: 70px;
+    padding-bottom: 20px;
+    background: #eee6cb;
+}
+.navbar {
+    margin-bottom: 20px;
+}
+.navbar-inner {
+    background-color: #121320;
+}
+
+.navbar .nav>li>a{
+    color: #eee6cb;
+}
+a.navbar-brand {
+    margin-left: 5px;
+    padding: 0;
+}
+.navbar-inverse .navbar-brand {
+    color: #eee6cb;
+}
+
+* {
+    -webkit-border-radius: 0 !important;
+    -moz-border-radius: 0 !important;
+    border-radius: 0 !important;
+}
+.panel-heading {
+    color: #5e351a;
+}
+.subtext {
+    color: #A0A0A0;
+}
+.right {
+    float: right;
+}
+table {
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+table.tableSection {
+    display: table;
+    width: 100%;
+}
+table.tableSection thead, table.tableSection tbody {
+    float: left;
+    width: 100%;
+}
+table.tableSection tbody {
+    overflow: auto;
+    height: 150px;
+}
+table.tableSection tr {
+    width: 100%;
+    display: table;
+    text-align: center;
+}
+table.tableSection th, table.tableSection td {
+    width: 25%;
+    text-align: center;
+}
+.panel-heading .chevron-toggle {
+    color: #333;
+}
+.panel-heading .chevron-toggle:after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e114";
+    float: right;
+    color: grey;
+}
+.panel-heading .chevron-toggle.collapsed:after {
+    content: "\e080";
+}
+
+.fixed-height-panel {
+    min-height: 250px;
+    max-height: 250px;
+}
