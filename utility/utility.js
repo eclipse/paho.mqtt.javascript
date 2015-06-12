@@ -53,13 +53,25 @@ function onMessageArrived(message) {
   row.insertCell(2).innerHTML = messageTime;
   row.insertCell(3).innerHTML = message.qos;
 
-  // Update Subscription Table
-  var subscriptionRow = document.getElementById(message.destinationName);
-  subscriptionRow.cells[1].innerHTML = safe_tags_regex(message.payloadString);
-  subscriptionRow.cells[2].innerHTML = messageTime;
 
+  if(!document.getElementById(message.destinationName)){
+      var lastMessageTable = document.getElementById("lastMessageTable").getElementsByTagName('tbody')[0];
+      var newlastMessageRow = lastMessageTable.insertRow(0);
+      newlastMessageRow.id = message.destinationName;
+      newlastMessageRow.insertCell(0).innerHTML = message.destinationName;
+      newlastMessageRow.insertCell(1).innerHTML = safe_tags_regex(message.payloadString);
+      newlastMessageRow.insertCell(2).innerHTML = messageTime;
+      newlastMessageRow.insertCell(3).innerHTML = message.qos;
 
-
+  } else {
+      // Update Last Message Table
+      var lastMessageRow = document.getElementById(message.destinationName);
+      lastMessageRow.id = message.destinationName;
+      lastMessageRow.cells[0].innerHTML = message.destinationName;
+      lastMessageRow.cells[1].innerHTML = safe_tags_regex(message.payloadString);
+      lastMessageRow.cells[2].innerHTML = messageTime;
+      lastMessageRow.cells[3].innerHTML = message.qos;
+  }
 
 }
 
@@ -107,6 +119,7 @@ function setFormEnabledState(enabled){
     document.getElementById("subscribeTopicInput").disabled = !enabled;
     document.getElementById("subscribeQosInput").disabled = !enabled;
     document.getElementById("subscribeButton").disabled = !enabled;
+    document.getElementById("unsubscribeButton").disabled = !enabled;
 
 }
 
@@ -127,20 +140,10 @@ function subscribe(){
     var qos = document.getElementById("subscribeQosInput").value;
     console.info('Subscribing to: Topic: ', topic, '. QoS: ', qos);
     client.subscribe(topic, {qos: Number(qos)});
-
-    var table = document.getElementById("subscriptionTable").getElementsByTagName('tbody')[0];
-    var row = table.insertRow(0);
-    row.id = topic;
-    row.insertCell(0).innerHTML = topic;
-    row.insertCell(1).innerHTML = '<span class="subtext">Subscribed</span>';
-    row.insertCell(2).innerHTML = new Date().toISOString();
-    row.insertCell(3).innerHTML = '<a href="#" onclick="unsubscribe(\'' + topic + '\')">Unsubscribe</a>';
-
-
-
 }
 
-function unsubscribe(topic){
+function unsubscribe(){
+    var topic = document.getElementById("subscribeTopicInput").value;
     console.info('Unsubscribing from ', topic);
     client.unsubscribe(topic, {
          onSuccess: unsubscribeSuccess,
@@ -152,9 +155,6 @@ function unsubscribe(topic){
 
 function unsubscribeSuccess(context){
     console.info('Successfully unsubscribed from ', context.invocationContext.topic);
-    var table = document.getElementById("subscriptionTable").getElementsByTagName('tbody')[0];
-    var rowIndex = document.getElementById(context.invocationContext.topic).rowIndex;
-    table.deleteRow(rowIndex -1);
 }
 
 function unsubscribeFailure(context){
