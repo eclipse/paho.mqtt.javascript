@@ -116,6 +116,7 @@
                             <div class="form-group">
                                 <div class="col-sm-offset-2 col-sm-10">
                                     <button id="subscribeButton" type="button" class="btn btn-default" onclick="subscribe();" disabled>Subscribe</button>
+                                    <button id="unsubscribeButton" type="button" class="btn btn-default" onclick="unsubscribe();" disabled>Unsubscribe</button>
                                 </div>
                             </div>
                         </form>
@@ -169,17 +170,17 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <a class="chevron-toggle" data-toggle="collapse" data-target="#subscriptionsCollapse" href="#collapseOne">
-                        Subscriptions
+                        Last Messages
                     </a>
                     </div>
                     <div class="panel-body collapse in fixed-height-panel" id="subscriptionsCollapse">
-                        <table class="table table-hover table-condensed tableSection" id="subscriptionTable">
+                        <table class="table table-hover table-condensed tableSection" id="lastMessageTable">
                             <thead>
                                 <tr>
                                     <th>Topic</th>
-                                    <th>Last Message</th>
+                                    <th>Payload</th>
                                     <th>Time</th>
-                                    <th>Unsubscribe</th>
+                                    <th>QoS</th>
                                 </tr>
                             </thead>
                             <tbody>
