@@ -22,22 +22,34 @@ This utility can be used to test the Eclipse Paho MQTT Javascript client.
 // Create a client instance
 client = null;
 
+connected = false;
+
 // called when the client connects
 function onConnect(context) {
   // Once a connection has been made, make a subscription and send a message.
   console.log("Client Connected");
-  console.log(context);
   var statusSpan = document.getElementById("connectionStatus");
-  statusSpan.innerHTML = "Connected to: " + context.invocationContext.host + ':' + context.invocationContext.port + ' as ' + context.invocationContext.clientId;
+  statusSpan.innerHTML = "Connected to: " + context.invocationContext.host + ':' + context.invocationContext.port + context.invocationContext.path + ' as ' + context.invocationContext.clientId;
+  connected = true;
   setFormEnabledState(true);
 
+
+}
+
+function onFail(context) {
+  console.log("Failed to connect");
+  var statusSpan = document.getElementById("connectionStatus");
+  statusSpan.innerHTML = "Failed to connect: " + context.errorMessage;
+  connected = false;
+  setFormEnabledState(false);
 }
 
 // called when the client loses its connection
 function onConnectionLost(responseObject) {
   if (responseObject.errorCode !== 0) {
-    console.log("Connection Lost: "+responseObject.errorMessage);
+    console.log("Connection Lost: " + responseObject.errorMessage);
   }
+  connected = false;
 }
 
 // called when a message arrives
@@ -75,22 +87,78 @@ function onMessageArrived(message) {
 
 }
 
+function connectionToggle(){
+
+  if(connected){
+    disconnect();
+  } else {
+    connect();
+  }
+
+
+}
+
 
 function connect(){
-    var hostname = document.getElementById("hostnameInput").value;
+    var hostname = document.getElementById("hostInput").value;
     var port = document.getElementById("portInput").value;
     var clientId = document.getElementById("clientIdInput").value;
 
-    console.info('Connecting to Server: Hostname: ', hostname, '. Port: ', port, '. Client ID: ', clientId);
-    client = new Paho.MQTT.Client(hostname, Number(port), clientId);
+    var path = document.getElementById("pathInput").value;
+    var user = document.getElementById("userInput").value;
+    var pass = document.getElementById("passInput").value;
+    var keepAlive = Number(document.getElementById("keepAliveInput").value);
+    var timeout = Number(document.getElementById("timeoutInput").value);
+    var ssl = document.getElementById("sslInput").checked;
+    var cleanSession = document.getElementById("cleanSessionInput").checked;
+    var lastWillTopic = document.getElementById("lwtInput").value;
+    var lastWillQos = Number(document.getElementById("lwQosInput").value);
+    var lastWillRetain = document.getElementById("lwRetainInput").checked;
+    var lastWillMessage = document.getElementById("lwMInput").value;
+
+
+    if(path.length > 0){
+      client = new Paho.MQTT.Client(hostname, Number(port), path, clientId);
+    } else {
+      client = new Paho.MQTT.Client(hostname, Number(port), clientId);
+    }
+    console.info('Connecting to Server: Hostname: ', hostname, '. Port: ', port, '. Path: ', client.path, '. Client ID: ', clientId);
+
     // set callback handlers
     client.onConnectionLost = onConnectionLost;
     client.onMessageArrived = onMessageArrived;
 
+
+    var options = {
+      invocationContext: {host : hostname, port: port, path: client.path, clientId: clientId},
+      timeout: timeout,
+      keepAliveInterval:keepAlive,
+      cleanSession: cleanSession,
+      useSSL: ssl,
+      onSuccess: onConnect,
+      onFailure: onFail
+    };
+
+
+
+    if(user.length > 0){
+      options.userName = user;
+    }
+
+    if(pass.length > 0){
+      options.password = pass;
+    }
+
+    if(lastWillTopic.length > 0){
+      var lastWillMessage = new Paho.MQTT.Message(lastWillMessage);
+      lastWillMessage.destinationName = lastWillTopic;
+      lastWillMessage.qos = lastWillQos;
+      lastWillMessage.retained = lastWillRetain;
+      options.willMessage = lastWillMessage;
+    }
+
     // connect the client
-    client.connect({onSuccess:onConnect,
-        invocationContext: {host : hostname, port: port, clientId: clientId}
-    });
+    client.connect(options);
     var statusSpan = document.getElementById("connectionStatus");
     statusSpan.innerHTML = 'Connecting...';
 }
@@ -100,22 +168,43 @@ function disconnect(){
     client.disconnect();
     var statusSpan = document.getElementById("connectionStatus");
     statusSpan.innerHTML = 'Connection - Disconnected.';
+    connected = false;
     setFormEnabledState(false);
+
 }
 
 // Sets various form controls to either enabled or disabled
 function setFormEnabledState(enabled){
-    document.getElementById("hostnameInput").disabled = enabled;
+
+    // Connection Panel Elements
+    if(enabled){
+      document.getElementById("clientConnectButton").innerHTML = "Disconnect";
+    } else {
+      document.getElementById("clientConnectButton").innerHTML = "Connect";
+    }
+    document.getElementById("hostInput").disabled = enabled;
     document.getElementById("portInput").disabled = enabled;
     document.getElementById("clientIdInput").disabled = enabled;
-    document.getElementById("clientConnectButton").disabled = enabled;
-    document.getElementById("clientDisconnectButton").disabled = !enabled;
+    document.getElementById("pathInput").disabled = enabled;
+    document.getElementById("userInput").disabled = enabled;
+    document.getElementById("passInput").disabled = enabled;
+    document.getElementById("keepAliveInput").disabled = enabled;
+    document.getElementById("timeoutInput").disabled = enabled;
+    document.getElementById("sslInput").disabled = enabled;
+    document.getElementById("cleanSessionInput").disabled = enabled;
+    document.getElementById("lwtInput").disabled = enabled;
+    document.getElementById("lwQosInput").disabled = enabled;
+    document.getElementById("lwRetainInput").disabled = enabled;
+    document.getElementById("lwMInput").disabled = enabled;
 
+    // Publish Panel Elements
     document.getElementById("publishTopicInput").disabled = !enabled;
     document.getElementById("publishQosInput").disabled = !enabled;
     document.getElementById("publishMessageInput").disabled = !enabled;
     document.getElementById("publishButton").disabled = !enabled;
+    document.getElementById("publishRetainInput").disabled = !enabled;
 
+    // Subscription Panel Elements
     document.getElementById("subscribeTopicInput").disabled = !enabled;
     document.getElementById("subscribeQosInput").disabled = !enabled;
     document.getElementById("subscribeButton").disabled = !enabled;
@@ -127,10 +216,12 @@ function publish(){
     var topic = document.getElementById("publishTopicInput").value;
     var qos = document.getElementById("publishQosInput").value;
     var message = document.getElementById("publishMessageInput").value;
+    var retain = document.getElementById("publishRetainInput").checked
     console.info('Publishing Message: Topic: ', topic, '. QoS: ' + qos + '. Message: ', message);
     message = new Paho.MQTT.Message(message);
     message.destinationName = topic;
     message.qos = Number(qos);
+    message.retained = retain;
     client.send(message);
 }
 
