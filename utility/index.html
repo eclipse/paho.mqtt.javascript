@@ -95,7 +95,7 @@
                 <div class="col-lg-2">
                   <div class="form-group">
                     <label for="pathInput">Path</label>
-                    <input type="text" class="form-control" id="pathInput">
+                    <input type="text" class="form-control" id="pathInput" value="/ws">
                   </div>
                 </div>
                 <div class="col-lg-2">
@@ -249,7 +249,7 @@
               <div class="col-lg-1">
                 <div class="form-group">
                   <label for="publishButton"></label>
-                  <button id="publishButton" class="btn btn-default" onclick="publish();" disabled>Publish</a>
+                  <button id="publishButton" type="button" class="btn btn-default" onclick="publish();" disabled>Publish</a>
                 </div>
               </div>
 
@@ -331,6 +331,7 @@
 
   <!-- Source Paho MQTT Client-->
   <script src="../src/mqttws31.js"></script>
+  <!--<script src="../src/paho-mqtt.js"></script>-->
 
   <!-- Utility Javascript -->
   <script src="utility.js"></script>
