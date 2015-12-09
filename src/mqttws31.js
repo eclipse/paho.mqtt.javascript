@@ -1144,8 +1144,6 @@ Paho.MQTT = (function (global) {
 	 */
 	ClientImpl.prototype._on_socket_message = function (event) {
 		this._trace("Client._on_socket_message", event.data);
-		// Reset the receive ping timer, we now have evidence the server is alive.
-		this.receivePinger.reset();
 		var messages = this._deframeMessages(event.data);
 		for (var i = 0; i < messages.length; i+=1) {
 		    this._handleMessage(messages[i]);
