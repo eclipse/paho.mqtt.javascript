@@ -77,3 +77,9 @@ table.tableSection th, table.tableSection td {
     min-height: 250px;
     max-height: 250px;
 }
+
+.special-checkbox {
+  display: block;
+    width:20px;
+     height:20px;
+}
