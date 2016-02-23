@@ -28,21 +28,9 @@
 		<defaultGoal>process-resources</defaultGoal>
 		<plugins>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>templating-maven-plugin</artifactId>
-				<version>1.0-alpha-3</version>
-				<executions>
-					<execution>
-						<id>filter-tests</id>
-						<goals>
-							<goal>filter-test-sources</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>net.alchim31.maven</groupId>
 				<artifactId>yuicompressor-maven-plugin</artifactId>
+				<version>1.5.1</version>
 				<executions>
 					<execution>
 						<id>compress-js</id>
@@ -226,11 +214,9 @@
 						<configuration>
 							<executable>node_modules/jasmine-node/bin/jasmine-node</executable>
 							<arguments>
+								<argument>--verbose</argument>
 								<argument>--forceexit</argument>
 								<argument>target/test</argument>
-								<argument>--junitreport</argument>
-								<argument>--output</argument>
-								<argument>target/failsafe-reports/</argument>
 							</arguments>
 						</configuration>
 					</execution>
