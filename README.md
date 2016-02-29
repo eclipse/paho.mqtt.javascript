@@ -14,7 +14,7 @@ Paho reflects the inherent physical and cost constraints of device connectivity.
 - Paho Javascript Client Page: [https://eclipse.org/paho/clients/js/](https://eclipse.org/paho/clients/js)
 - GitHub: [https://github.com/eclipse/paho.mqtt.javascript](https://github.com/eclipse/paho.mqtt.javascript)
 - Twitter: [@eclipsepaho](https://twitter.com/eclipsepaho)
-- Issues: Currently [https://bugs.eclipse.org/bugs/buglist.cgi?component=MQTT-JS](https://bugs.eclipse.org/bugs/buglist.cgi?component=MQTT-JS), though will soon be GitHub Issues.
+- Issues: [github.com/eclipse/paho.mqtt.javascript/issues](https://github.com/eclipse/paho.mqtt.javascript/issues)
 - Mailing-list: [https://dev.eclipse.org/mailman/listinfo/paho-dev](https://dev.eclipse.org/mailman/listinfo/paho-dev
 
 
