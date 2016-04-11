@@ -181,7 +181,8 @@ Paho.MQTT = (function (global) {
 		UNSUPPORTED_OPERATION: {code:14, text:"AMQJS0014E Unsupported operation."},
 		INVALID_STORED_DATA: {code:15, text:"AMQJS0015E Invalid data in local storage key={0} value={1}."},
 		INVALID_MQTT_MESSAGE_TYPE: {code:16, text:"AMQJS0016E Invalid MQTT message type {0}."},
-		MALFORMED_UNICODE: {code:17, text:"AMQJS0017E Malformed Unicode string:{0} {1}."}
+		MALFORMED_UNICODE: {code:17, text:"AMQJS0017E Malformed Unicode string:{0} {1}."},
+		BUFFER_FULL: {code:18, text:"AMQJS0018E Message buffer is full, maximum buffer size: ${0}."},
 	};
 	
 	/** CONNACK RC Meaning. */
@@ -711,6 +712,48 @@ Paho.MQTT = (function (global) {
 		this.cancel = function() {
 			this._window.clearTimeout(this.timeout);
 		}
+	 };
+	 
+	 /** 
+	 * Reconnect timer
+	 * @ignore
+	 */
+	var Reconnector = function(client, window, reconnectInterval) { 
+		this._client = client;        	
+		this._window = window;
+		this._reconnectInterval = reconnectInterval*1000;
+		
+		var doTimeout = function (reconnector) {
+			return function () {
+				return doReconnect.apply(reconnector);
+			};
+		};
+		
+		/** @ignore */
+		var doReconnect = function() { 
+			if (this._client.connected) {
+				this._client._trace("Reconnector.doReconnect", "ALREADY CONNECTED");
+				this._window.clearTimeout(this.reconnectorTimer);
+			} else {
+				this._client._trace("Reconnector.doReconnect", "reconnecting");
+				if (this._client.connectOptions.uris) {
+					this._client.hostIndex = 0;
+					this._client._doConnect(this._client.connectOptions.uris[0]);  
+				} else {
+					this._client._doConnect(this._client.uri);
+				}
+				this.reconnectorTimer = this._window.setTimeout(doTimeout(this), this._reconnectInterval);
+			}
+		}
+		
+		this.reset = function() {
+			this._window.clearTimeout(this.reconnectorTimer);
+			this.reconnectorTimer = this._window.setTimeout(doTimeout(this), this._reconnectInterval);
+		}
+
+		this.cancel = function() {
+			this._window.clearTimeout(this.reconnectorTimer);
+		}
 	 }; 
 
 	/**
@@ -760,6 +803,7 @@ Paho.MQTT = (function (global) {
 		this.path = path;
 		this.uri = uri;
 		this.clientId = clientId;
+		this._wsuri = null;
 
 		// Local storagekeys are qualified with the following string.
 		// The conditional inclusion of path in the key is for backward
@@ -770,6 +814,7 @@ Paho.MQTT = (function (global) {
 		// Create private instance-only message queue
 		// Internal queue of messages to be sent, in sending order. 
 		this._msg_queue = [];
+		this._buffered_queue = [];
 
 		// Messages we have sent and are expecting a response for, indexed by their respective message ids. 
 		this._sentMessages = {};
@@ -815,16 +860,22 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype.maxMessageIdentifier = 65536;
 	ClientImpl.prototype.connectOptions;
 	ClientImpl.prototype.hostIndex;
+	ClientImpl.prototype.onConnected;
 	ClientImpl.prototype.onConnectionLost;
 	ClientImpl.prototype.onMessageDelivered;
 	ClientImpl.prototype.onMessageArrived;
 	ClientImpl.prototype.traceFunction;
 	ClientImpl.prototype._msg_queue = null;
+	ClientImpl.prototype._buffered_queue = null;
 	ClientImpl.prototype._connectTimeout;
 	/* The sendPinger monitors how long we allow before we send data to prove to the server that we are alive. */
 	ClientImpl.prototype.sendPinger = null;
 	/* The receivePinger monitors how long we allow before we require evidence that the server is alive. */
 	ClientImpl.prototype.receivePinger = null;
+	/* The reconnector indicates that reconnection operation is active */
+	ClientImpl.prototype.reconnector = null;
+	ClientImpl.prototype.disconnectedPublishing = false;
+	ClientImpl.prototype.disconnectedBufferSize = 5000;
 	
 	ClientImpl.prototype.receiveBuffer = null;
 	
@@ -912,8 +963,19 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype.send = function (message) {
 		this._trace("Client.send", message);
 
-		if (!this.connected)
-		   throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
+		if (!this.connected) {
+			if (this.reconnector && this.disconnectedPublishing) {
+				//this._trace("Client.send", this._buffered_queue.length, this.disconnectedBufferSize);
+				if (this._buffered_queue.length === this.disconnectedBufferSize) {
+					throw new Error(format(ERROR.BUFFER_FULL, [this._buffered_queue.length]));
+				} else {
+					this._buffered_queue.push(message);
+					return;
+				}
+			} else {
+				throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
+			}
+		}
 		
 		wireMessage = new WireMessage(MESSAGE_TYPE.PUBLISH);
 		wireMessage.payloadMessage = message;
@@ -965,13 +1027,14 @@ Paho.MQTT = (function (global) {
 		delete this._traceBuffer;
 	};
 
-	ClientImpl.prototype._doConnect = function (wsurl) { 	        
+	ClientImpl.prototype._doConnect = function (wsurl) {
 		// When the socket is open, this client will send the CONNECT WireMessage using the saved parameters. 
 		if (this.connectOptions.useSSL) {
 		    var uriParts = wsurl.split(":");
 		    uriParts[0] = "wss";
 		    wsurl = uriParts.join(":");
 		}
+		this._wsuri = wsurl;
 		this.connected = false;
 		if (this.connectOptions.mqttVersion < 4) {
 			this.socket = new WebSocket(wsurl, ["mqttv3.1"]);
@@ -1000,7 +1063,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype._schedule_message = function (message) {
 		this._msg_queue.push(message);
 		// Process outstanding messages in the queue if we have an  open socket, and have received CONNACK. 
-		if (this.connected) {
+		if (this.connected && this.reconnector === null) {
 			this._process_queue();
 		}
 	};
@@ -1190,6 +1253,7 @@ Paho.MQTT = (function (global) {
 			switch(wireMessage.type) {
 			case MESSAGE_TYPE.CONNACK:
 				this._connectTimeout.cancel();
+				this._connectTimeout = null;
 				
 				// If we have started using clean session then clear up the local state.
 				if (this.connectOptions.cleanSession) {
@@ -1232,12 +1296,39 @@ Paho.MQTT = (function (global) {
 						this._schedule_message(pubRelMessage);
 					} else {
 						this._schedule_message(sentMessage);
-					};
+					}
+				}
+
+				// Send buffered messages
+				if (this.reconnector) {
+					var fifo = this._buffered_queue.reverse();
+					var message = null;
+					while(message = fifo.pop()) {
+						var wireMessage = new WireMessage(MESSAGE_TYPE.PUBLISH);
+						wireMessage.payloadMessage = message;
+						if (message.qos > 0)
+							this._requires_ack(wireMessage);
+						else if (this.onMessageDelivered)
+							this._notify_msg_sent[wireMessage] = this.onMessageDelivered(wireMessage.payloadMessage);
+						this._schedule_message(wireMessage);
+					}
+					this._buffered_queue = [];
 				}
 
 				// Execute the connectOptions.onSuccess callback if there is one.
-				if (this.connectOptions.onSuccess) {
+				if (this.connectOptions.onSuccess && (this.reconnector == null)) {
 					this.connectOptions.onSuccess({invocationContext:this.connectOptions.invocationContext});
+				}
+				
+				reconnect = false;
+				if (this.connectOptions.reconnect && this.reconnector) {
+					reconnect = true;
+					this.reconnector.cancel();
+					this.reconnector = null;
+					// Execute the onConnected callback if there is one.
+					if (this.onConnected) {
+						this.onConnected({reconnect:reconnect, uri:this._wsuri});
+					}
 				}
 
 				// Process all queued messages now that the connection is established. 
@@ -1281,6 +1372,8 @@ Paho.MQTT = (function (global) {
 				// Always flow PubComp, we may have previously flowed PubComp but the server lost it and restarted.
 				var pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier:wireMessage.messageIdentifier});
 				this._schedule_message(pubCompMessage);                    
+					
+				
 				break;
 
 			case MESSAGE_TYPE.PUBCOMP: 
@@ -1399,6 +1492,17 @@ Paho.MQTT = (function (global) {
 	};
 
 	/**
+	 * Client has connected.
+	 * @param {reconnect} [boolean] indicate if this was a result of reconnect operation.
+	 * @param {uri} [string] fully qualified WebSocket URI of the server.
+	 */
+	ClientImpl.prototype._connected = function (reconnect, uri) {
+		// Execute the onConnected callback if there is one.  
+		if (this.onConnected)
+			this.onConnected({reconnect:reconnect, uri:uri}); 
+	};
+	
+	/**
 	 * Client has disconnected either at its own request or because the server
 	 * or network disconnected it. Remove all non-durable state.
 	 * @param {errorCode} [number] the error number.
@@ -1406,15 +1510,23 @@ Paho.MQTT = (function (global) {
 	 * @ignore
 	 */
 	ClientImpl.prototype._disconnected = function (errorCode, errorText) {
-		this._trace("Client._disconnected", errorCode, errorText);
+		this._trace("Client._disconnected", errorCode, errorText, new Date());
+		if (this.connected && errorCode === ERROR.CONNECT_TIMEOUT.code) {
+			return;
+		}
 		
 		this.sendPinger.cancel();
 		this.receivePinger.cancel();
-		if (this._connectTimeout)
+		if (this._connectTimeout) {
 			this._connectTimeout.cancel();
-		// Clear message buffers.
-		this._msg_queue = [];
-		this._notify_msg_sent = {};
+			this._connectTimeout = null;
+		}
+		
+		if (!this.reconnector) {
+			// Clear message buffers.
+			this._msg_queue = [];
+			this._notify_msg_sent = {};
+		}
 	   
 		if (this.socket) {
 			// Cancel all socket callbacks so that they cannot be driven again by this socket.
@@ -1424,7 +1536,7 @@ Paho.MQTT = (function (global) {
 			this.socket.onclose = null;
 			if (this.socket.readyState === 1)
 				this.socket.close();
-			delete this.socket;           
+			delete this.socket;
 		}
 		
 		if (this.connectOptions.uris && this.hostIndex < this.connectOptions.uris.length-1) {
@@ -1443,8 +1555,19 @@ Paho.MQTT = (function (global) {
 			if (this.connected) {
 				this.connected = false;
 				// Execute the connectionLostCallback if there is one, and we were connected.       
-				if (this.onConnectionLost)
-					this.onConnectionLost({errorCode:errorCode, errorMessage:errorText});      	
+				if (this.onConnectionLost) {
+					reconnect = false;
+					if (this.connectOptions.reconnect)
+						reconnect = this.connectOptions.reconnect;
+					this.onConnectionLost({errorCode:errorCode, errorMessage:errorText, reconnect:reconnect, uri:this._wsuri});
+				}
+				if (errorCode !== ERROR.OK.code && this.connectOptions.reconnect) {
+					this._trace("Client._disconnected", "starting auto reconnect");
+					this.reconnector = new Reconnector(this, window, this.connectOptions.reconnectInterval);
+					this.reconnector.reset();
+				}
+			} else if (this.reconnector) {
+				this._trace("Client._disconnected", "auto reconnect is already in progress", new Date());
 			} else {
 				// Otherwise we never had a connection, so indicate that the connect has failed.
 				if (this.connectOptions.mqttVersion === 4 && this.connectOptions.mqttVersionExplicit === false) {
@@ -1625,6 +1748,24 @@ Paho.MQTT = (function (global) {
 		this._getClientId = function() { return client.clientId; };
 		this._setClientId = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
 		
+		this._getOnConnected = function() { return client.onConnected; };
+		this._setOnConnected = function(newOnConnected) { 
+			if (typeof newOnConnected === "function")
+				client.onConnected = newOnConnected;
+			else 
+				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnected, "onConnected"]));
+		};
+
+		this._getDisconnectedPublishing = function() { return client.disconnectedPublishing; };
+		this._setDisconnectedPublishing = function(newDisconnectedPublishing) {
+			client.disconnectedPublishing = newDisconnectedPublishing;
+		}
+		
+		this._getDisconnectedBufferSize = function() { return client.disconnectedBufferSize; };
+		this._setDisconnectedBufferSize = function(newDisconnectedBufferSize) {
+			client.disconnectedBufferSize = newDisconnectedBufferSize;
+		}
+		
 		this._getOnConnectionLost = function() { return client.onConnectionLost; };
 		this._setOnConnectionLost = function(newOnConnectionLost) { 
 			if (typeof newOnConnectionLost === "function")
@@ -1714,6 +1855,8 @@ Paho.MQTT = (function (global) {
 									   onFailure:"function",
 									   hosts:"object",
 									   ports:"object",
+									   reconnect:"boolean",
+									   reconnectInterval:"number",
 									   mqttVersion:"number",
 									   mqttVersionExplicit:"boolean",
 									   uris: "object"});
@@ -1736,6 +1879,9 @@ Paho.MQTT = (function (global) {
 			//Check that if password is set, so is username
 			if (connectOptions.password === undefined && connectOptions.userName !== undefined)
 				throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.password, "connectOptions.password"]))
+			
+			if (connectOptions.reconnectInterval === undefined)
+				connectOptions.reconnectInterval = 10;
 
 			if (connectOptions.willMessage) {
 				if (!(connectOptions.willMessage instanceof Message))
@@ -2000,7 +2146,16 @@ Paho.MQTT = (function (global) {
 			
 		get clientId() { return this._getClientId(); },
 		set clientId(newClientId) { this._setClientId(newClientId); },
+		
+		get onConnected() { return this._getOnConnected(); },
+		set onConnected(newOnConnected) { this._setOnConnected(newOnConnected); },
 
+		get disconnectedPublishing() { return this._getDisconnectedPublishing(); },
+		set disconnectedPublishing(newDisconnectedPublishing) { this._setDisconnectedPublishing(newDisconnectedPublishing); },		
+		
+		get disconnectedBufferSize() { return this._getDisconnectedBufferSize(); },
+		set disconnectedBufferSize(newDisconnectedBufferSize) { this._setDisconnectedBufferSize(newDisconnectedBufferSize); },
+		
 		get onConnectionLost() { return this._getOnConnectionLost(); },
 		set onConnectionLost(newOnConnectionLost) { this._setOnConnectionLost(newOnConnectionLost); },
 
