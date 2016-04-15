@@ -21,7 +21,7 @@ describe('InteropsTests', function() {
 	var subscribed = false;
 	var disconnectError = null;
 	var disconnectErrorMsg = null;
-	
+
 	var subscribed = false;
 	var messageReceivedCount = 0;
 	var messagePublishedCount = 0;
@@ -332,6 +332,9 @@ describe('InteropsTests', function() {
 		});
 	});
 
+	/*
+	// This test has been commented out as it is only valid for a messagesight 
+	// server and behaviour differs between mqtt server implementations.
 	it('should get a return code for failure to subscribe', function() {
 		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js");
 		client.onMessageArrived = callbacks.onMessageArrived;
@@ -365,4 +368,5 @@ describe('InteropsTests', function() {
 			expect(subFailed).toBe(true);
 		});
 	});
+	*/
 })
