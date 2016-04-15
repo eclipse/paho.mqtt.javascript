@@ -13,7 +13,7 @@
 		</license>
 	</licenses>
 	<properties>
-		<paho.version>1.0.1</paho.version>
+		<paho.version>1.0.2-SNAPSHOT</paho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<build.level>${maven.build.timestamp}</build.level>
 		<download.location>/home/data/httpd/download.eclipse.org/paho/releases/${paho.version}</download.location>
