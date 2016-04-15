@@ -23,32 +23,50 @@
 		<url>http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git</url>
 		<connection>scm:git://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.javascript.git</connection>
 	</scm>
-	
+
 	<build>
 		<defaultGoal>process-resources</defaultGoal>
 		<plugins>
 			<plugin>
-				<groupId>net.alchim31.maven</groupId>
-				<artifactId>yuicompressor-maven-plugin</artifactId>
-				<version>1.5.1</version>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>templating-maven-plugin</artifactId>
+				<version>1.0-alpha-3</version>
 				<executions>
 					<execution>
-						<id>compress-js</id>
-						<phase>process-sources</phase>
-						<configuration>
-							<force>true</force>
-							<sourceDirectory>src/</sourceDirectory>
-							<outputDirectory>target/</outputDirectory>
-							<excludes>
-								<exclude>**/test/**</exclude>
-							</excludes>
-						</configuration>
+						<id>filter-tests</id>
 						<goals>
-							<goal>compress</goal>
+							<goal>filter-test-sources</goal>
 						</goals>
 					</execution>
-				</executions>        
+				</executions>
 			</plugin>
+			<plugin>
+		      <groupId>com.samaxes.maven</groupId>
+		      <artifactId>minify-maven-plugin</artifactId>
+		      <version>1.7.4</version>
+		      <executions>
+		        <execution>
+		          <id>default-minify</id>
+				  <phase>process-sources</phase>
+		          <configuration>
+		            <charset>UTF-8</charset>
+					<webappSourceDir>${basedir}/</webappSourceDir>
+					<jsSourceDir>src/</jsSourceDir>
+					<jsSourceFiles>
+				    	<jsSourceFile>mqttws31.js</jsSourceFile>
+				 	</jsSourceFiles>
+				 	<jsFinalFile>mqttws31.js</jsFinalFile>
+				 	<jsTargetDir>target</jsTargetDir>
+				 	<webappTargetDir>${basedir}</webappTargetDir>
+		            <jsEngine>CLOSURE</jsEngine>
+					<closureLanguage>ECMASCRIPT5</closureLanguage>
+		          </configuration>
+		          <goals>
+		            <goal>minify</goal>
+		          </goals>
+		        </execution>
+		      </executions>
+		    </plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.3</version>
@@ -64,7 +82,7 @@
 										<filter token="BUILDLEVEL" value="${build.level}"/>
 									</filterset>
 								</copy>
-								<copy file="target/mqttws31-min.js" toFile="target/mqttws31-min-2.js">
+								<copy file="target/mqttws31.min.js" toFile="target/mqttws31-min-2.js">
 									<filterset>
 										<filter token="VERSION" value="${project.version}"/>
 										<filter token="BUILDLEVEL" value="${build.level}"/>
@@ -75,6 +93,7 @@
 									<fileset file="target/mqttws31-min-2.js" />
 								</concat>
 								<delete file="target/mqttws31-min-2.js"/>
+								<delete file="target/mqttws31.min.js"/>
 							</tasks>
 						</configuration>
 						<goals>
