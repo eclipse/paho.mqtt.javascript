@@ -63,13 +63,13 @@ function ensureValue(prop,value) {
 }
 
 module.exports = {
-    server: ensureValue("${test.server}","messagesight.demos.ibm.com"),
-    port: parseInt(ensureValue("${test.server.port}","1883")),
-    path: ensureValue("${test.server.path}","/mqtt"),
+    server: ensureValue("${test.server}","iot.eclipse.org"),
+    port: parseInt(ensureValue("${test.server.port}","80")),
+    path: ensureValue("${test.server.path}","/ws"),
     mqttVersion: parseInt(ensureValue("${test.server.mqttVersion}","3")),
-    interopServer: ensureValue("${test.interopServer}","messagesight.demos.ibm.com"),
-    interopPort: parseInt(ensureValue("${test.interopPort}","1883")),
-    interopPath: ensureValue("${test.interopPath}","/mqtt")
+    interopServer: ensureValue("${test.interopServer}","iot.eclipse.org"),
+    interopPort: parseInt(ensureValue("${test.interopPort}","80")),
+    interopPath: ensureValue("${test.interopPath}","/ws")
 }
 /*
 var connection = {

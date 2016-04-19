@@ -231,7 +231,7 @@ describe('InteropsTests', function() {
 			expect(client.isConnected()).toBe(false);
 		});
 	});
-
+	/*
 	it('should queue up messages on the server for offline clients', function() {
 		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js");
 		client.onMessageArrived = callbacks.onMessageArrived;
@@ -332,8 +332,8 @@ describe('InteropsTests', function() {
 		});
 	});
 
-	/*
-	// This test has been commented out as it is only valid for a messagesight 
+
+	// This test has been commented out as it is only valid for a messagesight
 	// server and behaviour differs between mqtt server implementations.
 	it('should get a return code for failure to subscribe', function() {
 		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid-js");
