@@ -71,7 +71,7 @@ The included code below is a very basic sample that connects to a server using W
 
 This requires the use of a broker that supports WebSockets natively, or the use of a gateway that can forward between WebSockets and TCP.
 
-```
+```JS
 // Create a client instance
 client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
 
