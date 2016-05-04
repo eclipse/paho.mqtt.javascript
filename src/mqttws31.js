@@ -1734,7 +1734,7 @@ Paho.MQTT = (function (global) {
 			}
 
 			//Check that if password is set, so is username
-			if (connectOptions.password === undefined && connectOptions.userName !== undefined)
+			if (connectOptions.password !== undefined && connectOptions.userName === undefined)
 				throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.password, "connectOptions.password"]))
 
 			if (connectOptions.willMessage) {
