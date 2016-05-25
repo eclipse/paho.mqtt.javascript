@@ -850,9 +850,9 @@ Paho.MQTT = (function (global) {
 		if (this.socket)
 			throw new Error(format(ERROR.INVALID_STATE, ["already connected"]));
 		
-		// connect() function is called while reconnectiong in progress.
-		// Terminate the auto reconnect process to use new connect options.
 		if (this._reconnecting) {
+			// connect() function is called while reconnect is in progress.
+			// Terminate the auto reconnect process to use new connect options.
 			this._reconnectTimeout.cancel();
 			this._reconnectTimeout = null;
 			this._reconnecting = false;
@@ -970,9 +970,12 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype.disconnect = function () {
 		this._trace("Client.disconnect");
 
-		if (this.connectOptions.reconnect && this._reconnectTimeout) {
+		if (this._reconnecting) {
+			// disconnect() function is called while reconnect is in progress.
+			// Terminate the auto reconnect process.
 			this._reconnectTimeout.cancel();
 			this._reconnectTimeout = null;
+			this._reconnecting = false;
 		}
 			
 		if (!this.socket)
@@ -1023,7 +1026,7 @@ Paho.MQTT = (function (global) {
 		this.connected = false;
 		
 		if (this._reconnecting) {
-			this._reconnectTimeout = new Timeout(this, window, this._reconnectInterval, this._reconnector);
+			this._reconnectTimeout = new Timeout(this, window, this._reconnectInterval, this._reconnect);
 		}
 		
 		if (this.connectOptions.mqttVersion < 4) {
@@ -1494,22 +1497,24 @@ Paho.MQTT = (function (global) {
 		if (this.onConnected)
 			this.onConnected({reconnect:reconnect, uri:uri}); 
 	};
-	
+
 	/**
 	 * Reconnect when this is invoked by the timer.
 	 */
-	ClientImpl.prototype._reconnector = function () {
-		this._trace("Client._reconnector");
-		this._reconnecting = true;
-		this.sendPinger.cancel();
-		this.receivePinger.cancel();
-		if (this._reconnectInterval < 60)
-			this._reconnectInterval += 5;
-		if (this.connectOptions.uris) {
-			this.hostIndex = 0;
-			this._doConnect(this.connectOptions.uris[0]);  
-		} else {
-			this._doConnect(this.uri);
+	ClientImpl.prototype._reconnect = function () {
+		this._trace("Client._reconnect");
+		if (!this.connected) {
+			this._reconnecting = true;
+			this.sendPinger.cancel();
+			this.receivePinger.cancel();
+			if (this._reconnectInterval < 60)
+				this._reconnectInterval += 5;
+			if (this.connectOptions.uris) {
+				this.hostIndex = 0;
+				this._doConnect(this.connectOptions.uris[0]);  
+			} else {
+				this._doConnect(this.uri);
+			}
 		}
 	}
 	
@@ -1523,8 +1528,9 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype._disconnected = function (errorCode, errorText) {
 		this._trace("Client._disconnected", errorCode, errorText);
 
-		if (errorCode !== undefined && this.connectOptions.reconnect) {
-			this._reconnector();
+		if (errorCode !== undefined && this._reconnecting) {
+			// Continue automatic reconnect process
+			this._reconnect();
 			return;
 		}
 		
@@ -1533,11 +1539,6 @@ Paho.MQTT = (function (global) {
 		if (this._connectTimeout) {
 			this._connectTimeout.cancel();
 			this._connectTimeout = null;
-		}
-		if (this._reconnectTimeout) {
-			this._reconnectTimeout.cancel();
-			this._reconnectTimeout = null;
-			this._reconnecting = false;
 		}
 		
 		// Clear message buffers.
@@ -1572,7 +1573,13 @@ Paho.MQTT = (function (global) {
 				this.connected = false;
 				// Execute the connectionLostCallback if there is one, and we were connected.       
 				if (this.onConnectionLost) {
-					this.onConnectionLost({errorCode:errorCode, errorMessage:errorText, reconnect:false, uri:this._wsuri});
+					this.onConnectionLost({errorCode:errorCode, errorMessage:errorText, reconnect:this.connectOptions.reconnect, uri:this._wsuri});
+				}
+				if (errorCode !== ERROR.OK.code && this.connectOptions.reconnect) {
+					// Start automatic reconnect process for the very first time since last successful connect.
+					this._reconnectInterval = 0;
+					this._reconnect();
+					return;
 				}
 			} else {
 				// Otherwise we never had a connection, so indicate that the connect has failed.
