@@ -1523,7 +1523,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype._disconnected = function (errorCode, errorText) {
 		this._trace("Client._disconnected", errorCode, errorText);
 
-		if (errorCode !== undefined) {
+		if (errorCode !== undefined && this.connectOptions.reconnect) {
 			this._reconnector();
 			return;
 		}
