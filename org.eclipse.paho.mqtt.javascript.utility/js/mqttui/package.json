@@ -1,9 +1,0 @@
-{
-  "name": "Mqtt Web Utility",
-  
-  "description": "Mqtt Web Utility",
-  "version": 1.0,
-  "maintainers":[{"name":"Paho"}],
-  "contributors":[{"name":"Paho"}],
-  "dojoBuild": "mqttui.profile.js"
-}
