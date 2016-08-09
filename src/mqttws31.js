@@ -2141,3 +2141,5 @@ Paho.MQTT = (function (global) {
 		Message: Message
 	};
 })(window);
+
+module.exports = Paho;
