@@ -1,4 +1,5 @@
 {
+	"version": "1.0.1",
 	"name": "paho-client",
 	"description": "Pre reqs for the Paho JS client",
 	"dependencies": {
