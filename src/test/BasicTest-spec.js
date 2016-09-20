@@ -4,6 +4,7 @@ var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
 var testMqttVersion = settings.mqttVersion;
+var topicPrefix = settings.topicPrefix;
 
 var genStr = function(str){
 	var time = new Date();
@@ -21,7 +22,7 @@ describe('BasicTest', function() {
 	var subscribed = false;
 	var isMessageReceived = false;
 	var isMessageDelivered = false;
-	var strTopic = '/' + makeid() + '/World';
+	var strTopic = topicPrefix + '/' + makeid() + '/World';
 	var strMessageReceived = '';
 	var strMessageSend = 'Hello';
 	var strTopicReceived = '';
@@ -216,7 +217,7 @@ describe('BasicTest', function() {
 		});
 		waitsFor(function() {
 			return connected;
-		}, "the client should connect", 2000);
+		}, "the client should connect", 5000);
 		runs(function() {
 			expect(connected).toBe(true);
 		});
@@ -305,7 +306,7 @@ describe('BasicTest', function() {
 
 	it('check message properties.',function(){
 		var strMsg = 'test Msg';
-		var strDes = '/test';
+		var strDes = topicPrefix + '/test';
 		var message = new Paho.MQTT.Message(strMsg);
 		message.destinationName = strDes;
 

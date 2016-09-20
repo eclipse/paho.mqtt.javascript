@@ -53,7 +53,7 @@ src/tests
 
 To run the tests with maven, use the following command:
 ```
-$ mvn test -Dtest.server=iot.eclipse.com -Dtest.server.port=80 -Dtest.server.path=/ws
+$ mvn test -Dtest.server=iot.eclipse.org -Dtest.server.port=80 -Dtest.server.path=/ws
 ```
 The parameters passed in should be modified to match the broker instance being tested against.
 
