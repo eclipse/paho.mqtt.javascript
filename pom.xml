@@ -53,9 +53,9 @@
 					<webappSourceDir>${basedir}/</webappSourceDir>
 					<jsSourceDir>src/</jsSourceDir>
 					<jsSourceFiles>
-				    	<jsSourceFile>mqttws31.js</jsSourceFile>
+				    	<jsSourceFile>paho-mqtt.js</jsSourceFile>
 				 	</jsSourceFiles>
-				 	<jsFinalFile>mqttws31.js</jsFinalFile>
+				 	<jsFinalFile>paho-mqtt.js</jsFinalFile>
 				 	<jsTargetDir>target</jsTargetDir>
 				 	<webappTargetDir>${basedir}</webappTargetDir>
 		            <jsEngine>CLOSURE</jsEngine>
@@ -76,24 +76,24 @@
 						<phase>process-sources</phase>
 						<configuration>
 							<tasks>
-								<copy file="src/mqttws31.js" toFile="target/mqttws31.js">
+								<copy file="src/paho-mqtt.js" toFile="target/paho-mqtt.js">
 									<filterset>
 										<filter token="VERSION" value="${project.version}"/>
 										<filter token="BUILDLEVEL" value="${build.level}"/>
 									</filterset>
 								</copy>
-								<copy file="target/mqttws31.min.js" toFile="target/mqttws31-min-2.js">
+								<copy file="target/paho-mqtt.min.js" toFile="target/paho-mqtt-min-2.js">
 									<filterset>
 										<filter token="VERSION" value="${project.version}"/>
 										<filter token="BUILDLEVEL" value="${build.level}"/>
 									</filterset>
 								</copy>
-								<concat destfile="target/mqttws31-min.js">
+								<concat destfile="target/paho-mqtt-min.js">
 									<fileset file="src/header.txt" />
-									<fileset file="target/mqttws31-min-2.js" />
+									<fileset file="target/paho-mqtt-min-2.js" />
 								</concat>
-								<delete file="target/mqttws31-min-2.js"/>
-								<delete file="target/mqttws31.min.js"/>
+								<delete file="target/paho-mqtt-min-2.js"/>
+								<delete file="target/paho-mqtt.min.js"/>
 							</tasks>
 						</configuration>
 						<goals>
@@ -263,7 +263,7 @@
 							<executable>node</executable>
 							<arguments>
 								<argument>node_modules/jsdoc/jsdoc.js</argument>
-								<argument>target/mqttws31.js</argument>
+								<argument>target/paho-mqtt.js</argument>
 								<argument>-d</argument>
 								<argument>target/docs</argument>
 							</arguments>

@@ -53,7 +53,7 @@ global.WebSocket = function(wsurl,protocol) {
 var LocalStorage = require('node-localstorage').LocalStorage;
 global.localStorage = new LocalStorage('./persistence');
 
-require("../mqttws31");
+require("../paho-mqtt");
 
 function ensureValue(prop,value) {
     if (prop == "" || prop[0] == "$") {

@@ -25,7 +25,7 @@ Paho reflects the inherent physical and cost constraints of device connectivity.
 
 A zip file containing the full and a minified version the Javascript client can be downloaded from the [Paho downloads page](https://projects.eclipse.org/projects/technology.paho/downloads)
 
-Alternatively the Javascript client can be downloaded directly from the projects git repository: [https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/mqttws31.js](https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/mqttws31.js).
+Alternatively the Javascript client can be downloaded directly from the projects git repository: [https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/paho-mqtt.js](https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/paho-mqtt.js).
 
 Please **do not** link directly to this url from your application.
 
