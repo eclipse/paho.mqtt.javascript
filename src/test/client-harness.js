@@ -62,6 +62,16 @@ function ensureValue(prop,value) {
     return prop;
 }
 
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
 module.exports = {
     server: ensureValue("${test.server}","iot.eclipse.org"),
     port: parseInt(ensureValue("${test.server.port}","80")),
@@ -69,7 +79,8 @@ module.exports = {
     mqttVersion: parseInt(ensureValue("${test.server.mqttVersion}","3")),
     interopServer: ensureValue("${test.interopServer}","iot.eclipse.org"),
     interopPort: parseInt(ensureValue("${test.interopPort}","80")),
-    interopPath: ensureValue("${test.interopPath}","/ws")
+    interopPath: ensureValue("${test.interopPath}","/ws"),
+    topicPrefix: "paho-mqtt-test-" + guid()
 }
 /*
 var connection = {

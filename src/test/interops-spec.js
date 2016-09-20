@@ -3,6 +3,7 @@ var settings = require('./client-harness');
 var testServer = settings.interopServer;
 var testPort = settings.interopPort;
 var testPath = settings.interopPath;
+var topicPrefix = settings.topicPrefix;
 var testMqttVersion = 4;
 
 var genStr = function(str){
@@ -119,7 +120,7 @@ describe('InteropsTests', function() {
 		});
 
 		runs(function() {
-			client.subscribe(topics[0], {qos:2, onSuccess: callbacks.onSubscribeSuccess});
+			client.subscribe(topicPrefix + topics[0], {qos:2, onSuccess: callbacks.onSubscribeSuccess});
 		});
 		waitsFor(function() {
 			return subscribed;
@@ -131,7 +132,7 @@ describe('InteropsTests', function() {
 		runs(function (){
 			for (var i = 0; i < 3; i++) {
 				var message = new Paho.MQTT.Message("qos " + i);
-				message.destinationName = topics[0];
+				message.destinationName = topicPrefix + topics[0];
 				message.qos=i;
 				client.send(message);
 			}
