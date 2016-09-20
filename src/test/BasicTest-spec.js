@@ -17,20 +17,31 @@ describe('BasicTest', function() {
 	var failure = false;
 	var disconnectError = null;
 	var disconnectErrorMsg = null;
-	
+
 	var subscribed = false;
 	var isMessageReceived = false;
 	var isMessageDelivered = false;
-	var strTopic = '/World';
+	var strTopic = '/' + makeid() + '/World';
 	var strMessageReceived = '';
 	var strMessageSend = 'Hello';
 	var strTopicReceived = '';
+
+
+	function makeid(){
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for( var i=0; i < 5; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+	}
 
 	function onConnectSuccess(responseObj) {
 		//console.log("connected %s",responseObj);
 		connected = true;
 	};
-	
+
 	function onConnectionLost(err) {
 		connected = false;
 		if(err){
@@ -39,17 +50,17 @@ describe('BasicTest', function() {
 		}
 		console.log("connection lost. ErrorCode: %s, ErrorMsg: %s",disconnectError,disconnectErrorMsg);
 	};
-	
+
 	function onConnectFailure(err){
 		connected = false;
 		console.log('Connect fail. ErrorCode: %s, ErrorMsg: %s',err.errCode,err.errorMessage);
 	};
-	
+
 	function onSubscribeSuccess() {
 		subscribed = true;
 		//console.log("subscribed",subscribed);
 	};
-	
+
 	function onSubscribeFailure(err) {
 		subscribed = false;
 		console.log("subscribe fail. ErrorCode: %s, ErrorMsg: %s",err.errCode,err.errorMessage);
@@ -64,16 +75,16 @@ describe('BasicTest', function() {
 		isMessageDelivered = true;
 		//reponse.invocationContext.onMessageArrived = null;
 	};
-	
+
 	function messageArrived(message) {
 		console.log("messageArrived.",'topic:',message.destinationName,' ;content:',message.payloadString);
 		isMessageReceived = true;
 		strMessageReceived = message.payloadString;
 		strTopicReceived = message.destinationName;
-		
+
 		//reponse.invocationContext.onMessageArrived = null;
 	};
-	
+
 	beforeEach(function(){
 		connected = false;
 		failure = false;
@@ -83,7 +94,7 @@ describe('BasicTest', function() {
 		//	client = new Paho.MQTT.Client(testServer, testPort, clientId);
 		//}
 	});
-	
+
 	/*afterEach(function(){
 		if(client){
 			client.disconnect();
@@ -95,7 +106,7 @@ describe('BasicTest', function() {
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 
-		
+
 		console.log('Connecting...');
 		runs(function() {
 			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
@@ -106,7 +117,7 @@ describe('BasicTest', function() {
 		runs(function() {
 			expect(connected).toBe(true);
 		});
-		
+
 		console.log('Disconnecting...');
 		runs(function() {
 			client.disconnect();
@@ -117,7 +128,7 @@ describe('BasicTest', function() {
 		runs(function() {
 			expect(connected).not.toBe(true);
 		});
-		
+
 		console.log('Re-Connecting...');
 		runs(function() {
 			client.connect({onSuccess:onConnectSuccess,mqttVersion:testMqttVersion});
@@ -130,7 +141,7 @@ describe('BasicTest', function() {
 		runs(function() {
 			expect(connected).toBe(true);
 		});
-	
+
 	});
 
 	it('it should fallback from MQTTv3.1.1 to v3.1',function(){
@@ -148,7 +159,7 @@ describe('BasicTest', function() {
 		runs(function() {
 			expect(connected).toBe(true);
 		});
-		
+
 		console.log('Disconnecting...');
 		runs(function() {
 			client.disconnect();
@@ -160,17 +171,17 @@ describe('BasicTest', function() {
 			expect(connected).not.toBe(true);
 		});
 	});
-	
+
 	it('it should connect to a list of server(HA connection).',function(){
 		var defaultServer = testServer;
 		var defaultPort = testPort;
 		var arrHosts = ['localhost',testServer,];
 		var arrPorts = [2000,testPort];
-		
+
 		var client = new Paho.MQTT.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
-		
+
 		console.log('should connect to a available server from list');
 		runs(function() {
 			client.connect({
@@ -190,16 +201,16 @@ describe('BasicTest', function() {
 			expect(connected).toBe(true);
 			//client.disconnect();
 		});
-	
+
 	});
-	
-	
+
+
 	it('it should publish and subscribe.',function(){
-		
+
 		var client = new Paho.MQTT.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onMessageArrived = messageArrived;
 		client.onMessageDelivered = messageDelivered;
-		
+
 		runs(function() {
 			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
 		});
@@ -209,25 +220,25 @@ describe('BasicTest', function() {
 		runs(function() {
 			expect(connected).toBe(true);
 		});
-		
+
 		console.log('Subscribe a topic...');
 		runs(function() {
 			client.subscribe(strTopic, {onSuccess:onSubscribeSuccess,onFailure:onSubscribeFailure});
 		});
-	    
+
 		waitsFor(function() {
 			return subscribed;
 		}, "the client should subscribe", 2000);
-	    
+
 		runs(function() {
 			expect(subscribed).toBe(true);
 		});
-			
+
 		console.log('Send and receive message...');
 		runs(function() {
 			var message = new Paho.MQTT.Message(strMessageSend);
 			message.destinationName = strTopic;
-			client.send(message); 
+			client.send(message);
 		});
 		waitsFor(function() {
 			return isMessageReceived;
@@ -237,16 +248,16 @@ describe('BasicTest', function() {
 			expect(isMessageDelivered).toBe(true);
 			//Check msg received
 			expect(isMessageReceived).toBe(true);
-			//Check message 
+			//Check message
 			expect(strMessageReceived).toEqual(strMessageSend);
 			//Check topic
 			expect(strTopicReceived).toEqual(strTopic);
-			
-			//disconnect 
+
+			//disconnect
 			//client.disconnect();
-			
+
 		});
-		
+
 		console.log('Unsubscribe a topic...');
 		runs(function() {
 			client.unsubscribe(strTopic, {onSuccess:onUnsubscribeSuccess});
@@ -256,10 +267,10 @@ describe('BasicTest', function() {
 		}, "the client should subscribe", 2000);
 		runs(function() {
 			expect(subscribed).toBe(false);
-			//disconnect 
+			//disconnect
 			//client.disconnect();
 		});
-		
+
 		//should not receive a message after unsubscribe
 		runs(function() {
 			//console.log('isMessageReceived',isMessageReceived);
@@ -267,10 +278,10 @@ describe('BasicTest', function() {
 			isMessageReceived = false;
 			strMessageReceived = '';
 			strTopicReceived = '';
-			
+
 			var message = new Paho.MQTT.Message(genStr(strMessageSend));
 			message.destinationName = strTopic;
-			client.send(message); 
+			client.send(message);
 		})
 		waitsFor(function() {
 			return isMessageDelivered;
@@ -281,23 +292,23 @@ describe('BasicTest', function() {
 			expect(isMessageDelivered).toBe(true);
 			//Check msg received
 			expect(isMessageReceived).toBe(false);
-			//Check message 
+			//Check message
 			expect(strMessageReceived).toEqual('');
 			//Check topic
 			expect(strTopicReceived).toEqual('');
-			
-			//disconnect 
+
+			//disconnect
 			//client.disconnect();
-			
+
 		})
 	});
-	
+
 	it('check message properties.',function(){
 		var strMsg = 'test Msg';
 		var strDes = '/test';
 		var message = new Paho.MQTT.Message(strMsg);
 		message.destinationName = strDes;
-		
+
 		console.log('Check default for message with payload.');
 		expect(message.qos).toBe(0);
 		expect(message.duplicate).toBe(false);
@@ -305,12 +316,12 @@ describe('BasicTest', function() {
 		expect(message.payloadString).toEqual(strMsg);
 		expect(message.payloadBytes.length).toBeGreaterThan(0);
 		expect(message.destinationName).toEqual(strDes);
-		
+
 		console.log('Check empty msg to throw error');
 		expect(function(){
 			var empMsg = new Paho.MQTT.Message();
 		}).toThrow();
-		
+
 		console.log('Check message qos');
 		message.qos = 0;
 		expect(message.qos).toBe(0);
@@ -318,7 +329,7 @@ describe('BasicTest', function() {
 		expect(message.qos).toBe(1);
 		message.qos = 2;
 		expect(message.qos).toBe(2);
-		
+
 		//illegal argument exception
 		expect(function(){
 			message.qos = -1;
@@ -326,25 +337,25 @@ describe('BasicTest', function() {
 		expect(function(){
 			message.qos = 1;
 		}).not.toThrow();
-		
+
 		console.log('Check payload');
 		var strPayload = 'payload is a string';
 		message.payloadString = strPayload;
 		console.log('not allowed to set payload');
 		expect(message.payloadString).not.toEqual(strPayload);
-		
+
 		console.log('Check retained');
 		message.retained = false;
 		expect(message.retained).toBe(false);
 		message.retained = true;
 		expect(message.retained).toBe(true);
-		
+
 		console.log('Check duplicate');
 		message.duplicate = false;
 		expect(message.duplicate).toBe(false);
 		message.duplicate = true;
 		expect(message.duplicate).toBe(true);
-		
+
 		//to do , check payload
 		/*
 		var buffer = new ArrayBuffer(4);
@@ -358,7 +369,5 @@ describe('BasicTest', function() {
 		console.log(msg.payloadBytes,msg.payloadString);
 		*/
 	});
-	
-});
 
-	
+});
