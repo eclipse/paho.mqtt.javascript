@@ -1859,7 +1859,6 @@ Paho.MQTT = (function (global) {
      * It will initially wait 1 second before it attempts to reconnect, for every failed reconnect attempt, the delay
      * will double until it is at 2 minutes at which point the delay will stay at 2 minutes.</li>
      *</ul>
-     * @param {number} connectOptions.reconnectInterval - Default 10 (seconds)
      * @param {number} connectOptions.mqttVersion - The version of MQTT to use to connect to the MQTT Broker.
      *<ul>
      *<li>3 - MQTT V3.1</li>
@@ -1889,7 +1888,6 @@ Paho.MQTT = (function (global) {
 									   hosts:"object",
 									   ports:"object",
 									   reconnect:"boolean",
-                     reconnectInterval:"number",
 									   mqttVersion:"number",
 									   mqttVersionExplicit:"boolean",
 									   uris: "object"});
@@ -1912,9 +1910,6 @@ Paho.MQTT = (function (global) {
 			//Check that if password is set, so is username
 			if (connectOptions.password !== undefined && connectOptions.userName === undefined)
 				throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.password, "connectOptions.password"]))
-
-			if (connectOptions.reconnectInterval === undefined)
-				connectOptions.reconnectInterval = 10;
 
 			if (connectOptions.willMessage) {
 				if (!(connectOptions.willMessage instanceof Message))
