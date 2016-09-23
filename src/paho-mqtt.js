@@ -830,7 +830,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype.sendPinger = null;
 	/* The receivePinger monitors how long we allow before we require evidence that the server is alive. */
 	ClientImpl.prototype.receivePinger = null;
-	ClientImpl.prototype._reconnectInterval = 0;
+	ClientImpl.prototype._reconnectInterval = 1; // Reconnect Delay, starts at 1 second
 	ClientImpl.prototype._reconnecting = false;
 	ClientImpl.prototype._reconnectTimeout = null;
 	ClientImpl.prototype.disconnectedPublishing = false;
@@ -859,7 +859,7 @@ Paho.MQTT = (function (global) {
 		}
 
 		this.connectOptions = connectOptions;
-		this._reconnectInterval = 0;
+		this._reconnectInterval = 1;
 		this._reconnecting = false;
 		if (connectOptions.uris) {
 			this.hostIndex = 0;
@@ -1025,9 +1025,7 @@ Paho.MQTT = (function (global) {
 		this._wsuri = wsurl;
 		this.connected = false;
 
-		if (this._reconnecting) {
-			this._reconnectTimeout = new Timeout(this, window, this._reconnectInterval, this._reconnect);
-		}
+
 
 		if (this.connectOptions.mqttVersion < 4) {
 			this.socket = new WebSocket(wsurl, ["mqttv3.1"]);
@@ -1267,10 +1265,13 @@ Paho.MQTT = (function (global) {
 				}
 				// Client connected and ready for business.
 				if (wireMessage.returnCode === 0) {
+
 					this.connected = true;
 					// Jump to the end of the list of uris and stop looking for a good host.
+
 					if (this.connectOptions.uris)
-						this.hostIndex = this.connectOptions.uris.length;
+            this.hostIndex = this.connectOptions.uris.length;
+
 				} else {
 					this._disconnected(ERROR.CONNACK_RETURNCODE.code , format(ERROR.CONNACK_RETURNCODE, [wireMessage.returnCode, CONNACK_RC[wireMessage.returnCode]]));
 					break;
@@ -1307,14 +1308,16 @@ Paho.MQTT = (function (global) {
 				}
 
 				// Execute the connectOptions.onSuccess callback if there is one.
-				if (this.connectOptions.onSuccess && !this._reconnecting) {
-					this.connectOptions.onSuccess({invocationContext:this.connectOptions.invocationContext});
+        // Will also now return if this connection was the result of an automatic
+        // reconnect and which URI was successfully connected to.
+				if (this.connectOptions.onSuccess) {
+					this.connectOptions.onSuccess({invocationContext:this.connectOptions.invocationContext}, this._reconnecting, this.uri);
 				}
 
 				var reconnected = false;
 				if (this._reconnecting) {
 					reconnected = true;
-					this._reconnectInterval = 0;
+					this._reconnectInterval = 1;
 					this._reconnecting = false;
 				}
 
@@ -1497,7 +1500,9 @@ Paho.MQTT = (function (global) {
 	};
 
 	/**
-	 * Reconnect when this is invoked by the timer.
+	 * Attempts to reconnect the client to the server.
+   * For each reconnect attempt, will double the reconnect interval
+   * up to 128 seconds.
 	 */
 	ClientImpl.prototype._reconnect = function () {
 		this._trace("Client._reconnect");
@@ -1505,9 +1510,8 @@ Paho.MQTT = (function (global) {
 			this._reconnecting = true;
 			this.sendPinger.cancel();
 			this.receivePinger.cancel();
-      console.log("Reconnect interval is currently: " + this._reconnectInterval);
-			if (this._reconnectInterval < 60)
-				this._reconnectInterval += 5;
+			if (this._reconnectInterval < 128)
+				this._reconnectInterval = this._reconnectInterval * 2;
 			if (this.connectOptions.uris) {
 				this.hostIndex = 0;
 				this._doConnect(this.connectOptions.uris[0]);
@@ -1528,8 +1532,8 @@ Paho.MQTT = (function (global) {
 		this._trace("Client._disconnected", errorCode, errorText);
 
 		if (errorCode !== undefined && this._reconnecting) {
-			// Continue automatic reconnect process
-			this._reconnect();
+      //Continue automatic reconnect process
+  		this._reconnectTimeout = new Timeout(this, window, this._reconnectInterval, this._reconnect);
 			return;
 		}
 
@@ -1576,7 +1580,7 @@ Paho.MQTT = (function (global) {
 				}
 				if (errorCode !== ERROR.OK.code && this.connectOptions.reconnect) {
 					// Start automatic reconnect process for the very first time since last successful connect.
-					this._reconnectInterval = 0;
+					this._reconnectInterval = 1;
 					this._reconnect();
 					return;
 				}
