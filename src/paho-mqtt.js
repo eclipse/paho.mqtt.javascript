@@ -1311,7 +1311,7 @@ Paho.MQTT = (function (global) {
         // Will also now return if this connection was the result of an automatic
         // reconnect and which URI was successfully connected to.
 				if (this.connectOptions.onSuccess) {
-					this.connectOptions.onSuccess({invocationContext:this.connectOptions.invocationContext}, this._reconnecting, this.uri);
+					this.connectOptions.onSuccess({invocationContext:this.connectOptions.invocationContext});
 				}
 
 				var reconnected = false;
@@ -1496,7 +1496,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype._connected = function (reconnect, uri) {
 		// Execute the onConnected callback if there is one.
 		if (this.onConnected)
-			this.onConnected({reconnect:reconnect, uri:uri});
+			this.onConnected(reconnect, uri);
 	};
 
 	/**
@@ -1689,7 +1689,7 @@ Paho.MQTT = (function (global) {
 	 *                            <li>errorCode
 	 *                            <li>errorMessage
 	 *                            </ol>
-	 * @property {function} onMessageDelivered called when a message has been delivered.
+	 * @property {function} onMessageDelivered - called when a message has been delivered.
 	 *                            All processing that this Client will ever do has been completed. So, for example,
 	 *                            in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
 	 *                            and the message has been removed from persistent storage before this callback is invoked.
@@ -1697,11 +1697,23 @@ Paho.MQTT = (function (global) {
 	 *                            <ol>
 	 *                            <li>{@link Paho.MQTT.Message} that was delivered.
 	 *                            </ol>
-	 * @property {function} onMessageArrived called when a message has arrived in this Paho.MQTT.client.
+	 * @property {function} onMessageArrived - called when a message has arrived in this Paho.MQTT.client.
 	 *                            Parameters passed to the onMessageArrived callback are:
 	 *                            <ol>
 	 *                            <li>{@link Paho.MQTT.Message} that has arrived.
 	 *                            </ol>
+	 * @property {function} onConnected - called when a connection is successfully made to the server.
+	 *                                  after a connect() method.
+	 *                                  Parameters passed to the onConnected callback are:
+	 *                                  <ol>
+	 *                                  <li>reconnect (boolean) - If true, the connection was the result of a reconnect.</li>
+	 *                                  <li>URI (string) - The URI used to connect to the server.</li>
+	 *                                  </ol>
+	 * @property {boolean} disconnectedPublishing - if set, will enable disconnected publishing in
+	 *                                            in the event that the connection to the server is lost.
+	 * @property {number} disconnectedBufferSize - Used to set the maximum number of messages that the disconnected
+	 *                                             buffer will hold before rejecting new messages. Default size: 5000 messages
+	 * @property {function} trace - called whenever trace is called. TODO
 	 */
 	var Client = function (host, port, path, clientId) {
 
