@@ -1232,7 +1232,8 @@ Paho.MQTT = (function (global) {
 		    	this.receiveBuffer = byteArray.subarray(offset);
 		    }
 		} catch (error) {
-			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,error.stack.toString()]));
+			var errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : "No Error Stack Available");
+			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,errorStack]));
 			return;
 		}
 		return messages;
@@ -1421,7 +1422,8 @@ Paho.MQTT = (function (global) {
 				this._disconnected(ERROR.INVALID_MQTT_MESSAGE_TYPE.code , format(ERROR.INVALID_MQTT_MESSAGE_TYPE, [wireMessage.type]));
 			};
 		} catch (error) {
-			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,error.stack.toString()]));
+			var errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : "No Error Stack Available");
+			this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,errorStack]));
 			return;
 		}
 	};
@@ -2132,6 +2134,58 @@ Paho.MQTT = (function (global) {
 		};
 
 		/**
+		 * Publish a message to the consumers of the destination in the Message.
+		 * Synonym for Paho.Mqtt.Client#send
+		 *
+		 * @name Paho.MQTT.Client#publish
+		 * @function
+		 * @param {string|Paho.MQTT.Message} topic - <b>mandatory</b> The name of the topic to which the message is to be published.
+		 * 					   - If it is the only parameter, used as Paho.MQTT.Message object.
+		 * @param {String|ArrayBuffer} payload - The message data to be published.
+		 * @param {number} qos The Quality of Service used to deliver the message.
+		 * 		<dl>
+		 * 			<dt>0 Best effort (default).
+		 *     			<dt>1 At least once.
+		 *     			<dt>2 Exactly once.
+		 * 		</dl>
+		 * @param {Boolean} retained If true, the message is to be retained by the server and delivered
+		 *                     to both current and future subscriptions.
+		 *                     If false the server only delivers the message to current subscribers, this is the default for new Messages.
+		 *                     A received message has the retained boolean set to true if the message was published
+		 *                     with the retained boolean set to true
+		 *                     and the subscrption was made after the message has been published.
+		 * @throws {InvalidState} if the client is not connected.
+		 */
+		 this.publish = function(topic,payload,qos,retained) {
+			 console.log("Publising message to: ", topic)
+			 var message ;
+
+ 			if(arguments.length == 0){
+ 				throw new Error("Invalid argument."+"length");
+
+ 			}else if(arguments.length == 1) {
+
+ 				if (!(topic instanceof Message) && (typeof topic !== "string"))
+ 					throw new Error("Invalid argument:"+ typeof topic);
+
+ 				message = topic;
+ 				if (typeof message.destinationName === "undefined")
+ 					throw new Error(format(ERROR.INVALID_ARGUMENT,[message.destinationName,"Message.destinationName"]));
+ 				client.send(message);
+
+ 			}else {
+ 				//parameter checking in Message object
+ 				message = new Message(payload);
+ 				message.destinationName = topic;
+ 				if(arguments.length >= 3)
+ 					message.qos = qos;
+ 				if(arguments.length >= 4)
+ 					message.retained = retained;
+ 				client.send(message);
+ 			}
+		 }
+
+		/**
 		 * Normal disconnect of this Messaging client from its server.
 		 *
 		 * @name Paho.MQTT.Client#disconnect
@@ -2323,6 +2377,9 @@ Paho.MQTT = (function (global) {
 
 		get destinationName() { return this._getDestinationName(); },
 		set destinationName(newDestinationName) { this._setDestinationName(newDestinationName); },
+
+		get topic() { return this._getDestinationName(); },
+		set topic(newTopic) { this._setDestinationName(newTopic); },
 
 		get qos() { return this._getQos(); },
 		set qos(newQos) { this._setQos(newQos); },
