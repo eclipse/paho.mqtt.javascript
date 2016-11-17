@@ -1,0 +1,90 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/nodejs', '/usr/local/bin/npm', 'publish' ]
+2 info using npm@3.3.12
+3 info using node@v5.4.1
+4 verbose publish [ '.' ]
+5 silly cache add args [ '.', null ]
+6 verbose cache add spec .
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: '.',
+7 silly cache add   scope: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: '.',
+7 silly cache add   spec: '/home/oscar/Documenti/development/paho.mqtt.javascript',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory /home/oscar/.npm/paho-client/1.0.0/package.tgz not in flight; packing
+9 info lifecycle paho-client@1.0.0~prepublish: paho-client@1.0.0
+10 silly lifecycle paho-client@1.0.0~prepublish: no script for prepublish, continuing
+11 verbose tar pack [ '/home/oscar/.npm/paho-client/1.0.0/package.tgz',
+11 verbose tar pack   '/home/oscar/Documenti/development/paho.mqtt.javascript' ]
+12 verbose tarball /home/oscar/.npm/paho-client/1.0.0/package.tgz
+13 verbose folder /home/oscar/Documenti/development/paho.mqtt.javascript
+14 verbose addLocalTarball adding from inside cache /home/oscar/.npm/paho-client/1.0.0/package.tgz
+15 silly cache afterAdd paho-client@1.0.0
+16 verbose afterAdd /home/oscar/.npm/paho-client/1.0.0/package/package.json not in flight; writing
+17 verbose afterAdd /home/oscar/.npm/paho-client/1.0.0/package/package.json written
+18 silly publish { version: '1.0.0',
+18 silly publish   name: 'paho-client',
+18 silly publish   description: 'Pre reqs for the Paho JS client',
+18 silly publish   dependencies:
+18 silly publish    { websocket: '1.x.x',
+18 silly publish      'node-localstorage': '0.x.x',
+18 silly publish      'jasmine-node': '1.11.x' },
+18 silly publish   readme: '# Eclipse Paho JavaScript client\n\nThe Paho JavaScript Client is an MQTT browser-based client library written in Javascript that uses WebSockets to connect to an MQTT Broker.\n\n## Project description:\n\nThe Paho project has been created to provide reliable open-source implementations of open and standard messaging protocols aimed at new, existing, and emerging applications for Machine-to-Machine (M2M) and Internet of Things (IoT).\nPaho reflects the inherent physical and cost constraints of device connectivity. Its objectives include effective levels of decoupling between devices and applications, designed to keep markets open and encourage the rapid growth of scalable Web and Enterprise middleware and applications.\n\n## Links\n\n- Project Website: [https://www.eclipse.org/paho](https://www.eclipse.org/paho)\n- Eclipse Project Information: [https://projects.eclipse.org/projects/iot.paho](https://projects.eclipse.org/projects/iot.paho)\n- Paho Javascript Client Page: [https://eclipse.org/paho/clients/js/](https://eclipse.org/paho/clients/js)\n- GitHub: [https://github.com/eclipse/paho.mqtt.javascript](https://github.com/eclipse/paho.mqtt.javascript)\n- Twitter: [@eclipsepaho](https://twitter.com/eclipsepaho)\n- Issues: [github.com/eclipse/paho.mqtt.javascript/issues](https://github.com/eclipse/paho.mqtt.javascript/issues)\n- Mailing-list: [https://dev.eclipse.org/mailman/listinfo/paho-dev](https://dev.eclipse.org/mailman/listinfo/paho-dev\n\n\n## Using the Paho Javascript Client\n\n\n### Downloading\n\nA zip file containing the full and a minified version the Javascript client can be downloaded from the [Paho downloads page](https://projects.eclipse.org/projects/technology.paho/downloads)\n\nAlternatively the Javascript client can be downloaded directly from the projects git repository: [https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/mqttws31.js](https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/mqttws31.js).\n\nPlease **do not** link directly to this url from your application.\n\n### Building from source\n\nThere are two active branches on the Paho Java git repository, ```master``` which is used to produce stable releases, and ```develop``` where active development is carried out. By default cloning the git repository will download the ```master``` branch, to build from develop make sure you switch to the remote branch: ```git checkout -b develop remotes/origin/develop```\n\nThe project contains a maven based build that produces a minified version of the client, runs unit tests and generates it\'s documentation.\n\nTo run the build:\n\n```\n$ mvn\n```\n\nThe output of the build is copied to the ```target``` directory.\n\n### Tests\n\nThe client uses the [Jasmine](http://jasmine.github.io/) test framework. The tests for the client are in:\n\n```\nsrc/tests\n```\n\nTo run the tests with maven, use the following command:\n```\n$ mvn test -Dtest.server=iot.eclipse.com -Dtest.server.port=80 -Dtest.server.path=/ws\n```\nThe parameters passed in should be modified to match the broker instance being tested against.\n\n### Documentation\n\nReference documentation is online at: [http://www.eclipse.org/paho/files/jsdoc/index.html](http://www.eclipse.org/paho/files/jsdoc/index.html)\n\n### Compatibility\n\nThe client should work in any browser fully supporting WebSockets, [http://caniuse.com/websockets](http://caniuse.com/websockets) lists browser compatibility.\n\n## Getting Started\n\nThe included code below is a very basic sample that connects to a server using WebSockets and subscribes to the topic ```/World```, once subscribed, it then publishes the message ```Hello``` to that topic. Any messages that come into the subscribed topic will be printed to the Javascript console.\n\nThis requires the use of a broker that supports WebSockets natively, or the use of a gateway that can forward between WebSockets and TCP.\n\n```JS\n// Create a client instance\nclient = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");\n\n// set callback handlers\nclient.onConnectionLost = onConnectionLost;\nclient.onMessageArrived = onMessageArrived;\n\n// connect the client\nclient.connect({onSuccess:onConnect});\n\n\n// called when the client connects\nfunction onConnect() {\n  // Once a connection has been made, make a subscription and send a message.\n  console.log("onConnect");\n  client.subscribe("/World");\n  message = new Paho.MQTT.Message("Hello");\n  message.destinationName = "/World";\n  client.send(message);\n}\n\n// called when the client loses its connection\nfunction onConnectionLost(responseObject) {\n  if (responseObject.errorCode !== 0) {\n    console.log("onConnectionLost:"+responseObject.errorMessage);\n  }\n}\n\n// called when a message arrives\nfunction onMessageArrived(message) {\n  console.log("onMessageArrived:"+message.payloadString);\n}\n```\n',
+18 silly publish   readmeFilename: 'README.md',
+18 silly publish   gitHead: '3828848187b03333684478105ee54dab4da3bc79',
+18 silly publish   _id: 'paho-client@1.0.0',
+18 silly publish   scripts: {},
+18 silly publish   _shasum: 'd8e61113f75a3ed1335bcb590ff451816eb0bfa2',
+18 silly publish   _from: '.' }
+19 verbose getPublishConfig undefined
+20 silly mapToRegistry name paho-client
+21 silly mapToRegistry using default registry
+22 silly mapToRegistry registry https://registry.npmjs.org/
+23 silly mapToRegistry uri https://registry.npmjs.org/paho-client
+24 verbose publish registryBase https://registry.npmjs.org/
+25 silly publish uploading /home/oscar/.npm/paho-client/1.0.0/package.tgz
+26 verbose request uri https://registry.npmjs.org/paho-client
+27 verbose request sending authorization for write operation
+28 info attempt registry request try #1 at 14:27:00
+29 verbose request using bearer token for auth
+30 verbose request id 8828bd3422deac51
+31 http request PUT https://registry.npmjs.org/paho-client
+32 http 403 https://registry.npmjs.org/paho-client
+33 verbose headers { 'content-type': 'application/json',
+33 verbose headers   'cache-control': 'max-age=300',
+33 verbose headers   'content-length': '95',
+33 verbose headers   'accept-ranges': 'bytes',
+33 verbose headers   date: 'Tue, 09 Aug 2016 12:27:02 GMT',
+33 verbose headers   via: '1.1 varnish',
+33 verbose headers   connection: 'keep-alive',
+33 verbose headers   'x-served-by': 'cache-lcy1123-LCY',
+33 verbose headers   'x-cache': 'MISS',
+33 verbose headers   'x-cache-hits': '0',
+33 verbose headers   'x-timer': 'S1470745621.177074,VS0,VE1483',
+33 verbose headers   vary: 'Accept-Encoding' }
+34 verbose request invalidating /home/oscar/.npm/registry.npmjs.org/paho-client on PUT
+35 error publish Failed PUT 403
+36 verbose stack Error: "You cannot publish over the previously published version 1.0.0." : paho-client
+36 verbose stack     at makeError (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:264:12)
+36 verbose stack     at CachingRegistryClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:252:14)
+36 verbose stack     at Request._callback (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:172:14)
+36 verbose stack     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/request.js:198:22)
+36 verbose stack     at emitTwo (events.js:87:13)
+36 verbose stack     at Request.emit (events.js:172:7)
+36 verbose stack     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1082:10)
+36 verbose stack     at emitOne (events.js:82:20)
+36 verbose stack     at Request.emit (events.js:169:7)
+36 verbose stack     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1009:12)
+37 verbose statusCode 403
+38 verbose pkgid paho-client
+39 verbose cwd /home/oscar/Documenti/development/paho.mqtt.javascript
+40 error Linux 4.2.0-42-generic
+41 error argv "/usr/bin/nodejs" "/usr/local/bin/npm" "publish"
+42 error node v5.4.1
+43 error npm  v3.3.12
+44 error code E403
+45 error "You cannot publish over the previously published version 1.0.0." : paho-client
+46 error If you need help, you may report this error at:
+46 error     <https://github.com/npm/npm/issues>
+47 verbose exit [ 1, true ]
