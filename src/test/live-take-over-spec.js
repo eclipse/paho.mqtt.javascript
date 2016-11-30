@@ -76,6 +76,7 @@ describe('LiveTakeOver', function() {
 			if(!connectOptions.hasOwnProperty("onSuccess")){
 				connectOptions.onSuccess=onConnect;
 				connectOptions.mqttVersion=testMqttVersion;
+				connectOptions.useSSL = true;
 			}
 		    runs(function() {
 			  client.connect(connectOptions);
@@ -211,7 +212,7 @@ describe('LiveTakeOver', function() {
 		willMessage.retained=true;
 
 		var client1= new MqttClient(clientId);
-		client1.connect({cleanSession:false,willMessage:willMessage,mqttVersion:testMqttVersion});
+		client1.connect({cleanSession:false,willMessage:willMessage,mqttVersion:testMqttVersion, useSSL: true});
 
 		//subscribe
 		client1.subscribe(testTopic, subscribedQoS);
@@ -226,7 +227,7 @@ describe('LiveTakeOver', function() {
         // Create a second MQTT client connection with the same clientid. The
         // server should spot this and kick the first client connection off.
 		var client2= new MqttClient(clientId);
-		client2.connect({cleanSession:false,willMessage:willMessage,mqttVersion:testMqttVersion});
+		client2.connect({cleanSession:false,willMessage:willMessage,mqttVersion:testMqttVersion, useSSL: true});
 
 	    waitsFor(function() {
 				return !client1.states.connected;

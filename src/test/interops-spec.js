@@ -90,7 +90,7 @@ describe('InteropsTests', function() {
 		expect(client).not.toBe(null);
 
 		runs(function() {
-			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion});
+			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return client.isConnected();
@@ -110,7 +110,7 @@ describe('InteropsTests', function() {
 		});
 
 		runs(function() {
-			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion});
+			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return client.isConnected();
@@ -165,7 +165,7 @@ describe('InteropsTests', function() {
 		expect(client).not.toBe(null);
 
 		runs(function() {
-			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion});
+			client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return client.isConnected();
@@ -176,7 +176,7 @@ describe('InteropsTests', function() {
 
 		runs(function() {
 			try {
-				client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion});
+				client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, useSSL: true});
 			} catch (e) {
 				console.log(e.message)
 				if (e.message == "AMQJS0011E Invalid state already connected.") {
@@ -194,7 +194,7 @@ describe('InteropsTests', function() {
 		expect(client).not.toBe(null);
 
 		runs(function() {
-			client.connect({cleanSession:true, onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion});
+			client.connect({cleanSession:true, onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return client.isConnected();
@@ -223,7 +223,7 @@ describe('InteropsTests', function() {
 		expect(client).not.toBe(null);
 
 		runs(function() {
-			client.connect({cleanSession:false, onFailure:failCallback, mqttVersion:testMqttVersion});
+			client.connect({cleanSession:false, onFailure:failCallback, mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return connectFail

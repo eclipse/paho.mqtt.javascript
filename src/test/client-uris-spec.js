@@ -35,14 +35,14 @@ describe('client-uris', function() {
 
 	it('should create a new client with a default path', function() {
 		client = new Paho.MQTT.Client(testServer, testPort, "testclientid");
-		
+
 		expect(client).not.toBe(null);
 		expect(client.host).toBe(testServer);
 		expect(client.port).toBe(testPort);
 		expect(client.path).toBe("/mqtt");
-		
+
 	});
-	
+
 	it('should create a new client with a path', function() {
 		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid");
 
@@ -51,7 +51,7 @@ describe('client-uris', function() {
 		expect(client.port).toBe(testPort);
 		expect(client.path).toBe(testPath);
 	});
-	
+
 	it('should create a new client with a uri', function() {
 		client = new Paho.MQTT.Client("ws://"+testServer+":"+testPort+testPath, "testclientid");
 
@@ -83,7 +83,7 @@ describe('client-uris', function() {
 
 		client.onMessageArrived = messageArrived;
         client.onConnectionLost = onDisconnect;
-		
+
 		runs(function() {
 			client.connect({onSuccess:onConnect,hosts:[testServer],ports:[testPort]});
 		});
@@ -108,16 +108,16 @@ describe('client-uris', function() {
         });
 	});
 	*/
-	
+
 	it('should connect and disconnect to a server using connectoptions hosts', function() {
         client = new Paho.MQTT.Client(testServer, testPort, "testclientid");
         expect(client).not.toBe(null);
 
 		client.onMessageArrived = messageArrived;
         client.onConnectionLost = onDisconnect;
-		
+
 		runs(function() {
-			client.connect({onSuccess:onConnect,hosts:["ws://"+testServer+":"+testPort+testPath],mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnect,hosts:["ws://"+testServer+":"+testPort+testPath],mqttVersion:testMqttVersion, useSSL: true});
 		});
 
 		waitsFor(function() {
@@ -139,5 +139,5 @@ describe('client-uris', function() {
             expect(disconnectError.errorCode).toBe(0);
         });
 	});
-	
+
 })

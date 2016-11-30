@@ -74,11 +74,11 @@ function guid() {
 
 module.exports = {
     server: ensureValue("${test.server}","iot.eclipse.org"),
-    port: parseInt(ensureValue("${test.server.port}","80")),
+    port: parseInt(ensureValue("${test.server.port}","443")),
     path: ensureValue("${test.server.path}","/ws"),
     mqttVersion: parseInt(ensureValue("${test.server.mqttVersion}","3")),
     interopServer: ensureValue("${test.interopServer}","iot.eclipse.org"),
-    interopPort: parseInt(ensureValue("${test.interopPort}","80")),
+    interopPort: parseInt(ensureValue("${test.interopPort}","443")),
     interopPath: ensureValue("${test.interopPath}","/ws"),
     topicPrefix: "paho-mqtt-test-" + guid()
 }
