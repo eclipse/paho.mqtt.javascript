@@ -888,7 +888,7 @@ Paho.MQTT = (function (global) {
 		}
 
 		if (subscribeOptions.onFailure) {
-			wireMessage.onFailure = function(errorCode) {subscribeOptions.onFailure({invocationContext:subscribeOptions.invocationContext,errorCode:errorCode});};
+			wireMessage.onFailure = function(errorCode) {subscribeOptions.onFailure({invocationContext:subscribeOptions.invocationContext,errorCode:errorCode, errorMessage:format(errorCode)});};
 		}
 
 		if (subscribeOptions.timeout) {
