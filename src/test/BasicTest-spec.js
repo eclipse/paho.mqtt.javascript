@@ -110,7 +110,7 @@ describe('BasicTest', function() {
 
 		console.log('Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return connected;
@@ -132,7 +132,7 @@ describe('BasicTest', function() {
 
 		console.log('Re-Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnectSuccess,mqttVersion:testMqttVersion, useSSL: true});
 		});
 
 		waitsFor(function() {
@@ -152,7 +152,7 @@ describe('BasicTest', function() {
 
 		console.log('Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,timeout:1});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,timeout:1, useSSL: true});
 		});
 		waitsFor(function() {
 			return connected;
@@ -190,7 +190,8 @@ describe('BasicTest', function() {
 				onFailure : onConnectFailure,
 				hosts : arrHosts,
 				ports : arrPorts,
-				mqttVersion: testMqttVersion
+				mqttVersion: testMqttVersion,
+				useSSL : true
 			});
 		});
 
@@ -213,7 +214,7 @@ describe('BasicTest', function() {
 		client.onMessageDelivered = messageDelivered;
 
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return connected;

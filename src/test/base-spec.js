@@ -41,7 +41,7 @@ describe('client', function() {
 
 	it('should connect to a server', function() {
 		runs(function() {
-			client.connect({onSuccess:onConnect, mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnect, mqttVersion:testMqttVersion, useSSL: true});
 		});
 
 		waitsFor(function() {
