@@ -240,6 +240,19 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>jshint</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>node_modules/jshint/bin/jshint</executable>
+							<arguments>
+								<argument>src/paho-mqtt.js</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
 						<id>install-jsdoc-modules</id>
 						<phase>generate-resources</phase>
 						<goals>

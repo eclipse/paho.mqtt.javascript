@@ -4,6 +4,7 @@
 	"dependencies": {
 		"websocket": "1.x.x",
 		"node-localstorage": "0.x.x",
-		"jasmine-node": "1.11.x"
+		"jasmine-node": "1.11.x",
+		"jshint" : "2.9.x"
 	}
 }
