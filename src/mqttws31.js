@@ -84,6 +84,10 @@ if (typeof Paho === "undefined") {
 	Paho = {};
 }
 
+if (typeof exports === 'object' && typeof module === 'object') {
+  module.exports = Paho;
+}
+
 Paho.MQTT = (function (global) {
 
 	// Private variables below, these are only visible inside the function closure
