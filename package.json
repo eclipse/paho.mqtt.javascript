@@ -1,7 +1,9 @@
 {
-	"name": "paho-client",
+	"name": "paho-mqtt",
+	"main": "bin/index.js",
+	"version": "1.0.3",
 	"description": "Pre reqs for the Paho JS client",
-	"dependencies": {
+	"devDependencies": {
 		"websocket": "1.x.x",
 		"node-localstorage": "0.x.x",
 		"jasmine-node": "1.11.x"
