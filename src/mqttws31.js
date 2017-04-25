@@ -93,7 +93,7 @@ function onMessageArrived(message) {
 		root.Paho.MQTT = factory();
 	}
 })(this, function LibraryFactory() {
-	return (function(global) {
+	 var PahoMQTT = (function(global) {
 		// Private variables below, these are only visible inside the function closure
 		// which is used to define the module. 
 
@@ -498,7 +498,7 @@ function onMessageArrived(message) {
 						pos += 2;
 					}
 					
-					var message = new Paho.MQTT.Message(input.subarray(pos, endPos));
+					var message = new PahoMQTT.Message(input.subarray(pos, endPos));
 					if ((messageInfo & 0x01) == 0x01) 
 						message.retained = true;
 					if ((messageInfo & 0x08) == 0x08)
@@ -1072,7 +1072,7 @@ function onMessageArrived(message) {
 						hex = hex.substring(2, hex.length);
 						byteStream[i++] = x;
 					}
-					var payloadMessage = new Paho.MQTT.Message(byteStream);
+					var payloadMessage = new PahoMQTT.Message(byteStream);
 					
 					payloadMessage.qos = storedMessage.payloadMessage.qos;
 					payloadMessage.destinationName = storedMessage.payloadMessage.destinationName;
@@ -2148,5 +2148,7 @@ function onMessageArrived(message) {
 			Client: Client,
 			Message: Message
 		};
-	})(window);		
+	})(window);
+
+	return PahoMQTT;
 });
