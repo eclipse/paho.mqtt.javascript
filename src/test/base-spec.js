@@ -14,23 +14,20 @@ describe('client', function() {
 	var messageReceived = false;
 
 	function onConnect() {
-		console.log("connected");
 		connected = true;
 	};
 
 	function onSubscribe() {
-		console.log("subscribed");
 		subscribed = true;
 	};
 
 	function messageArrived(response) {
-		console.log("messageArrived");
 		messageReceived = true;
 		//reponse.invocationContext.onMessageArrived = null;
 	};
 
 	it('should create a new client', function() {
-		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid");
+		client = new settings.Paho.Client(testServer, testPort, testPath, "testclientid");
 		client.onMessageArrived = messageArrived;
 
 		expect(client).not.toBe(null);
@@ -69,7 +66,7 @@ describe('client', function() {
 
 	it('should send and receive a message', function() {
 		runs(function() {
-			message = new Paho.MQTT.Message("Hello");
+			message = new settings.Paho.Message("Hello");
 			message.destinationName = topicPrefix + "/World";
 			client.send(message);
 		})

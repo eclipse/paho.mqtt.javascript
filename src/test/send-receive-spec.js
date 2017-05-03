@@ -1,5 +1,6 @@
 var settings = require('./client-harness');
 
+
 var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
@@ -15,7 +16,7 @@ describe('SendReceive', function() {
     // Client wrapper - define a client wrapper to ease testing
 	//*************************************************************************
 	var MqttClient= function(clientId){
-	    var client = new Paho.MQTT.Client(testServer, testPort, testPath, clientId);
+	    var client = new Paho.Client(testServer, testPort, testPath, clientId);
 		//states
 		var connected = false;
 	    var subscribed = false;
@@ -143,7 +144,7 @@ describe('SendReceive', function() {
 		//publish and verify
 		this.publish=function(topic,qos,payload){
 			runs(function() {
-				var message = new Paho.MQTT.Message(payload);
+				var message = new Paho.Message(payload);
 				message.destinationName = topic;
 				message.qos=qos;
 				client.send(message);

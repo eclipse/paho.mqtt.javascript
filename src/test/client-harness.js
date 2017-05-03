@@ -1,6 +1,8 @@
 global.window = global;
 
 var WebSocketClient = require('websocket').client;
+var Paho = require('../paho-mqtt')
+
 
 global.WebSocket = function(wsurl,protocol) {
     var ws = new WebSocketClient();
@@ -53,7 +55,10 @@ global.WebSocket = function(wsurl,protocol) {
 var LocalStorage = require('node-localstorage').LocalStorage;
 global.localStorage = new LocalStorage('./persistence');
 
-require("../paho-mqtt");
+var Paho = require('../paho-mqtt')
+global.Paho = Paho;
+
+
 
 function ensureValue(prop,value) {
     if (prop == "" || prop[0] == "$") {
@@ -80,7 +85,8 @@ module.exports = {
     interopServer: ensureValue("${test.interopServer}","iot.eclipse.org"),
     interopPort: parseInt(ensureValue("${test.interopPort}","443")),
     interopPath: ensureValue("${test.interopPath}","/ws"),
-    topicPrefix: "paho-mqtt-test-" + guid()
+    topicPrefix: "paho-mqtt-test-" + guid(),
+    Paho: Paho
 }
 /*
 var connection = {
@@ -88,7 +94,7 @@ var connection = {
     "port" : "1883"
 };
 
-var broker = new Paho.MQTT.Client(connection.hostname, Number(connection.port), "clientId");
+var broker = new Paho.Client(connection.hostname, Number(connection.port), "clientId");
 broker.onConnectionLost = onConnectionLost;
 broker.onMessageArrived = onMessageArrived;
 broker.connect({onSuccess:onConnect,onFailure : onConnectFailure});

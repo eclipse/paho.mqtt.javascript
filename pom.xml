@@ -108,7 +108,7 @@
 				<artifactId>jasmine-maven-plugin</artifactId>
 				<version>1.3.1.2</version>
 				<configuration>
-					<jsSrcDir>${basedir}/target/src/javascript</jsSrcDir>
+					<jsSrcDir>${basedir}/target/src</jsSrcDir>
 				</configuration>
 			</plugin>
 			<plugin>

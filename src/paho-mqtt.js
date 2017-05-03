@@ -81,12 +81,23 @@ function onMessageArrived(message) {
  */
 
 /* jshint shadow:true */
+(function ExportLibrary(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object'){
+		module.exports = factory();
+	} else if (typeof define === 'function' && define.amd){
+		define(factory);
+	} else if (typeof exports === 'object'){
+		exports = factory();
+	} else {
+		if (typeof root.Paho === 'undefined'){
+			root.Paho = {};
+		}
+		root.Paho.MQTT = factory();
+	}
+})(this, function LibraryFactory(){
 
-if (typeof Paho === "undefined") {
-	Paho = {};
-}
 
-Paho.MQTT = (function (global) {
+var PahoMQTT = (function (global) {
 
 	// Private variables below, these are only visible inside the function closure
 	// which is used to define the module.
@@ -2398,3 +2409,5 @@ Paho.MQTT = (function (global) {
 		Message: Message
 	};
 })(window);
+return PahoMQTT;
+});
