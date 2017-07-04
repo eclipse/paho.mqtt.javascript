@@ -19,8 +19,8 @@
 <head>
   <title>Eclipse Paho MQTT JavaScript Client Example</title>
   <!-- Latest compiled and minified CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
   <!-- Custom Styles theme -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -73,7 +73,7 @@
                 <div class="col-lg-1">
                   <div class="form-group">
                     <label for="portInput">Port</label>
-                    <input type="text" class="form-control" id="portInput" value="80">
+                    <input type="text" class="form-control" id="portInput" value="443">
                   </div>
 
                 </div>
@@ -128,14 +128,14 @@
 
                 <div class="col-lg-1">
                   <div class="form-group">
-                    <label for="sslInput">TLS</label>
-                    <input type="checkbox" class="special-checkbox" id="sslInput" value="">
+                    <label for="tlsInput">TLS</label>
+                    <input type="checkbox" class="special-checkbox" id="tlsInput" value="" checked>
                   </div>
                 </div>
                 <div class="col-lg-2">
                   <div class="form-group">
                     <label for="cleanSessionInput">Clean Session</label>
-                    <input type="checkbox" class="special-checkbox" id="cleanSessionInput" value="">
+                    <input type="checkbox" class="special-checkbox" id="cleanSessionInput" value="" checked>
                   </div>
 
                 </div>
@@ -178,7 +178,7 @@
   <!-- End of Connection panel -->
 
 
-  <div class="row">
+  <div class="row ">
     <!-- Subscription panel -->
     <div class="col-md-6">
       <div class="panel panel-default">
@@ -192,7 +192,7 @@
             <div class="form-group">
               <label for="subscribeTopicInput" class="col-sm-2 control-label">Topic</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="subscribeTopicInput" value="/test" disabled>
+                <input type="text" class="form-control" id="subscribeTopicInput" value="world" disabled>
               </div>
             </div>
             <div class="form-group">
@@ -228,7 +228,7 @@
               <div class="col-lg-5">
                 <div class="form-group">
                   <label for="publishTopicInput">Topic</label>
-                    <input type="text" class="form-control" id="publishTopicInput" value="/test" disabled>
+                    <input type="text" class="form-control" id="publishTopicInput" value="world" disabled>
                 </div>
               </div>
               <div class="col-lg-3">
@@ -331,7 +331,7 @@
   </div>
 
   <!-- Source Paho MQTT Client-->
-  <script src="../src/mqttws31.js"></script>
+  <script src="../src/paho-mqtt.js"></script>
   <!--<script src="../src/paho-mqtt.js"></script>-->
 
   <!-- Utility Javascript -->

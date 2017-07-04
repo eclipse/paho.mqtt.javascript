@@ -1,6 +1,8 @@
 global.window = global;
 
 var WebSocketClient = require('websocket').client;
+var Paho = require('../paho-mqtt')
+
 
 global.WebSocket = function(wsurl,protocol) {
     var ws = new WebSocketClient();
@@ -53,7 +55,10 @@ global.WebSocket = function(wsurl,protocol) {
 var LocalStorage = require('node-localstorage').LocalStorage;
 global.localStorage = new LocalStorage('./persistence');
 
-require("../mqttws31");
+var Paho = require('../paho-mqtt')
+global.Paho = Paho;
+
+
 
 function ensureValue(prop,value) {
     if (prop == "" || prop[0] == "$") {
@@ -62,14 +67,26 @@ function ensureValue(prop,value) {
     return prop;
 }
 
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
 module.exports = {
     server: ensureValue("${test.server}","iot.eclipse.org"),
-    port: parseInt(ensureValue("${test.server.port}","80")),
+    port: parseInt(ensureValue("${test.server.port}","443")),
     path: ensureValue("${test.server.path}","/ws"),
     mqttVersion: parseInt(ensureValue("${test.server.mqttVersion}","3")),
     interopServer: ensureValue("${test.interopServer}","iot.eclipse.org"),
-    interopPort: parseInt(ensureValue("${test.interopPort}","80")),
-    interopPath: ensureValue("${test.interopPath}","/ws")
+    interopPort: parseInt(ensureValue("${test.interopPort}","443")),
+    interopPath: ensureValue("${test.interopPath}","/ws"),
+    topicPrefix: "paho-mqtt-test-" + guid(),
+    Paho: Paho
 }
 /*
 var connection = {
@@ -77,7 +94,7 @@ var connection = {
     "port" : "1883"
 };
 
-var broker = new Paho.MQTT.Client(connection.hostname, Number(connection.port), "clientId");
+var broker = new Paho.Client(connection.hostname, Number(connection.port), "clientId");
 broker.onConnectionLost = onConnectionLost;
 broker.onMessageArrived = onMessageArrived;
 broker.connect({onSuccess:onConnect,onFailure : onConnectFailure});

@@ -21,8 +21,11 @@ This utility can be used to test the Eclipse Paho MQTT Javascript client.
 
 // Create a client instance
 client = null;
-
 connected = false;
+
+
+// Things to do as soon as the page loads
+document.getElementById("clientIdInput").value = 'js-utility-' + makeid();
 
 // called when the client connects
 function onConnect(context) {
@@ -109,7 +112,7 @@ function connect(){
     var pass = document.getElementById("passInput").value;
     var keepAlive = Number(document.getElementById("keepAliveInput").value);
     var timeout = Number(document.getElementById("timeoutInput").value);
-    var ssl = document.getElementById("sslInput").checked;
+    var tls = document.getElementById("tlsInput").checked;
     var cleanSession = document.getElementById("cleanSessionInput").checked;
     var lastWillTopic = document.getElementById("lwtInput").value;
     var lastWillQos = Number(document.getElementById("lwQosInput").value);
@@ -134,7 +137,7 @@ function connect(){
       timeout: timeout,
       keepAliveInterval:keepAlive,
       cleanSession: cleanSession,
-      useSSL: ssl,
+      useSSL: tls,
       onSuccess: onConnect,
       onFailure: onFail
     };
@@ -190,7 +193,7 @@ function setFormEnabledState(enabled){
     document.getElementById("passInput").disabled = enabled;
     document.getElementById("keepAliveInput").disabled = enabled;
     document.getElementById("timeoutInput").disabled = enabled;
-    document.getElementById("sslInput").disabled = enabled;
+    document.getElementById("tlsInput").disabled = enabled;
     document.getElementById("cleanSessionInput").disabled = enabled;
     document.getElementById("lwtInput").disabled = enabled;
     document.getElementById("lwQosInput").disabled = enabled;
@@ -266,4 +269,15 @@ function clearHistory(){
 // Just in case someone sends html
 function safe_tags_regex(str) {
    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function makeid()
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for( var i=0; i < 5; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
 }

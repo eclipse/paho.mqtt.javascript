@@ -3,7 +3,8 @@
 	"description": "Pre reqs for the Paho JS client",
 	"dependencies": {
 		"websocket": "1.x.x",
-		"node-localstorage": "0.x.x",
-		"jasmine-node": "1.11.x"
+		"node-localstorage": "1.3.x",
+		"jasmine-node": "1.14.x",
+		"jshint" : "2.9.x"
 	}
 }

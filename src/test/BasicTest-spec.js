@@ -1,9 +1,11 @@
 var settings = require('./client-harness');
 
+
 var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
 var testMqttVersion = settings.mqttVersion;
+var topicPrefix = settings.topicPrefix;
 
 var genStr = function(str){
 	var time = new Date();
@@ -21,7 +23,7 @@ describe('BasicTest', function() {
 	var subscribed = false;
 	var isMessageReceived = false;
 	var isMessageDelivered = false;
-	var strTopic = '/' + makeid() + '/World';
+	var strTopic = topicPrefix + '/' + makeid() + '/World';
 	var strMessageReceived = '';
 	var strMessageSend = 'Hello';
 	var strTopicReceived = '';
@@ -91,7 +93,7 @@ describe('BasicTest', function() {
 		disconnectError = null;
 		disconnectErrorMsg = null;
 		//if(!client){
-		//	client = new Paho.MQTT.Client(testServer, testPort, clientId);
+		//	client = new Paho.Client(testServer, testPort, clientId);
 		//}
 	});
 
@@ -102,14 +104,14 @@ describe('BasicTest', function() {
 	});
 	*/
 	it('it should create and connect and disconnect to a server.', function() {
-		var client = new Paho.MQTT.Client(testServer, testPort, testPath, genStr(clientId));
+		var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 
 
 		console.log('Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return connected;
@@ -131,7 +133,7 @@ describe('BasicTest', function() {
 
 		console.log('Re-Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnectSuccess,mqttVersion:testMqttVersion, useSSL: true});
 		});
 
 		waitsFor(function() {
@@ -145,13 +147,13 @@ describe('BasicTest', function() {
 	});
 
 	it('it should fallback from MQTTv3.1.1 to v3.1',function(){
-		var client = new Paho.MQTT.Client(testServer, testPort, testPath, genStr(clientId));
+		var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 
 		console.log('Connecting...');
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,timeout:1});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,timeout:1, useSSL: true});
 		});
 		waitsFor(function() {
 			return connected;
@@ -178,7 +180,7 @@ describe('BasicTest', function() {
 		var arrHosts = ['localhost',testServer,];
 		var arrPorts = [2000,testPort];
 
-		var client = new Paho.MQTT.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
+		var client = new Paho.Client(defaultServer, defaultPort, testPath, genStr(clientId) );
 		client.onConnectionLost = onConnectionLost;
 		expect(client).not.toBe(null);
 
@@ -189,7 +191,8 @@ describe('BasicTest', function() {
 				onFailure : onConnectFailure,
 				hosts : arrHosts,
 				ports : arrPorts,
-				mqttVersion: testMqttVersion
+				mqttVersion: testMqttVersion,
+				useSSL : true
 			});
 		});
 
@@ -207,16 +210,16 @@ describe('BasicTest', function() {
 
 	it('it should publish and subscribe.',function(){
 
-		var client = new Paho.MQTT.Client(testServer, testPort, testPath, genStr(clientId));
+		var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
 		client.onMessageArrived = messageArrived;
 		client.onMessageDelivered = messageDelivered;
 
 		runs(function() {
-			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnectSuccess,onFailure:onConnectFailure,mqttVersion:testMqttVersion, useSSL: true});
 		});
 		waitsFor(function() {
 			return connected;
-		}, "the client should connect", 2000);
+		}, "the client should connect", 5000);
 		runs(function() {
 			expect(connected).toBe(true);
 		});
@@ -236,7 +239,7 @@ describe('BasicTest', function() {
 
 		console.log('Send and receive message...');
 		runs(function() {
-			var message = new Paho.MQTT.Message(strMessageSend);
+			var message = new Paho.Message(strMessageSend);
 			message.destinationName = strTopic;
 			client.send(message);
 		});
@@ -279,7 +282,7 @@ describe('BasicTest', function() {
 			strMessageReceived = '';
 			strTopicReceived = '';
 
-			var message = new Paho.MQTT.Message(genStr(strMessageSend));
+			var message = new Paho.Message(genStr(strMessageSend));
 			message.destinationName = strTopic;
 			client.send(message);
 		})
@@ -305,8 +308,8 @@ describe('BasicTest', function() {
 
 	it('check message properties.',function(){
 		var strMsg = 'test Msg';
-		var strDes = '/test';
-		var message = new Paho.MQTT.Message(strMsg);
+		var strDes = topicPrefix + '/test';
+		var message = new Paho.Message(strMsg);
 		message.destinationName = strDes;
 
 		console.log('Check default for message with payload.');
@@ -319,7 +322,7 @@ describe('BasicTest', function() {
 
 		console.log('Check empty msg to throw error');
 		expect(function(){
-			var empMsg = new Paho.MQTT.Message();
+			var empMsg = new Paho.Message();
 		}).toThrow();
 
 		console.log('Check message qos');
@@ -365,7 +368,7 @@ describe('BasicTest', function() {
 		//dataView.setInt
 		console.log(dataView.getInt32(0).toString(16));
 		//var arrbufPayload = new ArrayBuffer
-		var msg = new Paho.MQTT.Message(buffer);
+		var msg = new Paho.Message(buffer);
 		console.log(msg.payloadBytes,msg.payloadString);
 		*/
 	});

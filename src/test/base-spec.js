@@ -4,6 +4,8 @@ var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
 var testMqttVersion = settings.mqttVersion;
+var topicPrefix = settings.topicPrefix;
+
 
 describe('client', function() {
 	var client = this;
@@ -12,23 +14,20 @@ describe('client', function() {
 	var messageReceived = false;
 
 	function onConnect() {
-		console.log("connected");
 		connected = true;
 	};
 
 	function onSubscribe() {
-		console.log("subscribed");
 		subscribed = true;
 	};
 
 	function messageArrived(response) {
-		console.log("messageArrived");
 		messageReceived = true;
 		//reponse.invocationContext.onMessageArrived = null;
 	};
 
 	it('should create a new client', function() {
-		client = new Paho.MQTT.Client(testServer, testPort, testPath, "testclientid");
+		client = new settings.Paho.Client(testServer, testPort, testPath, "testclientid");
 		client.onMessageArrived = messageArrived;
 
 		expect(client).not.toBe(null);
@@ -39,7 +38,7 @@ describe('client', function() {
 
 	it('should connect to a server', function() {
 		runs(function() {
-			client.connect({onSuccess:onConnect, mqttVersion:testMqttVersion});
+			client.connect({onSuccess:onConnect, mqttVersion:testMqttVersion, useSSL: true});
 		});
 
 		waitsFor(function() {
@@ -53,7 +52,7 @@ describe('client', function() {
 
 	it('should subscribe to a topic', function() {
 		runs(function() {
-			client.subscribe("/World", {onSuccess:onSubscribe});
+			client.subscribe(topicPrefix + "/World", {onSuccess:onSubscribe});
 		});
 
 		waitsFor(function() {
@@ -67,9 +66,9 @@ describe('client', function() {
 
 	it('should send and receive a message', function() {
 		runs(function() {
-			message = new Paho.MQTT.Message("Hello");
-			message.destinationName = "/World";
-			client.send(message); 
+			message = new settings.Paho.Message("Hello");
+			message.destinationName = topicPrefix + "/World";
+			client.send(message);
 		})
 
 		waitsFor(function() {
