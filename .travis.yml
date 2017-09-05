@@ -1,2 +1,4 @@
+language: node_js
+node_js: 5
 script:
   mvn clean verify
