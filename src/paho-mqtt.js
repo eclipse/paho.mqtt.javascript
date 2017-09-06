@@ -689,9 +689,9 @@ var PahoMQTT = (function (global) {
 	 * Repeat keepalive requests, monitor responses.
 	 * @ignore
 	 */
-	var Pinger = function(client, window, keepAliveInterval) {
+	var Pinger = function(client, self, keepAliveInterval) {
 		this._client = client;
-		this._window = window;
+		this._self = self;
 		this._keepAliveInterval = keepAliveInterval*1000;
 		this.isReset = false;
 
@@ -712,19 +712,19 @@ var PahoMQTT = (function (global) {
 				this.isReset = false;
 				this._client._trace("Pinger.doPing", "send PINGREQ");
 				this._client.socket.send(pingReq);
-				this.timeout = this._window.setTimeout(doTimeout(this), this._keepAliveInterval);
+				this.timeout = this._self.setTimeout(doTimeout(this), this._keepAliveInterval);
 			}
 		};
 
 		this.reset = function() {
 			this.isReset = true;
-			this._window.clearTimeout(this.timeout);
+			this._self.clearTimeout(this.timeout);
 			if (this._keepAliveInterval > 0)
 				this.timeout = setTimeout(doTimeout(this), this._keepAliveInterval);
 		};
 
 		this.cancel = function() {
-			this._window.clearTimeout(this.timeout);
+			this._self.clearTimeout(this.timeout);
 		};
 	 };
 
@@ -732,8 +732,8 @@ var PahoMQTT = (function (global) {
 	 * Monitor request completion.
 	 * @ignore
 	 */
-	var Timeout = function(client, window, timeoutSeconds, action, args) {
-		this._window = window;
+	var Timeout = function(client, self, timeoutSeconds, action, args) {
+		this._self = self;
 		if (!timeoutSeconds)
 			timeoutSeconds = 30;
 
@@ -745,7 +745,7 @@ var PahoMQTT = (function (global) {
 		this.timeout = setTimeout(doTimeout(action, client, args), timeoutSeconds * 1000);
 
 		this.cancel = function() {
-			this._window.clearTimeout(this.timeout);
+			this._self.clearTimeout(this.timeout);
 		};
 	};
 
@@ -905,7 +905,7 @@ var PahoMQTT = (function (global) {
 		}
 
 		if (subscribeOptions.timeout) {
-			wireMessage.timeOut = new Timeout(this, window, subscribeOptions.timeout, subscribeOptions.onFailure,
+			wireMessage.timeOut = new Timeout(this, self, subscribeOptions.timeout, subscribeOptions.onFailure,
 						[{invocationContext:subscribeOptions.invocationContext,
 						errorCode:ERROR.SUBSCRIBE_TIMEOUT.code,
 						errorMessage:format(ERROR.SUBSCRIBE_TIMEOUT)}]);
@@ -930,7 +930,7 @@ var PahoMQTT = (function (global) {
 			wireMessage.callback = function() {unsubscribeOptions.onSuccess({invocationContext:unsubscribeOptions.invocationContext});};
 		}
 		if (unsubscribeOptions.timeout) {
-			wireMessage.timeOut = new Timeout(this, window, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
+			wireMessage.timeOut = new Timeout(this, self, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
 					  [{invocationContext:unsubscribeOptions.invocationContext,
 						errorCode:ERROR.UNSUBSCRIBE_TIMEOUT.code,
 						errorMessage:format(ERROR.UNSUBSCRIBE_TIMEOUT)}]);
@@ -1051,13 +1051,13 @@ var PahoMQTT = (function (global) {
 		this.socket.onerror = scope(this._on_socket_error, this);
 		this.socket.onclose = scope(this._on_socket_close, this);
 
-		this.sendPinger = new Pinger(this, window, this.connectOptions.keepAliveInterval);
-		this.receivePinger = new Pinger(this, window, this.connectOptions.keepAliveInterval);
+		this.sendPinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
+		this.receivePinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
 		if (this._connectTimeout) {
 			this._connectTimeout.cancel();
 			this._connectTimeout = null;
 		}
-		this._connectTimeout = new Timeout(this, window, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
+		this._connectTimeout = new Timeout(this, self, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
 	};
 
 
@@ -1548,7 +1548,7 @@ var PahoMQTT = (function (global) {
 
 		if (errorCode !== undefined && this._reconnecting) {
       //Continue automatic reconnect process
-  		this._reconnectTimeout = new Timeout(this, window, this._reconnectInterval, this._reconnect);
+  		this._reconnectTimeout = new Timeout(this, self, this._reconnectInterval, this._reconnect);
 			return;
 		}
 
@@ -2408,6 +2408,6 @@ var PahoMQTT = (function (global) {
 		Client: Client,
 		Message: Message
 	};
-})(window);
+})(self);
 return PahoMQTT;
 });
