@@ -2299,14 +2299,7 @@ var PahoMQTT = (function (global) {
 		var payload;
 		if (   typeof newPayload === "string" ||
 		newPayload instanceof ArrayBuffer ||
-		newPayload instanceof Int8Array   ||
-		newPayload instanceof Uint8Array  ||
-		newPayload instanceof Int16Array  ||
-		newPayload instanceof Uint16Array ||
-		newPayload instanceof Int32Array  ||
-		newPayload instanceof Uint32Array ||
-		newPayload instanceof Float32Array ||
-		newPayload instanceof Float64Array
+		(ArrayBuffer.isView(newPayload) && !(newPayload instanceof DataView))
 		   ) {
 			payload = newPayload;
 		} else {
