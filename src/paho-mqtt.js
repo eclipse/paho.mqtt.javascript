@@ -1776,71 +1776,88 @@ var PahoMQTT = (function (global) {
 			throw new Error(format(ERROR.INVALID_ARGUMENT, [clientId, "clientId"]));
 
 		var client = new ClientImpl(uri, host, port, path, clientId);
-		this._getHost =  function() { return host; };
-		this._setHost = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
 
-		this._getPort = function() { return port; };
-		this._setPort = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
-
-		this._getPath = function() { return path; };
-		this._setPath = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
-
-		this._getURI = function() { return uri; };
-		this._setURI = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
-
-		this._getClientId = function() { return client.clientId; };
-		this._setClientId = function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); };
-
-		this._getOnConnected = function() { return client.onConnected; };
-		this._setOnConnected = function(newOnConnected) {
-			if (typeof newOnConnected === "function")
-				client.onConnected = newOnConnected;
-			else
-				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnected, "onConnected"]));
-		};
-
-		this._getDisconnectedPublishing = function() { return client.disconnectedPublishing; };
-		this._setDisconnectedPublishing = function(newDisconnectedPublishing) {
-			client.disconnectedPublishing = newDisconnectedPublishing;
-		};
-
-		this._getDisconnectedBufferSize = function() { return client.disconnectedBufferSize; };
-		this._setDisconnectedBufferSize = function(newDisconnectedBufferSize) {
-			client.disconnectedBufferSize = newDisconnectedBufferSize;
-		};
-
-		this._getOnConnectionLost = function() { return client.onConnectionLost; };
-		this._setOnConnectionLost = function(newOnConnectionLost) {
-			if (typeof newOnConnectionLost === "function")
-				client.onConnectionLost = newOnConnectionLost;
-			else
-				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnectionLost, "onConnectionLost"]));
-		};
-
-		this._getOnMessageDelivered = function() { return client.onMessageDelivered; };
-		this._setOnMessageDelivered = function(newOnMessageDelivered) {
-			if (typeof newOnMessageDelivered === "function")
-				client.onMessageDelivered = newOnMessageDelivered;
-			else
-				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageDelivered, "onMessageDelivered"]));
-		};
-
-		this._getOnMessageArrived = function() { return client.onMessageArrived; };
-		this._setOnMessageArrived = function(newOnMessageArrived) {
-			if (typeof newOnMessageArrived === "function")
-				client.onMessageArrived = newOnMessageArrived;
-			else
-				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
-		};
-
-		this._getTrace = function() { return client.traceFunction; };
-		this._setTrace = function(trace) {
-			if(typeof trace === "function"){
-				client.traceFunction = trace;
-			}else{
-				throw new Error(format(ERROR.INVALID_TYPE, [typeof trace, "onTrace"]));
-			}
-		};
+		//Public Properties
+		Object.defineProperties(this,{
+			"host":{
+				get: function() { return host; },
+				set: function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); }
+			},
+			"port":{
+				get: function() { return port; },
+				set: function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); }
+			},
+			"path":{
+				get: function() { return path; },
+				set: function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); }
+			},
+			"uri":{
+				get: function() { return uri; },
+				set: function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); }
+			},
+			"clientId":{
+				get: function() { return client.clientId; },
+				set: function() { throw new Error(format(ERROR.UNSUPPORTED_OPERATION)); }
+			},
+			"onConnected":{
+				get: function() { return client.onConnected; },
+				set: function(newOnConnected) {
+					if (typeof newOnConnected === "function")
+						client.onConnected = newOnConnected;
+					else
+						throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnected, "onConnected"]));
+				}
+			},
+			"disconnectedPublishing":{
+				get: function() { return client.disconnectedPublishing; },
+				set: function(newDisconnectedPublishing) {
+					client.disconnectedPublishing = newDisconnectedPublishing;
+				}
+			},
+			"disconnectedBufferSize":{
+				get: function() { return client.disconnectedBufferSize; },
+				set: function(newDisconnectedBufferSize) {
+					client.disconnectedBufferSize = newDisconnectedBufferSize;
+				}
+			},
+			"onConnectionLost":{
+				get: function() { return client.onConnectionLost; },
+				set: function(newOnConnectionLost) {
+					if (typeof newOnConnectionLost === "function")
+						client.onConnectionLost = newOnConnectionLost;
+					else
+						throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnectionLost, "onConnectionLost"]));
+				}
+			},
+			"onMessageDelivered":{
+				get: function() { return client.onMessageDelivered; },
+				set: function(newOnMessageDelivered) {
+					if (typeof newOnMessageDelivered === "function")
+						client.onMessageDelivered = newOnMessageDelivered;
+					else
+						throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageDelivered, "onMessageDelivered"]));
+				}
+			},
+			"onMessageArrived":{
+				get: function() { return client.onMessageArrived; },
+				set: function(newOnMessageArrived) {
+					if (typeof newOnMessageArrived === "function")
+						client.onMessageArrived = newOnMessageArrived;
+					else
+						throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
+				}
+			},
+			"trace":{
+				get: function() { return client.traceFunction; },
+				set: function(trace) {
+					if(typeof trace === "function"){
+						client.traceFunction = trace;
+					}else{
+						throw new Error(format(ERROR.INVALID_TYPE, [typeof trace, "onTrace"]));
+					}
+				}
+			},
+		});
 
 		/**
 		 * Connect this Messaging client to its server.
@@ -2244,42 +2261,6 @@ var PahoMQTT = (function (global) {
 		};
 	};
 
-	Client.prototype = {
-		get host() { return this._getHost(); },
-		set host(newHost) { this._setHost(newHost); },
-
-		get port() { return this._getPort(); },
-		set port(newPort) { this._setPort(newPort); },
-
-		get path() { return this._getPath(); },
-		set path(newPath) { this._setPath(newPath); },
-
-		get clientId() { return this._getClientId(); },
-		set clientId(newClientId) { this._setClientId(newClientId); },
-
-		get onConnected() { return this._getOnConnected(); },
-		set onConnected(newOnConnected) { this._setOnConnected(newOnConnected); },
-
-		get disconnectedPublishing() { return this._getDisconnectedPublishing(); },
-		set disconnectedPublishing(newDisconnectedPublishing) { this._setDisconnectedPublishing(newDisconnectedPublishing); },
-
-		get disconnectedBufferSize() { return this._getDisconnectedBufferSize(); },
-		set disconnectedBufferSize(newDisconnectedBufferSize) { this._setDisconnectedBufferSize(newDisconnectedBufferSize); },
-
-		get onConnectionLost() { return this._getOnConnectionLost(); },
-		set onConnectionLost(newOnConnectionLost) { this._setOnConnectionLost(newOnConnectionLost); },
-
-		get onMessageDelivered() { return this._getOnMessageDelivered(); },
-		set onMessageDelivered(newOnMessageDelivered) { this._setOnMessageDelivered(newOnMessageDelivered); },
-
-		get onMessageArrived() { return this._getOnMessageArrived(); },
-		set onMessageArrived(newOnMessageArrived) { this._setOnMessageArrived(newOnMessageArrived); },
-
-		get trace() { return this._getTrace(); },
-		set trace(newTraceFunction) { this._setTrace(newTraceFunction); }
-
-	};
-
 	/**
 	 * An application message, sent or received.
 	 * <p>
@@ -2318,89 +2299,83 @@ var PahoMQTT = (function (global) {
 		var payload;
 		if (   typeof newPayload === "string" ||
 		newPayload instanceof ArrayBuffer ||
-		newPayload instanceof Int8Array   ||
-		newPayload instanceof Uint8Array  ||
-		newPayload instanceof Int16Array  ||
-		newPayload instanceof Uint16Array ||
-		newPayload instanceof Int32Array  ||
-		newPayload instanceof Uint32Array ||
-		newPayload instanceof Float32Array ||
-		newPayload instanceof Float64Array
+		(ArrayBuffer.isView(newPayload) && !(newPayload instanceof DataView))
 		   ) {
 			payload = newPayload;
 		} else {
 			throw (format(ERROR.INVALID_ARGUMENT, [newPayload, "newPayload"]));
 		}
 
-		this._getPayloadString = function () {
-			if (typeof payload === "string")
-				return payload;
-			else
-				return parseUTF8(payload, 0, payload.length);
-		};
-
-		this._getPayloadBytes = function() {
-			if (typeof payload === "string") {
-				var buffer = new ArrayBuffer(UTF8Length(payload));
-				var byteStream = new Uint8Array(buffer);
-				stringToUTF8(payload, byteStream, 0);
-
-				return byteStream;
-			} else {
-				return payload;
-			}
-		};
-
 		var destinationName;
-		this._getDestinationName = function() { return destinationName; };
-		this._setDestinationName = function(newDestinationName) {
-			if (typeof newDestinationName === "string")
-				destinationName = newDestinationName;
-			else
-				throw new Error(format(ERROR.INVALID_ARGUMENT, [newDestinationName, "newDestinationName"]));
-		};
-
 		var qos = 0;
-		this._getQos = function() { return qos; };
-		this._setQos = function(newQos) {
-			if (newQos === 0 || newQos === 1 || newQos === 2 )
-				qos = newQos;
-			else
-				throw new Error("Invalid argument:"+newQos);
-		};
-
 		var retained = false;
-		this._getRetained = function() { return retained; };
-		this._setRetained = function(newRetained) {
-			if (typeof newRetained === "boolean")
-				retained = newRetained;
-			else
-				throw new Error(format(ERROR.INVALID_ARGUMENT, [newRetained, "newRetained"]));
-		};
-
 		var duplicate = false;
-		this._getDuplicate = function() { return duplicate; };
-		this._setDuplicate = function(newDuplicate) { duplicate = newDuplicate; };
-	};
 
-	Message.prototype = {
-		get payloadString() { return this._getPayloadString(); },
-		get payloadBytes() { return this._getPayloadBytes(); },
-
-		get destinationName() { return this._getDestinationName(); },
-		set destinationName(newDestinationName) { this._setDestinationName(newDestinationName); },
-
-		get topic() { return this._getDestinationName(); },
-		set topic(newTopic) { this._setDestinationName(newTopic); },
-
-		get qos() { return this._getQos(); },
-		set qos(newQos) { this._setQos(newQos); },
-
-		get retained() { return this._getRetained(); },
-		set retained(newRetained) { this._setRetained(newRetained); },
-
-		get duplicate() { return this._getDuplicate(); },
-		set duplicate(newDuplicate) { this._setDuplicate(newDuplicate); }
+		Object.defineProperties(this,{
+			"payloadString":{
+				enumerable : true,
+				get : function () {
+					if (typeof payload === "string")
+						return payload;
+					else
+						return parseUTF8(payload, 0, payload.length);
+				}
+			},
+			"payloadBytes":{
+				enumerable: true,
+				get: function() {
+					if (typeof payload === "string") {
+						var buffer = new ArrayBuffer(UTF8Length(payload));
+						var byteStream = new Uint8Array(buffer);
+						stringToUTF8(payload, byteStream, 0);
+		
+						return byteStream;
+					} else {
+						return payload;
+					}
+				}
+			},
+			"destinationName":{
+				enumerable: true,
+				get: function() { return destinationName; },
+				set: function(newDestinationName) {
+					if (typeof newDestinationName === "string")
+						destinationName = newDestinationName;
+					else
+						throw new Error(format(ERROR.INVALID_ARGUMENT, [newDestinationName, "newDestinationName"]));
+				} 
+			},
+			"qos":{
+				enumerable: true,
+				get: function() { return qos; },
+				set: function(newQos) {
+					if (newQos === 0 || newQos === 1 || newQos === 2 )
+						qos = newQos;
+					else
+						throw new Error("Invalid argument:"+newQos);
+				}
+			},
+			"retained":{
+				enumerable: true,
+				get: function() { return retained; },
+				set: function(newRetained) {
+					if (typeof newRetained === "boolean")
+						retained = newRetained;
+					else
+						throw new Error(format(ERROR.INVALID_ARGUMENT, [newRetained, "newRetained"]));
+				}
+			},
+			"topic":{
+				enumerable: true,
+				get: function() { return destinationName; },
+				set: function(newTopic) {destinationName=newTopic;}
+			},
+			"duplicate":{
+				enumerable: true,
+				get: function() { return duplicate; },
+				set: function(newDuplicate) {duplicate=newDuplicate;}
+			}
+		});
 	};
 
 	// Module contents.
