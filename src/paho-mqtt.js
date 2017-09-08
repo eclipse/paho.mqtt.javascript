@@ -971,7 +971,8 @@ var PahoMQTT = (function (global) {
 						this._requires_ack(wireMessage);
 					} else {
 						wireMessage.sequence = ++this._sequence;
-						this._buffered_msg_queue.push(wireMessage);
+						// Add messages in fifo order to array, by adding to start
+						this._buffered_msg_queue.unshift(wireMessage);
 					}
 				}
 			} else {
@@ -1067,7 +1068,8 @@ var PahoMQTT = (function (global) {
 	// until this has happened. When WS connection starts, process
 	// all outstanding messages.
 	ClientImpl.prototype._schedule_message = function (message) {
-		this._msg_queue.push(message);
+		// Add messages in fifo order to array, by adding to start
+		this._msg_queue.unshift(message);
 		// Process outstanding messages in the queue if we have an  open socket, and have received CONNACK.
 		if (this.connected) {
 			this._process_queue();
@@ -1159,11 +1161,8 @@ var PahoMQTT = (function (global) {
 
 	ClientImpl.prototype._process_queue = function () {
 		var message = null;
-		// Process messages in order they were added
-		var fifo = this._msg_queue.reverse();
-
 		// Send all queued messages down socket connection
-		while ((message = fifo.pop())) {
+		while ((message = this._msg_queue.pop())) {
 			this._socket_send(message);
 			// Notify listeners that message was successfully sent
 			if (this._notify_msg_sent[message]) {
@@ -1301,8 +1300,7 @@ var PahoMQTT = (function (global) {
 				// Also schedule qos 0 buffered messages if any
 				if (this._buffered_msg_queue.length > 0) {
 					var msg = null;
-					var fifo = this._buffered_msg_queue.reverse();
-					while ((msg = fifo.pop())) {
+					while ((msg = this._buffered_msg_queue.pop())) {
 						sequencedMessages.push(msg);
 						if (this.onMessageDelivered)
 							this._notify_msg_sent[msg] = this.onMessageDelivered(msg.payloadMessage);
