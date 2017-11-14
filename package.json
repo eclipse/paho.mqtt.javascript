@@ -2,9 +2,11 @@
 	"name": "paho-client",
 	"description": "Pre reqs for the Paho JS client",
 	"dependencies": {
-		"websocket": "1.x.x",
-		"node-localstorage": "1.3.x",
+		"dotenv": "^4.0.0",
 		"jasmine-node": "1.14.x",
-		"jshint" : "2.9.x"
+		"jsdoc": "^3.5.5",
+		"jshint": "2.9.x",
+		"node-localstorage": "1.3.x",
+		"websocket": "1.x.x"
 	}
 }
