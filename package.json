@@ -1,6 +1,8 @@
 {
 	"name": "paho-client",
-	"description": "Pre reqs for the Paho JS client",
+	"version": "1.0.3",
+	"description": "Eclipse Paho JavaScript MQTT client",
+    "main": "./src/paho-mqtt.js",
 	"dependencies": {
 		"dotenv": "^4.0.0",
 		"jasmine-node": "1.14.x",
