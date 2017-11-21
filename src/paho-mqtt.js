@@ -2030,7 +2030,7 @@ var PahoMQTT = (function (global) {
 		 * <br>
 		 * @param {object} subscribeOptions - used to control the subscription
 		 *
-		 * @param {number} subscribeOptions.qos - the maiximum qos of any publications sent
+		 * @param {number} subscribeOptions.qos - the maximum qos of any publications sent
 		 *                                  as a result of making this subscription.
 		 * @param {object} subscribeOptions.invocationContext - passed to the onSuccess callback
 		 *                                  or onFailure callback.
