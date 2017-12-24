@@ -64,7 +64,7 @@ function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
   client.subscribe("/World");
-  message = new Paho.MQTT.Message("Hello");
+  var message = new Paho.MQTT.Message("Hello");
   message.destinationName = "/World";
   client.send(message);
 };
@@ -2324,7 +2324,7 @@ function onMessageArrived(message) {
 							var buffer = new ArrayBuffer(UTF8Length(payload));
 							var byteStream = new Uint8Array(buffer);
 							stringToUTF8(payload, byteStream, 0);
-		
+
 							return byteStream;
 						} else {
 							return payload;
@@ -2339,7 +2339,7 @@ function onMessageArrived(message) {
 							destinationName = newDestinationName;
 						else
 							throw new Error(format(ERROR.INVALID_ARGUMENT, [newDestinationName, "newDestinationName"]));
-					} 
+					}
 				},
 				"qos":{
 					enumerable: true,
