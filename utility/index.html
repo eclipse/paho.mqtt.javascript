@@ -112,9 +112,9 @@
                   </div>
                 </div>
 
-                <div class="col-lg-2">
+                <div class="col-lg-1">
                   <div class="form-group">
-                    <label for="keepAliveInput">Keep-Alive</label>
+                    <label for="keepAliveInput">Keepalive</label>
                     <input type="text" class="form-control" id="keepAliveInput" value="60">
                   </div>
                 </div>
@@ -132,12 +132,18 @@
                     <input type="checkbox" class="special-checkbox" id="tlsInput" value="" checked>
                   </div>
                 </div>
-                <div class="col-lg-2">
+                <div class="col-lg-1">
                   <div class="form-group">
                     <label for="cleanSessionInput">Clean Session</label>
                     <input type="checkbox" class="special-checkbox" id="cleanSessionInput" value="" checked>
                   </div>
 
+                </div>
+                <div class="col-lg-1">
+                  <div class="form-group">
+                    <label for="automaticReconnectInput">Automatic Reconnect</label>
+                    <input type="checkbox" class="special-checkbox" id="automaticReconnectInput" value="" checked>
+                  </div>
                 </div>
               </div>
               <hr>
@@ -324,6 +330,21 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+
+    <div class="col-md-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <a class="chevron-toggle" data-toggle="collapse" data-target="#consoleCollapse" href="#collapseOne">
+                        Console
+                        </a>
+        </div>
+        <div class="panel-body collapse in fixed-height-panel-pre" id="consoleCollapse">
+          <pre id="consolePre" class="pre-scrollable"></pre>
         </div>
       </div>
     </div>
