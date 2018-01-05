@@ -1,5 +1,7 @@
 # Eclipse Paho JavaScript client
 
+[![Build Status](https://travis-ci.org/eclipse/paho.mqtt.javascript.svg?branch=develop)](https://travis-ci.org/eclipse/paho.mqtt.javascript)
+
 The Paho JavaScript Client is an MQTT browser-based client library written in Javascript that uses WebSockets to connect to an MQTT Broker.
 
 ## Project description:
@@ -15,7 +17,7 @@ Paho reflects the inherent physical and cost constraints of device connectivity.
 - GitHub: [https://github.com/eclipse/paho.mqtt.javascript](https://github.com/eclipse/paho.mqtt.javascript)
 - Twitter: [@eclipsepaho](https://twitter.com/eclipsepaho)
 - Issues: [github.com/eclipse/paho.mqtt.javascript/issues](https://github.com/eclipse/paho.mqtt.javascript/issues)
-- Mailing-list: [https://dev.eclipse.org/mailman/listinfo/paho-dev](https://dev.eclipse.org/mailman/listinfo/paho-dev
+- Mailing-list: [https://dev.eclipse.org/mailman/listinfo/paho-dev](https://dev.eclipse.org/mailman/listinfo/paho-dev)
 
 
 ## Using the Paho Javascript Client
