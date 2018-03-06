@@ -46,7 +46,7 @@
  * <dd>This encapsulates the payload of the message along with various attributes
  * associated with its delivery, in particular the destination to which it has
  * been (or is about to be) sent.</dd>
- * </dl>
+ ubs </dl>
  * <p>
  * The programming interface validates parameters passed to it, and will throw
  * an Error containing an error message intended for developer use, if it detects
@@ -886,12 +886,13 @@ function onMessageArrived(message) {
 			if (!this.connected)
 				throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
 
-			var wireMessage = new WireMessage(MESSAGE_TYPE.SUBSCRIBE);
-			wireMessage.topics=[filter];
-			if (subscribeOptions.qos !== undefined)
-				wireMessage.requestedQos = [subscribeOptions.qos];
-			else
-				wireMessage.requestedQos = [0];
+            var wireMessage = new WireMessage(MESSAGE_TYPE.SUBSCRIBE);
+            wireMessage.topics = filter.constructor === Array ? filter : [filter];
+            if (subscribeOptions.qos === undefined)
+                subscribeOptions.qos = 0;
+            wireMessage.requestedQos = [];
+            for (var i = 0; i < wireMessage.topics.length; i++)
+                wireMessage.requestedQos[i] = subscribeOptions.qos;
 
 			if (subscribeOptions.onSuccess) {
 				wireMessage.onSuccess = function(grantedQos) {subscribeOptions.onSuccess({invocationContext:subscribeOptions.invocationContext,grantedQos:grantedQos});};
@@ -920,8 +921,8 @@ function onMessageArrived(message) {
 			if (!this.connected)
 				throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
 
-			var wireMessage = new WireMessage(MESSAGE_TYPE.UNSUBSCRIBE);
-			wireMessage.topics = [filter];
+            var wireMessage = new WireMessage(MESSAGE_TYPE.UNSUBSCRIBE);
+            wireMessage.topics = filter.constructor === Array ? filter : [filter];
 
 			if (unsubscribeOptions.onSuccess) {
 				wireMessage.callback = function() {unsubscribeOptions.onSuccess({invocationContext:unsubscribeOptions.invocationContext});};
@@ -2049,7 +2050,7 @@ function onMessageArrived(message) {
 		 * @throws {InvalidState} if the client is not in connected state.
 		 */
 			this.subscribe = function (filter, subscribeOptions) {
-				if (typeof filter !== "string")
+				if (typeof filter !== "string" && filter.constructor !== Array)
 					throw new Error("Invalid argument:"+filter);
 				subscribeOptions = subscribeOptions || {} ;
 				validate(subscribeOptions,  {qos:"number",
@@ -2065,7 +2066,7 @@ function onMessageArrived(message) {
 				client.subscribe(filter, subscribeOptions);
 			};
 
-			/**
+		/**
 		 * Unsubscribe for messages, stop receiving messages sent to destinations described by the filter.
 		 *
 		 * @name Paho.Client#unsubscribe
@@ -2094,7 +2095,7 @@ function onMessageArrived(message) {
 		 * @throws {InvalidState} if the client is not in connected state.
 		 */
 			this.unsubscribe = function (filter, unsubscribeOptions) {
-				if (typeof filter !== "string")
+				if (typeof filter !== "string" && filter.constructor !== Array)
 					throw new Error("Invalid argument:"+filter);
 				unsubscribeOptions = unsubscribeOptions || {} ;
 				validate(unsubscribeOptions,  {invocationContext:"object",
