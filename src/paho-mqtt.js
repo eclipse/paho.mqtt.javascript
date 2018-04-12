@@ -505,7 +505,7 @@ var PahoMQTT = (function (global) {
 					pos += 2;
 				}
 
-				var message = new Paho.MQTT.Message(input.subarray(pos, endPos));
+				var message = new PahoMQTT.Message(input.subarray(pos, endPos));
 				if ((messageInfo & 0x01) == 0x01)
 					message.retained = true;
 				if ((messageInfo & 0x08) == 0x08)
@@ -1133,7 +1133,7 @@ var PahoMQTT = (function (global) {
 				  hex = hex.substring(2, hex.length);
 				  byteStream[i++] = x;
 			  }
-			  var payloadMessage = new Paho.MQTT.Message(byteStream);
+			  var payloadMessage = new PahoMQTT.Message(byteStream);
 
 			  payloadMessage.qos = storedMessage.payloadMessage.qos;
 			  payloadMessage.destinationName = storedMessage.payloadMessage.destinationName;
