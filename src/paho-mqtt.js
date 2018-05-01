@@ -2377,6 +2377,7 @@ function onMessageArrived(message) {
 			Client: Client,
 			Message: Message
 		};
-	})(self);
+	// eslint-disable-next-line no-nested-ternary
+	})(typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
 	return PahoMQTT;
 });
