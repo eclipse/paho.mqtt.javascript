@@ -686,9 +686,8 @@ function onMessageArrived(message) {
 	 * Repeat keepalive requests, monitor responses.
 	 * @ignore
 	 */
-		var Pinger = function(client, self, keepAliveInterval) {
+		var Pinger = function(client, keepAliveInterval) {
 			this._client = client;
-			this._self = self;
 			this._keepAliveInterval = keepAliveInterval*1000;
 			this.isReset = false;
 
@@ -709,19 +708,19 @@ function onMessageArrived(message) {
 					this.isReset = false;
 					this._client._trace("Pinger.doPing", "send PINGREQ");
 					this._client.socket.send(pingReq);
-					this.timeout = this._self.setTimeout(doTimeout(this), this._keepAliveInterval);
+					this.timeout = setTimeout(doTimeout(this), this._keepAliveInterval);
 				}
 			};
 
 			this.reset = function() {
 				this.isReset = true;
-				this._self.clearTimeout(this.timeout);
+				clearTimeout(this.timeout);
 				if (this._keepAliveInterval > 0)
 					this.timeout = setTimeout(doTimeout(this), this._keepAliveInterval);
 			};
 
 			this.cancel = function() {
-				this._self.clearTimeout(this.timeout);
+				clearTimeout(this.timeout);
 			};
 		};
 
@@ -729,8 +728,7 @@ function onMessageArrived(message) {
 	 * Monitor request completion.
 	 * @ignore
 	 */
-		var Timeout = function(client, self, timeoutSeconds, action, args) {
-			this._self = self;
+		var Timeout = function(client, timeoutSeconds, action, args) {
 			if (!timeoutSeconds)
 				timeoutSeconds = 30;
 
@@ -742,7 +740,7 @@ function onMessageArrived(message) {
 			this.timeout = setTimeout(doTimeout(action, client, args), timeoutSeconds * 1000);
 
 			this.cancel = function() {
-				this._self.clearTimeout(this.timeout);
+				clearTimeout(this.timeout);
 			};
 		};
 
@@ -902,7 +900,7 @@ function onMessageArrived(message) {
 			}
 
 			if (subscribeOptions.timeout) {
-				wireMessage.timeOut = new Timeout(this, self, subscribeOptions.timeout, subscribeOptions.onFailure,
+				wireMessage.timeOut = new Timeout(this, subscribeOptions.timeout, subscribeOptions.onFailure,
 					[{invocationContext:subscribeOptions.invocationContext,
 						errorCode:ERROR.SUBSCRIBE_TIMEOUT.code,
 						errorMessage:format(ERROR.SUBSCRIBE_TIMEOUT)}]);
@@ -927,7 +925,7 @@ function onMessageArrived(message) {
 				wireMessage.callback = function() {unsubscribeOptions.onSuccess({invocationContext:unsubscribeOptions.invocationContext});};
 			}
 			if (unsubscribeOptions.timeout) {
-				wireMessage.timeOut = new Timeout(this, self, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
+				wireMessage.timeOut = new Timeout(this, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
 					[{invocationContext:unsubscribeOptions.invocationContext,
 						errorCode:ERROR.UNSUBSCRIBE_TIMEOUT.code,
 						errorMessage:format(ERROR.UNSUBSCRIBE_TIMEOUT)}]);
@@ -1049,13 +1047,13 @@ function onMessageArrived(message) {
 			this.socket.onerror = scope(this._on_socket_error, this);
 			this.socket.onclose = scope(this._on_socket_close, this);
 
-			this.sendPinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
-			this.receivePinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
+			this.sendPinger = new Pinger(this, this.connectOptions.keepAliveInterval);
+			this.receivePinger = new Pinger(this, this.connectOptions.keepAliveInterval);
 			if (this._connectTimeout) {
 				this._connectTimeout.cancel();
 				this._connectTimeout = null;
 			}
-			this._connectTimeout = new Timeout(this, self, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
+			this._connectTimeout = new Timeout(this, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
 		};
 
 
@@ -1543,7 +1541,7 @@ function onMessageArrived(message) {
 
 			if (errorCode !== undefined && this._reconnecting) {
 				//Continue automatic reconnect process
-				this._reconnectTimeout = new Timeout(this, self, this._reconnectInterval, this._reconnect);
+				this._reconnectTimeout = new Timeout(this, this._reconnectInterval, this._reconnect);
 				return;
 			}
 
