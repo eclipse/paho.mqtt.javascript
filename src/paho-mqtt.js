@@ -103,6 +103,19 @@ function onMessageArrived(message) {
 	// which is used to define the module.
 	var version = "@VERSION@-@BUILDLEVEL@";
 
+	/**
+	 * @private
+	 */
+	var localStorage = global.localStorage || (function () {
+		var data = {};
+
+		return {
+			setItem: function (key, item) { data[key] = item; },
+			getItem: function (key) { return data[key]; },
+			removeItem: function (key) { delete data[key]; },
+		};
+	})();
+
 		/**
 	 * Unique message type identifiers, with associated
 	 * associated integer values.
@@ -756,9 +769,6 @@ function onMessageArrived(message) {
 		// Check dependencies are satisfied in this browser.
 			if (!("WebSocket" in global && global.WebSocket !== null)) {
 				throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
-			}
-			if (!("localStorage" in global && global.localStorage !== null)) {
-				throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
 			}
 			if (!("ArrayBuffer" in global && global.ArrayBuffer !== null)) {
 				throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
