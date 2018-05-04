@@ -24,8 +24,10 @@ describe('BasicTest', function() {
   var isMessageReceived = false;
   var isMessageDelivered = false;
   var strTopic = topicPrefix + '/' + makeid() + '/World';
+  var strTopic2 = topicPrefix + '/' + makeid() + '/Mars';
   var strMessageReceived = '';
   var strMessageSend = 'Hello';
+  var strMessageSend2 = '你好'; // Hello in Traditional Chinese and a good UTF-8 test
   var strTopicReceived = '';
 
   settings.printConfig(settings);
@@ -398,6 +400,115 @@ describe('BasicTest', function() {
     var msg = new Paho.Message(buffer);
     console.log(msg.payloadBytes,msg.payloadString);
     */
+  });
+
+  it('it should subscribe to multiple topics.', function() {
+
+    var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+    client.onMessageArrived = messageArrived;
+    client.onMessageDelivered = messageDelivered;
+
+    runs(function() {
+      client.connect({
+        onSuccess: onConnectSuccess,
+        onFailure: onConnectFailure,
+        mqttVersion: testMqttVersion,
+        useSSL: testUseSSL
+      });
+    });
+    waitsFor(function() {
+      return connected;
+    }, "the client should connect", 5000);
+    runs(function() {
+      expect(connected).toBe(true);
+    });
+
+    console.log('Subscribe multiple topics...');
+    runs(function() {
+      client.subscribe([strTopic, strTopic2], {
+        onSuccess: onSubscribeSuccess,
+        onFailure: onSubscribeFailure
+      });
+    });
+
+    waitsFor(function() {
+      return subscribed;
+    }, "the client should subscribe to multiple topics.", 2000);
+
+    runs(function() {
+      expect(subscribed).toBe(true);
+    });
+
+    console.log('Send and receive message to the first topic...');
+    runs(function() {
+      var message= new Paho.Message(strMessageSend);
+      message.destinationName = strTopic;
+      client.send(message);
+    });
+
+    waitsFor(function() {
+      return isMessageReceived;
+    }, "the client should send and receive a message", 2000);
+    runs(function() {
+      //to do Check message sent
+      expect(isMessageDelivered).toBe(true);
+      //Check msg received
+      expect(isMessageReceived).toBe(true);
+      //Check message
+      expect(strMessageReceived).toEqual(strMessageSend);
+      //Check topic
+      expect(strTopicReceived).toEqual(strTopic);
+
+      //disconnect
+      //client.disconnect();
+
+    });
+
+    waitsFor(function() {
+      return isMessageReceived;
+    }, "Send and receive message to the second topic...", 2000);
+    runs(function() {
+      isMessageReceived = false;
+      var message= new Paho.Message(strMessageSend2);
+      message.destinationName = strTopic2;
+      client.send(message);
+
+    });
+
+   
+
+    waitsFor(function() {
+      return isMessageReceived;
+    }, "the client should send and receive a message", 2000);
+    runs(function() {
+      //to do Check message sent
+      expect(isMessageDelivered).toBe(true);
+      //Check msg received
+      expect(isMessageReceived).toBe(true);
+      //Check message
+      expect(strMessageReceived).toEqual(strMessageSend2);
+      //Check topic
+      expect(strTopicReceived).toEqual(strTopic2);
+
+      //disconnect
+      //client.disconnect();
+
+    });
+
+    console.log('Unsubscribe from both topics...');
+    runs(function() {
+      client.unsubscribe([strTopic, strTopic2], {
+        onSuccess: onUnsubscribeSuccess
+      });
+    });
+    waitsFor(function() {
+      return !subscribed;
+    }, "the client should subscribe", 2000);
+    runs(function() {
+      expect(subscribed).toBe(false);
+      //disconnect
+      //client.disconnect();
+    });
   });
 
 });
