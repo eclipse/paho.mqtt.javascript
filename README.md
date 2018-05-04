@@ -75,7 +75,7 @@ This requires the use of a broker that supports WebSockets natively, or the use 
 
 ```JS
 // Create a client instance
-client = new Paho.Client(location.hostname, Number(location.port), "clientId");
+var client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
 
 // set callback handlers
 client.onConnectionLost = onConnectionLost;
@@ -90,7 +90,7 @@ function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
   client.subscribe("/World");
-  message = new Paho.Message("Hello");
+  var message = new Paho.MQTT.Message("Hello");
   message.topic = "/World";
   client.publish(message);
 }

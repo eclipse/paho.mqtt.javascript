@@ -55,7 +55,7 @@
  * Example:
  *
  * <code><pre>
-client = new Paho.Client(location.hostname, Number(location.port), "clientId");
+var client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
 client.connect({onSuccess:onConnect});
@@ -64,7 +64,7 @@ function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
   client.subscribe("/World");
-  message = new Paho.Message("Hello");
+  var message = new Paho.MQTT.Message("Hello");
   message.destinationName = "/World";
   client.send(message);
 };
@@ -502,7 +502,8 @@ function onMessageArrived(message) {
 					wireMessage.messageIdentifier = readUint16(input, pos);
 					pos += 2;
 				}
-				var message = new PahoMQTT.Message(input.subarray(pos, endPos));
+
+				var message = new Message(input.subarray(pos, endPos));
 				if ((messageInfo & 0x01) == 0x01)
 					message.retained = true;
 				if ((messageInfo & 0x08) == 0x08)
@@ -1132,7 +1133,8 @@ function onMessageArrived(message) {
 					hex = hex.substring(2, hex.length);
 					byteStream[i++] = x;
 				}
-				var payloadMessage = new PahoMQTT.Message(byteStream);
+				var payloadMessage = new Message(byteStream);
+
 				payloadMessage.qos = storedMessage.payloadMessage.qos;
 				payloadMessage.destinationName = storedMessage.payloadMessage.destinationName;
 				if (storedMessage.payloadMessage.duplicate)
@@ -2322,7 +2324,7 @@ function onMessageArrived(message) {
 							var buffer = new ArrayBuffer(UTF8Length(payload));
 							var byteStream = new Uint8Array(buffer);
 							stringToUTF8(payload, byteStream, 0);
-		
+
 							return byteStream;
 						} else {
 							return payload;
@@ -2337,7 +2339,7 @@ function onMessageArrived(message) {
 							destinationName = newDestinationName;
 						else
 							throw new Error(format(ERROR.INVALID_ARGUMENT, [newDestinationName, "newDestinationName"]));
-					} 
+					}
 				},
 				"qos":{
 					enumerable: true,
