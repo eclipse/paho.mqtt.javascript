@@ -46,7 +46,7 @@
  * <dd>This encapsulates the payload of the message along with various attributes
  * associated with its delivery, in particular the destination to which it has
  * been (or is about to be) sent.</dd>
- ubs </dl>
+ * </dl>
  * <p>
  * The programming interface validates parameters passed to it, and will throw
  * an Error containing an error message intended for developer use, if it detects
