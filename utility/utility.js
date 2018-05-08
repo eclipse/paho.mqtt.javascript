@@ -23,7 +23,6 @@ This utility can be used to test the Eclipse Paho MQTT Javascript client.
 var client = null;
 var connected = false;
 
-
 logMessage("INFO", "Starting Eclipse Paho JavaScript Utility.");
 
 // Things to do as soon as the page loads
@@ -309,3 +308,8 @@ function logMessage(type, ...content) {
   }
 }
 
+window.connectionToggle = connectionToggle;
+window.subscribe = subscribe;
+window.unsubscribe = unsubscribe;
+window.publish = publish;
+window.clearHistory = clearHistory;
