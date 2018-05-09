@@ -53,6 +53,25 @@
     </nav>
     <!-- Nav Bar End -->
 
+    <!-- Local Storage GDPR Warning -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">Local Storage Warning</div>
+          <div class="panel-body">
+            <p>This page uses your browsers <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage">Local Storage</a> functionality
+            to store MQTT messages whilst they are "inflight". This allows the Paho javascript client to ensure that QoS 1 and QoS 2 messages are successfully delivered even
+              if the network connection or browser fails. If you do not wish for the Local Storage to be used, please do not use this client, or only use QoS 0 to send and 
+              receive messages. If you wish to see the data being stored for yourself, open up your developer console and look for the Local Storage section,
+              as messages are sent and received, you will see entries appearing and disappearing as the messages complete their QoS 1 and QoS 2 flows. 
+              Messages are deleted as soon as they have completed their QoS flow.</p>
+              <p>More information about the Eclipse Privacy and cookie policy can be found <a href="https://www.eclipse.org/legal/privacy.php">Here</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End of Local Storage GDPR Warning -->
+
     <!-- Connection panel -->
     <div class="row">
       <div class="col-md-12">
