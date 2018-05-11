@@ -3,7 +3,7 @@
  * associated integer values.
  * @private
  */
-var ERROR = {
+const ERROR = {
   OK:                        {code: 0, text: 'AMQJSC0000I OK.'},
   CONNECT_TIMEOUT:           {code: 1, text: 'AMQJSC0001E Connect timed out.'},
   SUBSCRIBE_TIMEOUT:         {code: 2, text: 'AMQJS0002E Subscribe timed out.'},
@@ -54,17 +54,17 @@ const MESSAGE_TYPE = {
 * @param {substitutions} [array] substituted into the text.
 * @return the text with the substitutions made.
 */
-var format = function(error, substitutions) {
-  var text = error.text;
+const format = function(error, substitutions) {
+  let text = error.text;
   if(substitutions) {
-    var field,
+    let field,
         start;
-    for(var i = 0; i < substitutions.length; i++) {
+    for(let i = 0; i < substitutions.length; i++) {
       field = '{' + i + '}';
       start = text.indexOf(field);
       if(start > 0) {
-        var part1 = text.substring(0, start);
-        var part2 = text.substring(start + field.length);
+        const part1 = text.substring(0, start);
+        const part2 = text.substring(start + field.length);
         text = part1 + substitutions[i] + part2;
       }
     }
@@ -77,13 +77,13 @@ var format = function(error, substitutions) {
 * @private
 */
 function stringToUTF8(input, output, start) {
-  var pos = start;
-  for(var i = 0; i < input.length; i++) {
-    var charCode = input.charCodeAt(i);
+  let pos = start;
+  for(let i = 0; i < input.length; i++) {
+    let charCode = input.charCodeAt(i);
 
     // Check for a surrogate pair.
     if(charCode >= 0xD800 && charCode <= 0xDBFF) {
-      var lowCharCode = input.charCodeAt(++i);
+      const lowCharCode = input.charCodeAt(++i);
       if(isNaN(lowCharCode)) {
         throw new Error(format(ERROR.MALFORMED_UNICODE, [charCode, lowCharCode]));
       }
@@ -110,16 +110,16 @@ function stringToUTF8(input, output, start) {
 }
 
 function parseUTF8(input, offset, length) {
-  var output = '';
-  var utf16;
-  var pos = offset;
+  let output = '';
+  let utf16;
+  let pos = offset;
 
   while(pos < offset + length) {
-    var byte1 = input[pos++];
+    const byte1 = input[pos++];
     if(byte1 < 128) {
       utf16 = byte1;
     } else {
-      var byte2 = input[pos++] - 128;
+      const byte2 = input[pos++] - 128;
       if(byte2 < 0) {
         throw new Error(format(ERROR.MALFORMED_UTF, [byte1.toString(16), byte2.toString(16), '']));
       }
@@ -127,7 +127,7 @@ function parseUTF8(input, offset, length) {
       {
         utf16 = 64 * (byte1 - 0xC0) + byte2;
       } else {
-        var byte3 = input[pos++] - 128;
+        const byte3 = input[pos++] - 128;
         if(byte3 < 0) {
           throw new Error(format(ERROR.MALFORMED_UTF, [byte1.toString(16), byte2.toString(16), byte3.toString(16)]));
         }
@@ -135,7 +135,7 @@ function parseUTF8(input, offset, length) {
         {
           utf16 = 4096 * (byte1 - 0xE0) + 64 * byte2 + byte3;
         } else {
-          var byte4 = input[pos++] - 128;
+          const byte4 = input[pos++] - 128;
           if(byte4 < 0) {
             throw new Error(format(ERROR.MALFORMED_UTF, [byte1.toString(16), byte2.toString(16), byte3.toString(16), byte4.toString(16)]));
           }
@@ -166,9 +166,9 @@ function parseUTF8(input, offset, length) {
 * @private
 */
 function UTF8Length(input) {
-  var output = 0;
-  for(var i = 0; i < input.length; i++) {
-    var charCode = input.charCodeAt(i);
+  let output = 0;
+  for(let i = 0; i < input.length; i++) {
+    const charCode = input.charCodeAt(i);
     if(charCode > 0x7FF) {
       // Surrogate pair means its a 4 byte character
       if(charCode >= 0xD800 && charCode <= 0xDBFF) {

@@ -5,11 +5,11 @@ import { MESSAGE_TYPE, stringToUTF8, UTF8Length } from './definitions';
  * @private
  */
 function encodeMBI(number) {
-  var output = new Array(1);
-  var numBytes = 0;
+  const output = new Array(1);
+  let numBytes = 0;
 
   do {
-    var digit = number % 128;
+    let digit = number % 128;
     number = number >> 7;
     if(number > 0) {
       digit |= 0x80;
@@ -21,9 +21,9 @@ function encodeMBI(number) {
 }
 
 // MQTT protocol and version          6    M    Q    I    s    d    p    3
-var MqttProtoIdentifierv3 = [0x00, 0x06, 0x4d, 0x51, 0x49, 0x73, 0x64, 0x70, 0x03];
+const MqttProtoIdentifierv3 = [0x00, 0x06, 0x4d, 0x51, 0x49, 0x73, 0x64, 0x70, 0x03];
 // MQTT proto/version for 311         4    M    Q    T    T    4
-var MqttProtoIdentifierv4 = [0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x04];
+const MqttProtoIdentifierv4 = [0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x04];
 
 function writeString(input, utf8Length, buffer, offset) {
   offset = writeUint16(utf8Length, buffer, offset);
@@ -64,7 +64,7 @@ function writeUint16(input, buffer, offset) {
 export default class {
   constructor(type, options) {
     this.type = type;
-    for(var name in options) {
+    for(const name in options) {
       if(options.hasOwnProperty(name)) {
         this[name] = options[name];
       }
@@ -72,17 +72,17 @@ export default class {
   }
   encode() {
     // Compute the first byte of the fixed header
-    var first = ((this.type & 0x0f) << 4);
+    let first = ((this.type & 0x0f) << 4);
 
     /*
      * Now calculate the length of the variable header + payload by adding up the lengths
      * of all the component parts
      */
 
-    var remLength = 0;
-    var topicStrLength = [];
-    var destinationNameLength = 0;
-    var willMessagePayloadBytes;
+    let remLength = 0;
+    const topicStrLength = [];
+    let destinationNameLength = 0;
+    let willMessagePayloadBytes;
 
     // if the message contains a messageIdentifier then we need two bytes for that
     if(this.messageIdentifier !== undefined) {
@@ -166,10 +166,10 @@ export default class {
 
     // Now we can allocate a buffer for the message
 
-    var mbi = encodeMBI(remLength);  // Convert the length to MQTT MBI format
-    var pos = mbi.length + 1;        // Offset of start of variable header
-    var buffer = new ArrayBuffer(remLength + pos);
-    var byteStream = new Uint8Array(buffer);    // view it as a sequence of bytes
+    const mbi = encodeMBI(remLength);  // Convert the length to MQTT MBI format
+    let pos = mbi.length + 1;        // Offset of start of variable header
+    const buffer = new ArrayBuffer(remLength + pos);
+    const byteStream = new Uint8Array(buffer);    // view it as a sequence of bytes
 
     // Write the fixed header into the buffer
     byteStream[0] = first;
@@ -192,7 +192,7 @@ export default class {
           pos += MqttProtoIdentifierv4.length;
           break;
       }
-      var connectFlags = 0;
+      let connectFlags = 0;
       if(this.cleanSession) {
         connectFlags = 0x02;
       }

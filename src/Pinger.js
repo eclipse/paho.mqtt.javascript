@@ -23,10 +23,10 @@ export default class {
     this._keepAliveInterval = keepAliveInterval * 1000;
     this.isReset = false;
 
-    var pingReq = new WireMessage(MESSAGE_TYPE.PINGREQ).encode();
+    const pingReq = new WireMessage(MESSAGE_TYPE.PINGREQ).encode();
 
     /** @ignore */
-    var doPing = function() {
+    const doPing = function() {
       if(!this.isReset) {
         this._client._trace('Pinger.doPing', 'Timed out');
         this._client._disconnected(ERROR.PING_TIMEOUT.code, format(ERROR.PING_TIMEOUT));

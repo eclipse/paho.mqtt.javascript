@@ -19,6 +19,11 @@ Eclipse Paho MQTT-JS Utility
 This utility can be used to test the Eclipse Paho MQTT Javascript client.
 */
 
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap-theme.min.css';
+import './style.css';
+
 // Create a client instance
 var client = null;
 var connected = false;
@@ -308,8 +313,8 @@ function logMessage(type, ...content) {
   }
 }
 
-window.connectionToggle = connectionToggle;
-window.subscribe = subscribe;
-window.unsubscribe = unsubscribe;
-window.publish = publish;
-window.clearHistory = clearHistory;
+document.getElementById('clientConnectButton').addEventListener('click', connectionToggle);
+document.getElementById('subscribeButton').addEventListener('click', subscribe);
+document.getElementById('unsubscribeButton').addEventListener('click', unsubscribe);
+document.getElementById('publishButton').addEventListener('click', publish);
+document.getElementById('clearHistoryButton').addEventListener('click', clearHistory);

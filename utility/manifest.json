@@ -1,0 +1,18 @@
+{
+	"name": "Paho MQTT Javascript Client Utility",
+	"short_name": "paho-client",
+	"description": "Javascript Client Utility for Eclipse Paho JavaScript MQTT client",
+	"version": "1.0.0",
+	"manifest_version": 2,
+	"app": {
+		"background": {
+			"scripts": ["./background.js"]
+		}
+	},
+	"sockets": {
+		"tcp": {
+			"connect": ""
+		}
+	},
+	"permissions": ["*://*/*"]
+}

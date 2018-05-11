@@ -18,11 +18,6 @@
 
 <head>
   <title>Eclipse Paho MQTT JavaScript Client Example</title>
-  <!-- Latest compiled and minified CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
-  <!-- Custom Styles theme -->
-  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -86,7 +81,7 @@
                 <div class="col-lg-1">
                   <div class="form-group">
                     <label for="clientConnectButton"></label>
-                    <a id="clientConnectButton" class="btn btn-default" onclick="connectionToggle();">Connect</a>
+                    <a id="clientConnectButton" class="btn btn-default">Connect</a>
                   </div>
                 </div>
               </div>
@@ -213,8 +208,8 @@
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
-                <button id="subscribeButton" type="button" class="btn btn-default" onclick="subscribe();" disabled>Subscribe</button>
-                <button id="unsubscribeButton" type="button" class="btn btn-default" onclick="unsubscribe();" disabled>Unsubscribe</button>
+                <button id="subscribeButton" type="button" class="btn btn-default" disabled>Subscribe</button>
+                <button id="unsubscribeButton" type="button" class="btn btn-default" disabled>Unsubscribe</button>
               </div>
             </div>
           </form>
@@ -256,7 +251,7 @@
               <div class="col-lg-1">
                 <div class="form-group">
                   <label for="publishButton"></label>
-                  <button id="publishButton" type="button" class="btn btn-default" onclick="publish();" disabled>Publish</a>
+                  <button id="publishButton" type="button" class="btn btn-default" disabled>Publish</a>
                 </div>
               </div>
 
@@ -317,7 +312,7 @@
                         </a>
         </div>
         <div class="panel-body collapse in fixed-height-panel" id="historyCollapse">
-          <span class="right"><a href="#" onclick="clearHistory()">Clear History</a></span>
+          <span class="right"><a href="#" id="clearHistoryButton">Clear History</a></span>
           <table class="table table-hover table-condensed  tableSection" id="incomingMessageTable">
 
             <thead>
@@ -350,17 +345,6 @@
     </div>
   </div>
   </div>
-
-  <!-- Source Paho MQTT Client-->
-  <!--script src="../src/paho-mqtt.js"></script-->
-  <!--<script src="../src/paho-mqtt.js"></script>-->
-
-  <!-- Utility Javascript -->
-  <!--script src="utility.js"></script-->
-
-  <!-- Javascript used for Bootstrap Theme -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 </body>
 
 </html>

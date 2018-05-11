@@ -197,7 +197,7 @@
 		"no-useless-escape": "warn",
 		"no-useless-rename": "error",
 		"no-useless-return": "off",
-		"no-var": "off",
+		"no-var": "warn",
 		"no-void": "error",
 		"no-warning-comments": [
 			"error",

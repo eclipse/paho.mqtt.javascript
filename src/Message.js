@@ -37,7 +37,7 @@ import { stringToUTF8, UTF8Length, ERROR, format, parseUTF8 } from './definition
 
 export default class {
   constructor(newPayload) {
-    var payload;
+    let payload;
     if(typeof newPayload === 'string' ||
         newPayload instanceof ArrayBuffer ||
           (ArrayBuffer.isView(newPayload) && !(newPayload instanceof DataView))
@@ -47,10 +47,10 @@ export default class {
       throw (format(ERROR.INVALID_ARGUMENT, [newPayload, 'newPayload']));
     }
 
-    var destinationName;
-    var qos = 0;
-    var retained = false;
-    var duplicate = false;
+    let destinationName;
+    let qos = 0;
+    let retained = false;
+    let duplicate = false;
 
     Object.defineProperties(this, {
       payloadString: {
@@ -67,8 +67,8 @@ export default class {
         enumerable: true,
         get:        function() {
           if(typeof payload === 'string') {
-            var buffer = new ArrayBuffer(UTF8Length(payload));
-            var byteStream = new Uint8Array(buffer);
+            const buffer = new ArrayBuffer(UTF8Length(payload));
+            const byteStream = new Uint8Array(buffer);
             stringToUTF8(payload, byteStream, 0);
 
             return byteStream;

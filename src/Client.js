@@ -86,17 +86,20 @@ import Message from './Message';
 * @throws {Error} Invalid option parameter found.
 * @private
 */
-var validate = function(obj, keys) {
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      if (keys.hasOwnProperty(key)) {
-        if (typeof obj[key] !== keys[key])
+const validate = function(obj, keys) {
+  for(const key in obj) {
+    if(obj.hasOwnProperty(key)) {
+      if(keys.hasOwnProperty(key)) {
+        if(typeof obj[key] !== keys[key]) {
           throw new Error(format(ERROR.INVALID_TYPE, [typeof obj[key], key]));
+        }
       } else {
-        var errorStr = "Unknown property, " + key + ". Valid properties are:";
-        for (var validKey in keys)
-          if (keys.hasOwnProperty(validKey))
-            errorStr = errorStr+" "+validKey;
+        let errorStr = 'Unknown property, ' + key + '. Valid properties are:';
+        for(const validKey in keys) {
+          if(keys.hasOwnProperty(validKey)) {
+            errorStr = errorStr + ' ' + validKey;
+          }
+        }
         throw new Error(errorStr);
       }
     }
@@ -105,7 +108,7 @@ var validate = function(obj, keys) {
 
 export default class {
   constructor(host, port, path, clientId) {
-    var uri;
+    let uri;
 
     if(typeof host !== 'string') {
       throw new Error(format(ERROR.INVALID_TYPE, [typeof host, 'host']));
@@ -116,7 +119,7 @@ export default class {
       // port: clientId
       clientId = port;
       uri = host;
-      var match = uri.match(/^(wss?):\/\/((\[(.+)\])|([^/]+?))(:(\d+))?(\/.*)$/);
+      const match = uri.match(/^(wss?):\/\/((\[(.+)\])|([^/]+?))(:(\d+))?(\/.*)$/);
       if(match) {
         host = match[4] || match[2];
         port = parseInt(match[7]);
@@ -136,13 +139,13 @@ export default class {
         throw new Error(format(ERROR.INVALID_TYPE, [typeof path, 'path']));
       }
 
-      var ipv6AddSBracket = (host.indexOf(':') !== -1 && host.slice(0, 1) !== '[' && host.slice(-1) !== ']');
+      const ipv6AddSBracket = (host.indexOf(':') !== -1 && host.slice(0, 1) !== '[' && host.slice(-1) !== ']');
       uri = 'ws://' + (ipv6AddSBracket ? '[' + host + ']' : host) + ':' + port + path;
     }
 
-    var clientIdLength = 0;
-    for(var i = 0; i < clientId.length; i++) {
-      var charCode = clientId.charCodeAt(i);
+    let clientIdLength = 0;
+    for(let i = 0; i < clientId.length; i++) {
+      const charCode = clientId.charCodeAt(i);
       if(charCode >= 0xD800 && charCode <= 0xDBFF)  {
         i++; // Surrogate pair.
       }
@@ -385,7 +388,7 @@ export default class {
         throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts, 'connectOptions.hosts']));
       }
 
-      var usingURIs = false;
+      let usingURIs = false;
       for(var i = 0; i < connectOptions.hosts.length; i++) {
         if(typeof connectOptions.hosts[i] !== 'string') {
           throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], 'connectOptions.hosts[' + i + ']']));
@@ -418,10 +421,10 @@ export default class {
           if(typeof connectOptions.ports[i] !== 'number' || connectOptions.ports[i] < 0) {
             throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], 'connectOptions.ports[' + i + ']']));
           }
-          var host = connectOptions.hosts[i];
-          var port = connectOptions.ports[i];
+          const host = connectOptions.hosts[i];
+          const port = connectOptions.ports[i];
 
-          var ipv6 = (host.indexOf(':') !== -1);
+          const ipv6 = (host.indexOf(':') !== -1);
           this.uri = 'ws://' + (ipv6 ? '[' + host + ']' : host) + ':' + port + this.path;
           connectOptions.uris.push(this.uri);
         }
@@ -552,7 +555,7 @@ export default class {
      * @throws {InvalidState} if the client is not connected.
      */
   send(topic, payload, qos, retained) {
-    var message;
+    let message;
 
     if(arguments.length === 0) {
       throw new Error('Invalid argument.' + 'length');
@@ -604,7 +607,7 @@ export default class {
      * @throws {InvalidState} if the client is not connected.
      */
   publish(topic, payload, qos, retained) {
-    var message;
+    let message;
 
     if(arguments.length === 0) {
       throw new Error('Invalid argument.' + 'length');

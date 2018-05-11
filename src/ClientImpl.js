@@ -41,17 +41,17 @@ function readUint16(buffer, offset) {
 }
 
 function decodeMessage(input, pos) {
-  var startingPos = pos;
-  var first = input[pos];
-  var type = first >> 4;
-  var messageInfo = first &= 0x0f;
+  const startingPos = pos;
+  let first = input[pos];
+  const type = first >> 4;
+  const messageInfo = first &= 0x0f;
   pos += 1;
 
   // Decode the remaining length (MBI format)
 
-  var digit;
-  var remLength = 0;
-  var multiplier = 1;
+  let digit;
+  let remLength = 0;
+  let multiplier = 1;
   do {
     if(pos == input.length) {
       return [null, startingPos];
@@ -61,12 +61,12 @@ function decodeMessage(input, pos) {
     multiplier *= 128;
   } while((digit & 0x80) !== 0);
 
-  var endPos = pos + remLength;
+  const endPos = pos + remLength;
   if(endPos > input.length) {
     return [null, startingPos];
   }
 
-  var wireMessage = new WireMessage(type);
+  const wireMessage = new WireMessage(type);
   switch (type) {
     case MESSAGE_TYPE.CONNACK:
       var connectAcknowledgeFlags = input[pos++];
@@ -224,7 +224,7 @@ export default class {
     this._sequence = 0;
 
     // Load the local state, if any, from the saved version, only restore state relevant to this client.
-    for(var key in localStorage) {
+    for(const key in localStorage) {
       if(key.indexOf('Sent:' + this._localKey) === 0 || key.indexOf('Received:' + this._localKey) === 0) {
         this.restore(key);
       }
@@ -232,7 +232,7 @@ export default class {
   }
 
   connect(connectOptions) {
-    var connectOptionsMasked = this._traceMask(connectOptions, 'password');
+    const connectOptionsMasked = this._traceMask(connectOptions, 'password');
     this._trace('Client.connect', connectOptionsMasked, this.socket, this.connected);
 
     if(this.connected) {
@@ -268,13 +268,13 @@ export default class {
       throw new Error(format(ERROR.INVALID_STATE, ['not connected']));
     }
 
-    var wireMessage = new WireMessage(MESSAGE_TYPE.SUBSCRIBE);
+    const wireMessage = new WireMessage(MESSAGE_TYPE.SUBSCRIBE);
     wireMessage.topics = filter.constructor === Array ? filter : [filter];
     if(subscribeOptions.qos === undefined) {
       subscribeOptions.qos = 0;
     }
     wireMessage.requestedQos = [];
-    for(var i = 0; i < wireMessage.topics.length; i++) {
+    for(let i = 0; i < wireMessage.topics.length; i++) {
       wireMessage.requestedQos[i] = subscribeOptions.qos;
     }
 
@@ -310,7 +310,7 @@ export default class {
       throw new Error(format(ERROR.INVALID_STATE, ['not connected']));
     }
 
-    var wireMessage = new WireMessage(MESSAGE_TYPE.UNSUBSCRIBE);
+    const wireMessage = new WireMessage(MESSAGE_TYPE.UNSUBSCRIBE);
     wireMessage.topics = filter.constructor === Array ? filter : [filter];
 
     if(unsubscribeOptions.onSuccess) {
@@ -333,7 +333,7 @@ export default class {
   send(message) {
     this._trace('Client.send', message);
 
-    var wireMessage = new WireMessage(MESSAGE_TYPE.PUBLISH);
+    const wireMessage = new WireMessage(MESSAGE_TYPE.PUBLISH);
     wireMessage.payloadMessage = message;
 
     if(this.connected) {
@@ -351,7 +351,7 @@ export default class {
       // Check if reconnecting is in progress and disconnected publish is enabled.
       if(this._reconnecting && this.disconnectedPublishing) {
         // Check the limit which include the "required ACK" messages
-        var messageCount = Object.keys(this._sentMessages).length + this._buffered_msg_queue.length;
+        const messageCount = Object.keys(this._sentMessages).length + this._buffered_msg_queue.length;
         if(messageCount > this.disconnectedBufferSize) {
           throw new Error(format(ERROR.BUFFER_FULL, [this.disconnectedBufferSize]));
         } else {
@@ -385,7 +385,7 @@ export default class {
       throw new Error(format(ERROR.INVALID_STATE, ['not connecting or connected']));
     }
 
-    var wireMessage = new WireMessage(MESSAGE_TYPE.DISCONNECT);
+    const wireMessage = new WireMessage(MESSAGE_TYPE.DISCONNECT);
 
     // Run the disconnected call back as soon as the message has been sent,
     // in case of a failure later on in the disconnect processing.
@@ -424,7 +424,7 @@ export default class {
   _doConnect(wsurl) {
     // When the socket is open, this client will send the CONNECT WireMessage using the saved parameters.
     if(this.connectOptions.useSSL) {
-      var uriParts = wsurl.split(':');
+      const uriParts = wsurl.split(':');
       uriParts[0] = 'wss';
       wsurl = uriParts.join(':');
     }
@@ -466,7 +466,7 @@ export default class {
   }
 
   store(prefix, wireMessage) {
-    var storedMessage = {type: wireMessage.type, messageIdentifier: wireMessage.messageIdentifier, version: 1};
+    const storedMessage = {type: wireMessage.type, messageIdentifier: wireMessage.messageIdentifier, version: 1};
 
     switch (wireMessage.type) {
       case MESSAGE_TYPE.PUBLISH:
@@ -478,7 +478,7 @@ export default class {
         storedMessage.payloadMessage = {};
         var hex = '';
         var messageBytes = wireMessage.payloadMessage.payloadBytes;
-        for(var i = 0; i < messageBytes.length; i++) {
+        for(let i = 0; i < messageBytes.length; i++) {
           if(messageBytes[i] <= 0xF) {
             hex = hex + '0' + messageBytes[i].toString(16);
           } else {
@@ -512,10 +512,10 @@ export default class {
   }
 
   restore(key) {
-    var value = localStorage.getItem(key);
-    var storedMessage = JSON.parse(value);
+    const value = localStorage.getItem(key);
+    const storedMessage = JSON.parse(value);
 
-    var wireMessage = new WireMessage(storedMessage.type, storedMessage);
+    const wireMessage = new WireMessage(storedMessage.type, storedMessage);
 
     switch (storedMessage.type) {
       case MESSAGE_TYPE.PUBLISH:
@@ -525,7 +525,7 @@ export default class {
         var byteStream = new Uint8Array(buffer);
         var i = 0;
         while(hex.length >= 2) {
-          var x = parseInt(hex.substring(0, 2), 16);
+          const x = parseInt(hex.substring(0, 2), 16);
           hex = hex.substring(2, hex.length);
           byteStream[i++] = x;
         }
@@ -556,7 +556,7 @@ export default class {
   }
 
   _process_queue() {
-    var message = null;
+    let message = null;
 
     // Send all queued messages down socket connection
     while((message = this._msg_queue.pop())) {
@@ -575,7 +575,7 @@ export default class {
    * @ignore
    */
   _requires_ack(wireMessage) {
-    var messageCount = Object.keys(this._sentMessages).length;
+    const messageCount = Object.keys(this._sentMessages).length;
     if(messageCount > this.maxMessageIdentifier) {
       throw Error('Too many messages:' + messageCount);
     }
@@ -599,7 +599,7 @@ export default class {
    */
   _on_socket_open() {
     // Create the CONNECT message object.
-    var wireMessage = new WireMessage(MESSAGE_TYPE.CONNECT, this.connectOptions);
+    const wireMessage = new WireMessage(MESSAGE_TYPE.CONNECT, this.connectOptions);
     wireMessage.clientId = this.clientId;
     this._socket_send(wireMessage);
   }
@@ -610,27 +610,27 @@ export default class {
    */
   _on_socket_message(event) {
     this._trace('Client._on_socket_message', event.data);
-    var messages = this._deframeMessages(event.data);
-    for(var i = 0; i < messages.length; i += 1) {
+    const messages = this._deframeMessages(event.data);
+    for(let i = 0; i < messages.length; i += 1) {
       this._handleMessage(messages[i]);
     }
   }
 
   _deframeMessages(data) {
-    var byteArray = new Uint8Array(data);
-    var messages = [];
+    let byteArray = new Uint8Array(data);
+    const messages = [];
     if(this.receiveBuffer) {
-      var newData = new Uint8Array(this.receiveBuffer.length + byteArray.length);
+      const newData = new Uint8Array(this.receiveBuffer.length + byteArray.length);
       newData.set(this.receiveBuffer);
       newData.set(byteArray, this.receiveBuffer.length);
       byteArray = newData;
       delete this.receiveBuffer;
     }
     try {
-      var offset = 0;
+      let offset = 0;
       while(offset < byteArray.length) {
-        var result = decodeMessage(byteArray, offset);
-        var wireMessage = result[0];
+        const result = decodeMessage(byteArray, offset);
+        const wireMessage = result[0];
         offset = result[1];
         if(wireMessage !== null) {
           messages.push(wireMessage);
@@ -642,7 +642,7 @@ export default class {
         this.receiveBuffer = byteArray.subarray(offset);
       }
     } catch (error) {
-      var errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : 'No Error Stack Available');
+      const errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : 'No Error Stack Available');
       this._disconnected(ERROR.INTERNAL_ERROR.code, format(ERROR.INTERNAL_ERROR, [error.message, errorStack]));
       return;
     }
@@ -689,7 +689,7 @@ export default class {
 
           // Resend messages.
           var sequencedMessages = [];
-          for(var msgId in this._sentMessages) {
+          for(const msgId in this._sentMessages) {
             if(this._sentMessages.hasOwnProperty(msgId)) {
               sequencedMessages.push(this._sentMessages[msgId]);
             }
@@ -697,7 +697,7 @@ export default class {
 
           // Also schedule qos 0 buffered messages if any
           if(this._buffered_msg_queue.length > 0) {
-            var msg = null;
+            let msg = null;
             while((msg = this._buffered_msg_queue.pop())) {
               sequencedMessages.push(msg);
               if(this.onMessageDelivered) {
@@ -710,7 +710,7 @@ export default class {
           var sequencedMessages = sequencedMessages.sort(function(a, b) {
             return a.sequence - b.sequence;
           });
-          for(var i = 0, len = sequencedMessages.length; i < len; i++) {
+          for(let i = 0, len = sequencedMessages.length; i < len; i++) {
             var sentMessage = sequencedMessages[i];
             if(sentMessage.type == MESSAGE_TYPE.PUBLISH && sentMessage.pubRecReceived) {
               var pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {messageIdentifier: sentMessage.messageIdentifier});
@@ -837,7 +837,7 @@ export default class {
           this._disconnected(ERROR.INVALID_MQTT_MESSAGE_TYPE.code, format(ERROR.INVALID_MQTT_MESSAGE_TYPE, [wireMessage.type]));
       }
     } catch (error) {
-      var errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : 'No Error Stack Available');
+      const errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : 'No Error Stack Available');
       this._disconnected(ERROR.INTERNAL_ERROR.code, format(ERROR.INTERNAL_ERROR, [error.message, errorStack]));
     }
   }
@@ -859,7 +859,7 @@ export default class {
   /** @ignore */
   _socket_send(wireMessage) {
     if(wireMessage.type == 1) {
-      var wireMessageMasked = this._traceMask(wireMessage, 'password');
+      const wireMessageMasked = this._traceMask(wireMessage, 'password');
       this._trace('Client._socket_send', wireMessageMasked);
     } else this._trace('Client._socket_send', wireMessage);
 
@@ -1026,7 +1026,7 @@ export default class {
           arguments.splice(i, 1, JSON.stringify(arguments[i]));
         }
       }
-      var record = Array.prototype.slice.call(arguments).join('');
+      const record = Array.prototype.slice.call(arguments).join('');
       this.traceFunction({severity: 'Debug', message: record	});
     }
 
@@ -1045,8 +1045,8 @@ export default class {
 
   /** @ignore */
   _traceMask(traceObject, masked) {
-    var traceObjectMasked = {};
-    for(var attr in traceObject) {
+    const traceObjectMasked = {};
+    for(const attr in traceObject) {
       if(traceObject.hasOwnProperty(attr)) {
         if(attr == masked) {
           traceObjectMasked[attr] = '******';
