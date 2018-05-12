@@ -3,14 +3,14 @@
 * @ignore
 */
 
-import WireMessage from './WireMessage';
-import { ERROR, MESSAGE_TYPE, format } from './definitions';
+import { ERROR, MESSAGE_TYPE, format } from "./definitions";
+import WireMessage from "./WireMessage";
 
 function doTimeout(pinger) {
   return function() {
     return pinger.doPing();
   };
-};
+}
 
 /**
 * Repeat keepalive requests, monitor responses.
@@ -23,20 +23,20 @@ export default class {
     this._keepAliveInterval = keepAliveInterval * 1000;
     this.isReset = false;
 
-    const pingReq = new WireMessage(MESSAGE_TYPE.PINGREQ).encode();
+    this.pingReq = new WireMessage(MESSAGE_TYPE.PINGREQ).encode();
 
-    /** @ignore */
-    const doPing = function() {
-      if(!this.isReset) {
-        this._client._trace('Pinger.doPing', 'Timed out');
-        this._client._disconnected(ERROR.PING_TIMEOUT.code, format(ERROR.PING_TIMEOUT));
-      } else {
-        this.isReset = false;
-        this._client._trace('Pinger.doPing', 'send PINGREQ');
-        this._client.socket.send(pingReq);
-        this.timeout = this._self.setTimeout(doTimeout(this), this._keepAliveInterval);
-      }
-    };
+  }
+
+  doPing() {
+    if(!this.isReset) {
+      this._client._trace("Pinger.doPing", "Timed out");
+      this._client._disconnected(ERROR.PING_TIMEOUT.code, format(ERROR.PING_TIMEOUT));
+    } else {
+      this.isReset = false;
+      this._client._trace("Pinger.doPing", "send PINGREQ");
+      this._client.socket.send(this.pingReq);
+      this.timeout = this._self.setTimeout(doTimeout(this), this._keepAliveInterval);
+    }
   }
 
   reset() {
@@ -50,4 +50,4 @@ export default class {
   cancel() {
     this._self.clearTimeout(this.timeout);
   }
-};
+}

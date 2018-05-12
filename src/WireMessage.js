@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, stringToUTF8, UTF8Length } from './definitions';
+import { MESSAGE_TYPE, UTF8Length, stringToUTF8 } from "./definitions";
 
 /**
  * Encodes an MQTT Multi-Byte Integer
@@ -70,6 +70,7 @@ export default class {
       }
     }
   }
+
   encode() {
     // Compute the first byte of the fixed header
     let first = ((this.type & 0x0f) << 4);
@@ -120,35 +121,35 @@ export default class {
         break;
 
       // Subscribe, Unsubscribe can both contain topic strings
-      case MESSAGE_TYPE.SUBSCRIBE:
+      case MESSAGE_TYPE.SUBSCRIBE: {
         first |= 0x02; // Qos = 1;
-        for(var i = 0; i < this.topics.length; i++) {
+        for(let i = 0; i < this.topics.length; i++) {
           topicStrLength[i] = UTF8Length(this.topics[i]);
           remLength += topicStrLength[i] + 2;
         }
         remLength += this.requestedQos.length; // 1 byte for each topic's Qos
         // QoS on Subscribe only
         break;
-
-      case MESSAGE_TYPE.UNSUBSCRIBE:
+      }
+      case MESSAGE_TYPE.UNSUBSCRIBE: {
         first |= 0x02; // Qos = 1;
-        for(var i = 0; i < this.topics.length; i++) {
+        for(let i = 0; i < this.topics.length; i++) {
           topicStrLength[i] = UTF8Length(this.topics[i]);
           remLength += topicStrLength[i] + 2;
         }
         break;
-
+      }
       case MESSAGE_TYPE.PUBREL:
         first |= 0x02; // Qos = 1;
         break;
 
-      case MESSAGE_TYPE.PUBLISH:
+      case MESSAGE_TYPE.PUBLISH: {
         if(this.payloadMessage.duplicate) first |= 0x08;
         first  = first |= (this.payloadMessage.qos << 1);
         if(this.payloadMessage.retained) first |= 0x01;
         destinationNameLength = UTF8Length(this.payloadMessage.destinationName);
         remLength += destinationNameLength + 2;
-        var payloadBytes = this.payloadMessage.payloadBytes;
+        let payloadBytes = this.payloadMessage.payloadBytes;
         remLength += payloadBytes.byteLength;
         if(payloadBytes instanceof ArrayBuffer) {
           payloadBytes = new Uint8Array(payloadBytes);
@@ -156,6 +157,7 @@ export default class {
           payloadBytes = new Uint8Array(payloadBytes.buffer);
         }
         break;
+      }
 
       case MESSAGE_TYPE.DISCONNECT:
         break;
@@ -237,7 +239,7 @@ export default class {
 
       case MESSAGE_TYPE.PUBLISH:
         // PUBLISH has a text or binary payload, if text do not add a 2 byte length field, just the UTF characters.
-        byteStream.set(payloadBytes, pos);
+        byteStream.set(this.payloadMessage.payloadBytes, pos);
 
         break;
 
@@ -246,25 +248,25 @@ export default class {
       //    	    case MESSAGE_TYPE.PUBCOMP:
       //    	    	break;
 
-      case MESSAGE_TYPE.SUBSCRIBE:
+      case MESSAGE_TYPE.SUBSCRIBE: {
         // SUBSCRIBE has a list of topic strings and request QoS
-        for(var i = 0; i < this.topics.length; i++) {
+        for(let i = 0; i < this.topics.length; i++) {
           pos = writeString(this.topics[i], topicStrLength[i], byteStream, pos);
           byteStream[pos++] = this.requestedQos[i];
         }
         break;
-
-      case MESSAGE_TYPE.UNSUBSCRIBE:
+      }
+      case MESSAGE_TYPE.UNSUBSCRIBE: {
         // UNSUBSCRIBE has a list of topic strings
-        for(var i = 0; i < this.topics.length; i++) {
+        for(let i = 0; i < this.topics.length; i++) {
           pos = writeString(this.topics[i], topicStrLength[i], byteStream, pos);
         }
         break;
-
+      }
       default:
         // Do nothing.
     }
 
     return buffer;
   }
-};
+}

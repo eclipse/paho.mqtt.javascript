@@ -23,6 +23,7 @@ import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/css/bootstrap-theme.min.css';
 import './style.css';
+import Paho from '../src';
 
 // Create a client instance
 var client = null;

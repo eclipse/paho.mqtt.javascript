@@ -6,11 +6,11 @@
  * @param {Number} port the port number for that host.
  * @param {String} clientId the MQ client identifier.
  */
-import { ERROR, MESSAGE_TYPE, format, parseUTF8 } from './definitions';
-import Timeout from './Timeout';
-import Pinger from './Pinger';
-import WireMessage from './WireMessage';
-import Message from './Message';
+import { ERROR, MESSAGE_TYPE, format, parseUTF8 } from "./definitions";
+import Message from "./Message";
+import Pinger from "./Pinger";
+import Timeout from "./Timeout";
+import WireMessage from "./WireMessage";
 
 /**
  * Return a new function which runs the user function bound
@@ -24,16 +24,16 @@ function scope(f, scope) {
   return function() {
     return f.apply(scope, arguments);
   };
-};
+}
 
 /** CONNACK RC Meaning. */
 const CONNACK_RC = {
-  0: 'Connection Accepted',
-  1: 'Connection Refused: unacceptable protocol version',
-  2: 'Connection Refused: identifier rejected',
-  3: 'Connection Refused: server unavailable',
-  4: 'Connection Refused: bad user name or password',
-  5: 'Connection Refused: not authorized'
+  0: "Connection Accepted",
+  1: "Connection Refused: unacceptable protocol version",
+  2: "Connection Refused: identifier rejected",
+  3: "Connection Refused: server unavailable",
+  4: "Connection Refused: bad user name or password",
+  5: "Connection Refused: not authorized"
 };
 
 function readUint16(buffer, offset) {
@@ -68,20 +68,20 @@ function decodeMessage(input, pos) {
 
   const wireMessage = new WireMessage(type);
   switch (type) {
-    case MESSAGE_TYPE.CONNACK:
-      var connectAcknowledgeFlags = input[pos++];
+    case MESSAGE_TYPE.CONNACK: {
+      const connectAcknowledgeFlags = input[pos++];
       if(connectAcknowledgeFlags & 0x01) {
         wireMessage.sessionPresent = true;
       }
       wireMessage.returnCode = input[pos++];
       break;
+    }
+    case MESSAGE_TYPE.PUBLISH: {
+      const qos = (messageInfo >> 1) & 0x03;
 
-    case MESSAGE_TYPE.PUBLISH:
-      var qos = (messageInfo >> 1) & 0x03;
-
-      var len = readUint16(input, pos);
+      const len = readUint16(input, pos);
       pos += 2;
-      var topicName = parseUTF8(input, pos, len);
+      const topicName = parseUTF8(input, pos, len);
       pos += len;
       // If QoS 1 or 2 there will be a messageIdentifier
       if(qos > 0) {
@@ -89,7 +89,7 @@ function decodeMessage(input, pos) {
         pos += 2;
       }
 
-      var message = new Message(input.subarray(pos, endPos));
+      const message = new Message(input.subarray(pos, endPos));
       if((messageInfo & 0x01) == 0x01) {
         message.retained = true;
       }
@@ -100,7 +100,7 @@ function decodeMessage(input, pos) {
       message.destinationName = topicName;
       wireMessage.payloadMessage = message;
       break;
-
+    }
     case  MESSAGE_TYPE.PUBACK:
     case  MESSAGE_TYPE.PUBREC:
     case  MESSAGE_TYPE.PUBREL:
@@ -120,6 +120,21 @@ function decodeMessage(input, pos) {
   }
 
   return [wireMessage, endPos];
+}
+
+/** @ignore */
+function _traceMask(traceObject, masked) {
+  const traceObjectMasked = {};
+  for(const attr in traceObject) {
+    if(traceObject.hasOwnProperty(attr)) {
+      if(attr == masked) {
+        traceObjectMasked[attr] = "******";
+      } else {
+        traceObjectMasked[attr] = traceObject[attr];
+      }
+    }
+  }
+  return traceObjectMasked;
 }
 
 /**
@@ -175,16 +190,16 @@ export default class {
     });
 
     // Check dependencies are satisfied in this browser.
-    if(!('WebSocket' in global && global.WebSocket !== null)) {
-      throw new Error(format(ERROR.UNSUPPORTED, ['WebSocket']));
+    if(!("WebSocket" in global && global.WebSocket !== null)) {
+      throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
     }
-    if(!('localStorage' in global && global.localStorage !== null)) {
-      throw new Error(format(ERROR.UNSUPPORTED, ['localStorage']));
+    if(!("localStorage" in global && global.localStorage !== null)) {
+      throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
     }
-    if(!('ArrayBuffer' in global && global.ArrayBuffer !== null)) {
-      throw new Error(format(ERROR.UNSUPPORTED, ['ArrayBuffer']));
+    if(!("ArrayBuffer" in global && global.ArrayBuffer !== null)) {
+      throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
     }
-    this._trace('Paho.Client', uri, host, port, path, clientId);
+    this._trace("Paho.Client", uri, host, port, path, clientId);
 
     this.host = host;
     this.port = port;
@@ -197,7 +212,7 @@ export default class {
     // The conditional inclusion of path in the key is for backward
     // compatibility to when the path was not configurable and assumed to
     // be /mqtt
-    this._localKey = host + ':' + port + (path != '/mqtt' ? ':' + path : '') + ':' + clientId + ':';
+    this._localKey = host + ":" + port + (path != "/mqtt" ? ":" + path : "") + ":" + clientId + ":";
 
     // Create private instance-only message queue
     // Internal queue of messages to be sent, in sending order.
@@ -225,21 +240,21 @@ export default class {
 
     // Load the local state, if any, from the saved version, only restore state relevant to this client.
     for(const key in localStorage) {
-      if(key.indexOf('Sent:' + this._localKey) === 0 || key.indexOf('Received:' + this._localKey) === 0) {
+      if(key.indexOf("Sent:" + this._localKey) === 0 || key.indexOf("Received:" + this._localKey) === 0) {
         this.restore(key);
       }
     }
   }
 
   connect(connectOptions) {
-    const connectOptionsMasked = this._traceMask(connectOptions, 'password');
-    this._trace('Client.connect', connectOptionsMasked, this.socket, this.connected);
+    const connectOptionsMasked = _traceMask(connectOptions, "password");
+    this._trace("Client.connect", connectOptionsMasked, this.socket, this.connected);
 
     if(this.connected) {
-      throw new Error(format(ERROR.INVALID_STATE, ['already connected']));
+      throw new Error(format(ERROR.INVALID_STATE, ["already connected"]));
     }
     if(this.socket) {
-      throw new Error(format(ERROR.INVALID_STATE, ['already connected']));
+      throw new Error(format(ERROR.INVALID_STATE, ["already connected"]));
     }
 
     if(this._reconnecting) {
@@ -262,10 +277,10 @@ export default class {
   }
 
   subscribe(filter, subscribeOptions) {
-    this._trace('Client.subscribe', filter, subscribeOptions);
+    this._trace("Client.subscribe", filter, subscribeOptions);
 
     if(!this.connected) {
-      throw new Error(format(ERROR.INVALID_STATE, ['not connected']));
+      throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
     }
 
     const wireMessage = new WireMessage(MESSAGE_TYPE.SUBSCRIBE);
@@ -298,16 +313,16 @@ export default class {
     }
 
     // All subscriptions return a SUBACK.
-    this._requires_ack(wireMessage);
-    this._schedule_message(wireMessage);
+    this._requiresAck(wireMessage);
+    this._scheduleMessage(wireMessage);
   }
 
   /** @ignore */
   unsubscribe(filter, unsubscribeOptions) {
-    this._trace('Client.unsubscribe', filter, unsubscribeOptions);
+    this._trace("Client.unsubscribe", filter, unsubscribeOptions);
 
     if(!this.connected) {
-      throw new Error(format(ERROR.INVALID_STATE, ['not connected']));
+      throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
     }
 
     const wireMessage = new WireMessage(MESSAGE_TYPE.UNSUBSCRIBE);
@@ -326,12 +341,12 @@ export default class {
     }
 
     // All unsubscribes return a SUBACK.
-    this._requires_ack(wireMessage);
-    this._schedule_message(wireMessage);
+    this._requiresAck(wireMessage);
+    this._scheduleMessage(wireMessage);
   }
 
   send(message) {
-    this._trace('Client.send', message);
+    this._trace("Client.send", message);
 
     const wireMessage = new WireMessage(MESSAGE_TYPE.PUBLISH);
     wireMessage.payloadMessage = message;
@@ -341,11 +356,11 @@ export default class {
       // For qos 0 message, invoke onMessageDelivered callback if there is one.
       // Then schedule the message.
       if(message.qos > 0) {
-        this._requires_ack(wireMessage);
+        this._requiresAck(wireMessage);
       } else if(this.onMessageDelivered) {
         this._notify_msg_sent[wireMessage] = this.onMessageDelivered(wireMessage.payloadMessage);
       }
-      this._schedule_message(wireMessage);
+      this._scheduleMessage(wireMessage);
     } else {
       // Currently disconnected, will not schedule this message
       // Check if reconnecting is in progress and disconnected publish is enabled.
@@ -357,7 +372,7 @@ export default class {
         } else {
           if(message.qos > 0) {
             // Mark this message as "ACK required"
-            this._requires_ack(wireMessage);
+            this._requiresAck(wireMessage);
           } else {
             wireMessage.sequence = ++this._sequence;
             // Add messages in fifo order to array, by adding to start
@@ -365,13 +380,13 @@ export default class {
           }
         }
       } else {
-        throw new Error(format(ERROR.INVALID_STATE, ['not connected']));
+        throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
       }
     }
   }
 
   disconnect() {
-    this._trace('Client.disconnect');
+    this._trace("Client.disconnect");
 
     if(this._reconnecting) {
       // disconnect() function is called while reconnect is in progress.
@@ -382,7 +397,7 @@ export default class {
     }
 
     if(!this.socket) {
-      throw new Error(format(ERROR.INVALID_STATE, ['not connecting or connected']));
+      throw new Error(format(ERROR.INVALID_STATE, ["not connecting or connected"]));
     }
 
     const wireMessage = new WireMessage(MESSAGE_TYPE.DISCONNECT);
@@ -392,19 +407,15 @@ export default class {
     // as a consequence, the _disconected call back may be run several times.
     this._notify_msg_sent[wireMessage] = scope(this._disconnected, this);
 
-    this._schedule_message(wireMessage);
+    this._scheduleMessage(wireMessage);
   }
 
   getTraceLog() {
     if(this._traceBuffer !== null) {
-      this._trace('Client.getTraceLog', new Date());
-      this._trace('Client.getTraceLog in flight messages', this._sentMessages.length);
-      for(var key in this._sentMessages) {
-        this._trace('_sentMessages ', key, this._sentMessages[key]);
-      }
-      for(var key in this._receivedMessages) {
-        this._trace('_receivedMessages ', key, this._receivedMessages[key]);
-      }
+      this._trace("Client.getTraceLog", new Date());
+      this._trace("Client.getTraceLog in flight messages", this._sentMessages.length);
+      Object.entries(this._sentMessages).forEach(([key, value]) => this._trace("_sentMessages ", key, value));
+      Object.entries(this._receivedMessages).forEach(([key, value]) => this._trace("_receivedMessages ", key, value));
 
       return this._traceBuffer;
     }
@@ -414,7 +425,7 @@ export default class {
     if(this._traceBuffer === null) {
       this._traceBuffer = [];
     }
-    this._trace('Client.startTrace', new Date(), version);
+    this._trace("Client.startTrace", new Date(), process.env.VERSION);
   }
 
   stopTrace() {
@@ -424,23 +435,23 @@ export default class {
   _doConnect(wsurl) {
     // When the socket is open, this client will send the CONNECT WireMessage using the saved parameters.
     if(this.connectOptions.useSSL) {
-      const uriParts = wsurl.split(':');
-      uriParts[0] = 'wss';
-      wsurl = uriParts.join(':');
+      const uriParts = wsurl.split(":");
+      uriParts[0] = "wss";
+      wsurl = uriParts.join(":");
     }
     this._wsuri = wsurl;
     this.connected = false;
 
     if(this.connectOptions.mqttVersion < 4) {
-      this.socket = new WebSocket(wsurl, ['mqttv3.1']);
+      this.socket = new WebSocket(wsurl, ["mqttv3.1"]);
     } else {
-      this.socket = new WebSocket(wsurl, ['mqtt']);
+      this.socket = new WebSocket(wsurl, ["mqtt"]);
     }
-    this.socket.binaryType = 'arraybuffer';
-    this.socket.onopen = scope(this._on_socket_open, this);
-    this.socket.onmessage = scope(this._on_socket_message, this);
-    this.socket.onerror = scope(this._on_socket_error, this);
-    this.socket.onclose = scope(this._on_socket_close, this);
+    this.socket.binaryType = "arraybuffer";
+    this.socket.onopen = scope(this._onSocketOpen, this);
+    this.socket.onmessage = scope(this._onSocketMessage, this);
+    this.socket.onerror = scope(this._onSocketError, this);
+    this.socket.onclose = scope(this._onSocketClose, this);
 
     this.sendPinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
     this.receivePinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
@@ -456,12 +467,12 @@ export default class {
   // to be started. All other messages are queued internally
   // until this has happened. When WS connection starts, process
   // all outstanding messages.
-  _schedule_message(message) {
+  _scheduleMessage(message) {
     // Add messages in fifo order to array, by adding to start
     this._msg_queue.unshift(message);
     // Process outstanding messages in the queue if we have an  open socket, and have received CONNACK.
     if(this.connected) {
-      this._process_queue();
+      this._processQueue();
     }
   }
 
@@ -469,18 +480,18 @@ export default class {
     const storedMessage = {type: wireMessage.type, messageIdentifier: wireMessage.messageIdentifier, version: 1};
 
     switch (wireMessage.type) {
-      case MESSAGE_TYPE.PUBLISH:
+      case MESSAGE_TYPE.PUBLISH: {
         if(wireMessage.pubRecReceived) {
           storedMessage.pubRecReceived = true;
         }
 
         // Convert the payload to a hex string.
         storedMessage.payloadMessage = {};
-        var hex = '';
-        var messageBytes = wireMessage.payloadMessage.payloadBytes;
+        let hex = "";
+        const messageBytes = wireMessage.payloadMessage.payloadBytes;
         for(let i = 0; i < messageBytes.length; i++) {
           if(messageBytes[i] <= 0xF) {
-            hex = hex + '0' + messageBytes[i].toString(16);
+            hex = hex + "0" + messageBytes[i].toString(16);
           } else {
             hex = hex + messageBytes[i].toString(16);
           }
@@ -497,14 +508,14 @@ export default class {
         }
 
         // Add a sequence number to sent messages.
-        if(prefix.indexOf('Sent:') === 0) {
+        if(prefix.indexOf("Sent:") === 0) {
           if(wireMessage.sequence === undefined) {
             wireMessage.sequence = ++this._sequence;
           }
           storedMessage.sequence = wireMessage.sequence;
         }
         break;
-
+      }
       default:
         throw Error(format(ERROR.INVALID_STORED_DATA, [prefix + this._localKey + wireMessage.messageIdentifier, storedMessage]));
     }
@@ -518,18 +529,18 @@ export default class {
     const wireMessage = new WireMessage(storedMessage.type, storedMessage);
 
     switch (storedMessage.type) {
-      case MESSAGE_TYPE.PUBLISH:
+      case MESSAGE_TYPE.PUBLISH: {
         // Replace the payload message with a Message object.
-        var hex = storedMessage.payloadMessage.payloadHex;
-        var buffer = new ArrayBuffer((hex.length) / 2);
-        var byteStream = new Uint8Array(buffer);
-        var i = 0;
+        let hex = storedMessage.payloadMessage.payloadHex;
+        const buffer = new ArrayBuffer((hex.length) / 2);
+        const byteStream = new Uint8Array(buffer);
+        let i = 0;
         while(hex.length >= 2) {
           const x = parseInt(hex.substring(0, 2), 16);
           hex = hex.substring(2, hex.length);
           byteStream[i++] = x;
         }
-        var payloadMessage = new Message(byteStream);
+        const payloadMessage = new Message(byteStream);
 
         payloadMessage.qos = storedMessage.payloadMessage.qos;
         payloadMessage.destinationName = storedMessage.payloadMessage.destinationName;
@@ -542,25 +553,25 @@ export default class {
         wireMessage.payloadMessage = payloadMessage;
 
         break;
-
+      }
       default:
         throw Error(format(ERROR.INVALID_STORED_DATA, [key, value]));
     }
 
-    if(key.indexOf('Sent:' + this._localKey) === 0) {
+    if(key.indexOf("Sent:" + this._localKey) === 0) {
       wireMessage.payloadMessage.duplicate = true;
       this._sentMessages[wireMessage.messageIdentifier] = wireMessage;
-    } else if(key.indexOf('Received:' + this._localKey) === 0) {
+    } else if(key.indexOf("Received:" + this._localKey) === 0) {
       this._receivedMessages[wireMessage.messageIdentifier] = wireMessage;
     }
   }
 
-  _process_queue() {
+  _processQueue() {
     let message = null;
 
     // Send all queued messages down socket connection
     while((message = this._msg_queue.pop())) {
-      this._socket_send(message);
+      this._socketSend(message);
       // Notify listeners that message was successfully sent
       if(this._notify_msg_sent[message]) {
         this._notify_msg_sent[message]();
@@ -574,10 +585,10 @@ export default class {
    * messages and set an unused identifier in this message.
    * @ignore
    */
-  _requires_ack(wireMessage) {
+  _requiresAck(wireMessage) {
     const messageCount = Object.keys(this._sentMessages).length;
     if(messageCount > this.maxMessageIdentifier) {
-      throw Error('Too many messages:' + messageCount);
+      throw Error("Too many messages:" + messageCount);
     }
 
     while(this._sentMessages[this._message_identifier] !== undefined) {
@@ -586,7 +597,7 @@ export default class {
     wireMessage.messageIdentifier = this._message_identifier;
     this._sentMessages[wireMessage.messageIdentifier] = wireMessage;
     if(wireMessage.type === MESSAGE_TYPE.PUBLISH) {
-      this.store('Sent:', wireMessage);
+      this.store("Sent:", wireMessage);
     }
     if(this._message_identifier === this.maxMessageIdentifier) {
       this._message_identifier = 1;
@@ -597,19 +608,19 @@ export default class {
    * Called when the underlying websocket has been opened.
    * @ignore
    */
-  _on_socket_open() {
+  _onSocketOpen() {
     // Create the CONNECT message object.
     const wireMessage = new WireMessage(MESSAGE_TYPE.CONNECT, this.connectOptions);
     wireMessage.clientId = this.clientId;
-    this._socket_send(wireMessage);
+    this._socketSend(wireMessage);
   }
 
   /**
    * Called when the underlying websocket has received a complete packet.
    * @ignore
    */
-  _on_socket_message(event) {
-    this._trace('Client._on_socket_message', event.data);
+  _onSocketMessage(event) {
+    this._trace("Client._onSocketMessage", event.data);
     const messages = this._deframeMessages(event.data);
     for(let i = 0; i < messages.length; i += 1) {
       this._handleMessage(messages[i]);
@@ -642,7 +653,7 @@ export default class {
         this.receiveBuffer = byteArray.subarray(offset);
       }
     } catch (error) {
-      const errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : 'No Error Stack Available');
+      const errorStack = ((error.hasOwnProperty("stack") == "undefined") ? error.stack.toString() : "No Error Stack Available");
       this._disconnected(ERROR.INTERNAL_ERROR.code, format(ERROR.INTERNAL_ERROR, [error.message, errorStack]));
       return;
     }
@@ -650,11 +661,11 @@ export default class {
   }
 
   _handleMessage(wireMessage) {
-    this._trace('Client._handleMessage', wireMessage);
+    this._trace("Client._handleMessage", wireMessage);
 
     try {
       switch (wireMessage.type) {
-        case MESSAGE_TYPE.CONNACK:
+        case MESSAGE_TYPE.CONNACK: {
           this._connectTimeout.cancel();
           if(this._reconnectTimeout) {
             this._reconnectTimeout.cancel();
@@ -662,16 +673,11 @@ export default class {
 
           // If we have started using clean session then clear up the local state.
           if(this.connectOptions.cleanSession) {
-            for(var key in this._sentMessages) {
-              var sentMessage = this._sentMessages[key];
-              localStorage.removeItem('Sent:' + this._localKey + sentMessage.messageIdentifier);
-            }
+            Object.values(this._sentMessages).forEach((sentMessage) => localStorage.removeItem("Sent:" + this._localKey + sentMessage.messageIdentifier)
+            );
             this._sentMessages = {};
-
-            for(var key in this._receivedMessages) {
-              var receivedMessage = this._receivedMessages[key];
-              localStorage.removeItem('Received:' + this._localKey + receivedMessage.messageIdentifier);
-            }
+            Object.values(this._receivedMessages).forEach((receivedMessage) => localStorage.removeItem("Received:" + this._localKey + receivedMessage.messageIdentifier)
+            );
             this._receivedMessages = {};
           }
           // Client connected and ready for business.
@@ -688,7 +694,7 @@ export default class {
           }
 
           // Resend messages.
-          var sequencedMessages = [];
+          let sequencedMessages = [];
           for(const msgId in this._sentMessages) {
             if(this._sentMessages.hasOwnProperty(msgId)) {
               sequencedMessages.push(this._sentMessages[msgId]);
@@ -707,16 +713,16 @@ export default class {
           }
 
           // Sort sentMessages into the original sent order.
-          var sequencedMessages = sequencedMessages.sort(function(a, b) {
+          sequencedMessages = sequencedMessages.sort(function(a, b) {
             return a.sequence - b.sequence;
           });
           for(let i = 0, len = sequencedMessages.length; i < len; i++) {
-            var sentMessage = sequencedMessages[i];
+            const sentMessage = sequencedMessages[i];
             if(sentMessage.type == MESSAGE_TYPE.PUBLISH && sentMessage.pubRecReceived) {
-              var pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {messageIdentifier: sentMessage.messageIdentifier});
-              this._schedule_message(pubRelMessage);
+              const pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {messageIdentifier: sentMessage.messageIdentifier});
+              this._scheduleMessage(pubRelMessage);
             } else {
-              this._schedule_message(sentMessage);
+              this._scheduleMessage(sentMessage);
             }
           }
 
@@ -727,7 +733,7 @@ export default class {
             this.connectOptions.onSuccess({invocationContext: this.connectOptions.invocationContext});
           }
 
-          var reconnected = false;
+          let reconnected = false;
           if(this._reconnecting) {
             reconnected = true;
             this._reconnectInterval = 1;
@@ -738,61 +744,61 @@ export default class {
           this._connected(reconnected, this._wsuri);
 
           // Process all queued messages now that the connection is established.
-          this._process_queue();
+          this._processQueue();
           break;
-
+        }
         case MESSAGE_TYPE.PUBLISH:
           this._receivePublish(wireMessage);
           break;
 
-        case MESSAGE_TYPE.PUBACK:
-          var sentMessage = this._sentMessages[wireMessage.messageIdentifier];
+        case MESSAGE_TYPE.PUBACK: {
+          const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           // If this is a re flow of a PUBACK after we have restarted receivedMessage will not exist.
           if(sentMessage) {
             delete this._sentMessages[wireMessage.messageIdentifier];
-            localStorage.removeItem('Sent:' + this._localKey + wireMessage.messageIdentifier);
+            localStorage.removeItem("Sent:" + this._localKey + wireMessage.messageIdentifier);
             if(this.onMessageDelivered) {
               this.onMessageDelivered(sentMessage.payloadMessage);
             }
           }
           break;
-
-        case MESSAGE_TYPE.PUBREC:
-          var sentMessage = this._sentMessages[wireMessage.messageIdentifier];
+        }
+        case MESSAGE_TYPE.PUBREC: {
+          const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           // If this is a re flow of a PUBREC after we have restarted receivedMessage will not exist.
           if(sentMessage) {
             sentMessage.pubRecReceived = true;
-            var pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {messageIdentifier: wireMessage.messageIdentifier});
-            this.store('Sent:', sentMessage);
-            this._schedule_message(pubRelMessage);
+            const pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {messageIdentifier: wireMessage.messageIdentifier});
+            this.store("Sent:", sentMessage);
+            this._scheduleMessage(pubRelMessage);
           }
           break;
-
-        case MESSAGE_TYPE.PUBREL:
-          var receivedMessage = this._receivedMessages[wireMessage.messageIdentifier];
-          localStorage.removeItem('Received:' + this._localKey + wireMessage.messageIdentifier);
+        }
+        case MESSAGE_TYPE.PUBREL: {
+          const receivedMessage = this._receivedMessages[wireMessage.messageIdentifier];
+          localStorage.removeItem("Received:" + this._localKey + wireMessage.messageIdentifier);
           // If this is a re flow of a PUBREL after we have restarted receivedMessage will not exist.
           if(receivedMessage) {
             this._receiveMessage(receivedMessage);
             delete this._receivedMessages[wireMessage.messageIdentifier];
           }
           // Always flow PubComp, we may have previously flowed PubComp but the server lost it and restarted.
-          var pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier: wireMessage.messageIdentifier});
-          this._schedule_message(pubCompMessage);
+          const pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier: wireMessage.messageIdentifier});
+          this._scheduleMessage(pubCompMessage);
 
           break;
-
-        case MESSAGE_TYPE.PUBCOMP:
-          var sentMessage = this._sentMessages[wireMessage.messageIdentifier];
+        }
+        case MESSAGE_TYPE.PUBCOMP: {
+          const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           delete this._sentMessages[wireMessage.messageIdentifier];
-          localStorage.removeItem('Sent:' + this._localKey + wireMessage.messageIdentifier);
+          localStorage.removeItem("Sent:" + this._localKey + wireMessage.messageIdentifier);
           if(this.onMessageDelivered) {
             this.onMessageDelivered(sentMessage.payloadMessage);
           }
           break;
-
-        case MESSAGE_TYPE.SUBACK:
-          var sentMessage = this._sentMessages[wireMessage.messageIdentifier];
+        }
+        case MESSAGE_TYPE.SUBACK: {
+          const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           if(sentMessage) {
             if(sentMessage.timeOut) {
               sentMessage.timeOut.cancel();
@@ -808,9 +814,9 @@ export default class {
             delete this._sentMessages[wireMessage.messageIdentifier];
           }
           break;
-
-        case MESSAGE_TYPE.UNSUBACK:
-          var sentMessage = this._sentMessages[wireMessage.messageIdentifier];
+        }
+        case MESSAGE_TYPE.UNSUBACK: {
+          const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           if(sentMessage) {
             if(sentMessage.timeOut) {
               sentMessage.timeOut.cancel();
@@ -822,7 +828,7 @@ export default class {
           }
 
           break;
-
+        }
         case MESSAGE_TYPE.PINGRESP:
           /* The sendPinger or receivePinger may have sent a ping, the receivePinger has already been reset. */
           this.sendPinger.reset();
@@ -837,31 +843,31 @@ export default class {
           this._disconnected(ERROR.INVALID_MQTT_MESSAGE_TYPE.code, format(ERROR.INVALID_MQTT_MESSAGE_TYPE, [wireMessage.type]));
       }
     } catch (error) {
-      const errorStack = ((error.hasOwnProperty('stack') == 'undefined') ? error.stack.toString() : 'No Error Stack Available');
+      const errorStack = ((error.hasOwnProperty("stack") == "undefined") ? error.stack.toString() : "No Error Stack Available");
       this._disconnected(ERROR.INTERNAL_ERROR.code, format(ERROR.INTERNAL_ERROR, [error.message, errorStack]));
     }
   }
 
   /** @ignore */
-  _on_socket_error(error) {
+  _onSocketError(error) {
     if(!this._reconnecting) {
       this._disconnected(ERROR.SOCKET_ERROR.code, format(ERROR.SOCKET_ERROR, [error.data]));
     }
   }
 
   /** @ignore */
-  _on_socket_close() {
+  _onSocketClose() {
     if(!this._reconnecting) {
       this._disconnected(ERROR.SOCKET_CLOSE.code, format(ERROR.SOCKET_CLOSE));
     }
   }
 
   /** @ignore */
-  _socket_send(wireMessage) {
+  _socketSend(wireMessage) {
     if(wireMessage.type == 1) {
-      const wireMessageMasked = this._traceMask(wireMessage, 'password');
-      this._trace('Client._socket_send', wireMessageMasked);
-    } else this._trace('Client._socket_send', wireMessage);
+      const wireMessageMasked = _traceMask(wireMessage, "password");
+      this._trace("Client._socketSend", wireMessageMasked);
+    } else this._trace("Client._socketSend", wireMessage);
 
     this.socket.send(wireMessage.encode());
     /* We have proved to the server we are alive. */
@@ -871,27 +877,27 @@ export default class {
   /** @ignore */
   _receivePublish(wireMessage) {
     switch (wireMessage.payloadMessage.qos) {
-      case 'undefined':
+      case "undefined":
       case 0:
         this._receiveMessage(wireMessage);
         break;
 
-      case 1:
-        var pubAckMessage = new WireMessage(MESSAGE_TYPE.PUBACK, {messageIdentifier: wireMessage.messageIdentifier});
-        this._schedule_message(pubAckMessage);
+      case 1: {
+        const pubAckMessage = new WireMessage(MESSAGE_TYPE.PUBACK, {messageIdentifier: wireMessage.messageIdentifier});
+        this._scheduleMessage(pubAckMessage);
         this._receiveMessage(wireMessage);
         break;
-
-      case 2:
+      }
+      case 2: {
         this._receivedMessages[wireMessage.messageIdentifier] = wireMessage;
-        this.store('Received:', wireMessage);
-        var pubRecMessage = new WireMessage(MESSAGE_TYPE.PUBREC, {messageIdentifier: wireMessage.messageIdentifier});
-        this._schedule_message(pubRecMessage);
+        this.store("Received:", wireMessage);
+        const pubRecMessage = new WireMessage(MESSAGE_TYPE.PUBREC, {messageIdentifier: wireMessage.messageIdentifier});
+        this._scheduleMessage(pubRecMessage);
 
         break;
-
+      }
       default:
-        throw Error('Invaild qos=' + wireMessage.payloadMessage.qos);
+        throw Error("Invaild qos=" + wireMessage.payloadMessage.qos);
     }
   }
 
@@ -920,7 +926,7 @@ export default class {
    * up to 128 seconds.
    */
   _reconnect() {
-    this._trace('Client._reconnect');
+    this._trace("Client._reconnect");
     if(!this.connected) {
       this._reconnecting = true;
       this.sendPinger.cancel();
@@ -945,7 +951,7 @@ export default class {
    * @ignore
    */
   _disconnected(errorCode, errorText) {
-    this._trace('Client._disconnected', errorCode, errorText);
+    this._trace("Client._disconnected", errorCode, errorText);
 
     if(errorCode !== undefined && this._reconnecting) {
       // Continue automatic reconnect process
@@ -1002,7 +1008,7 @@ export default class {
       } else {
         // Otherwise we never had a connection, so indicate that the connect has failed.
         if(this.connectOptions.mqttVersion === 4 && this.connectOptions.mqttVersionExplicit === false) {
-          this._trace('Failed to connect V4, dropping back to V3');
+          this._trace("Failed to connect V4, dropping back to V3");
           this.connectOptions.mqttVersion = 3;
           if(this.connectOptions.uris) {
             this.hostIndex = 0;
@@ -1021,40 +1027,25 @@ export default class {
   _trace() {
     // Pass trace message back to client's callback function
     if(this.traceFunction) {
-      for(var i in arguments) {
-        if(typeof arguments[i] !== 'undefined') {
+      for(const i in arguments) {
+        if(typeof arguments[i] !== "undefined") {
           arguments.splice(i, 1, JSON.stringify(arguments[i]));
         }
       }
-      const record = Array.prototype.slice.call(arguments).join('');
-      this.traceFunction({severity: 'Debug', message: record	});
+      const record = Array.prototype.slice.call(arguments).join("");
+      this.traceFunction({severity: "Debug", message: record	});
     }
 
     // buffer style trace
     if(this._traceBuffer !== null) {
-      for(var i = 0, max = arguments.length; i < max; i++) {
+      for(let i = 0, max = arguments.length; i < max; i++) {
         if(this._traceBuffer.length == this._MAX_TRACE_ENTRIES) {
           this._traceBuffer.shift();
         }
         if(i === 0) this._traceBuffer.push(arguments[i]);
-        else if(typeof arguments[i] === 'undefined') this._traceBuffer.push(arguments[i]);
-        else this._traceBuffer.push('  ' + JSON.stringify(arguments[i]));
+        else if(typeof arguments[i] === "undefined") this._traceBuffer.push(arguments[i]);
+        else this._traceBuffer.push("  " + JSON.stringify(arguments[i]));
       }
     }
   }
-
-  /** @ignore */
-  _traceMask(traceObject, masked) {
-    const traceObjectMasked = {};
-    for(const attr in traceObject) {
-      if(traceObject.hasOwnProperty(attr)) {
-        if(attr == masked) {
-          traceObjectMasked[attr] = '******';
-        } else {
-          traceObjectMasked[attr] = traceObject[attr];
-        }
-      }
-    }
-    return traceObjectMasked;
-  }
-};
+}

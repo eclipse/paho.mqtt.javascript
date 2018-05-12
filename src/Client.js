@@ -72,9 +72,9 @@
 * @property {function} trace - called whenever trace is called. TODO
 */
 
-import { ERROR, format } from './definitions';
-import ClientImpl from './ClientImpl';
-import Message from './Message';
+import { ERROR, format } from "./definitions";
+import ClientImpl from "./ClientImpl";
+import Message from "./Message";
 
 /**
 * Validate an object's parameter names to ensure they
@@ -94,10 +94,10 @@ const validate = function(obj, keys) {
           throw new Error(format(ERROR.INVALID_TYPE, [typeof obj[key], key]));
         }
       } else {
-        let errorStr = 'Unknown property, ' + key + '. Valid properties are:';
+        let errorStr = "Unknown property, " + key + ". Valid properties are:";
         for(const validKey in keys) {
           if(keys.hasOwnProperty(validKey)) {
-            errorStr = errorStr + ' ' + validKey;
+            errorStr = errorStr + " " + validKey;
           }
         }
         throw new Error(errorStr);
@@ -110,8 +110,8 @@ export default class {
   constructor(host, port, path, clientId) {
     let uri;
 
-    if(typeof host !== 'string') {
-      throw new Error(format(ERROR.INVALID_TYPE, [typeof host, 'host']));
+    if(typeof host !== "string") {
+      throw new Error(format(ERROR.INVALID_TYPE, [typeof host, "host"]));
     }
 
     if(arguments.length == 2) {
@@ -125,22 +125,22 @@ export default class {
         port = parseInt(match[7]);
         path = match[8];
       } else {
-        throw new Error(format(ERROR.INVALID_ARGUMENT, [host, 'host']));
+        throw new Error(format(ERROR.INVALID_ARGUMENT, [host, "host"]));
       }
     } else {
       if(arguments.length == 3) {
         clientId = path;
-        path = '/mqtt';
+        path = "/mqtt";
       }
-      if(typeof port !== 'number' || port < 0) {
-        throw new Error(format(ERROR.INVALID_TYPE, [typeof port, 'port']));
+      if(typeof port !== "number" || port < 0) {
+        throw new Error(format(ERROR.INVALID_TYPE, [typeof port, "port"]));
       }
-      if(typeof path !== 'string') {
-        throw new Error(format(ERROR.INVALID_TYPE, [typeof path, 'path']));
+      if(typeof path !== "string") {
+        throw new Error(format(ERROR.INVALID_TYPE, [typeof path, "path"]));
       }
 
-      const ipv6AddSBracket = (host.indexOf(':') !== -1 && host.slice(0, 1) !== '[' && host.slice(-1) !== ']');
-      uri = 'ws://' + (ipv6AddSBracket ? '[' + host + ']' : host) + ':' + port + path;
+      const ipv6AddSBracket = (host.indexOf(":") !== -1 && host.slice(0, 1) !== "[" && host.slice(-1) !== "]");
+      uri = "ws://" + (ipv6AddSBracket ? "[" + host + "]" : host) + ":" + port + path;
     }
 
     let clientIdLength = 0;
@@ -151,8 +151,8 @@ export default class {
       }
       clientIdLength++;
     }
-    if(typeof clientId !== 'string' || clientIdLength > 65535) {
-      throw new Error(format(ERROR.INVALID_ARGUMENT, [clientId, 'clientId']));
+    if(typeof clientId !== "string" || clientIdLength > 65535) {
+      throw new Error(format(ERROR.INVALID_ARGUMENT, [clientId, "clientId"]));
     }
 
     this.client = new ClientImpl(uri, host, port, path, clientId);
@@ -200,10 +200,10 @@ export default class {
       onConnected: {
         get: () => this.client.onConnected,
         set: (newOnConnected) => {
-          if(typeof newOnConnected === 'function') {
+          if(typeof newOnConnected === "function") {
             this.client.onConnected = newOnConnected;
           } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnected, 'onConnected']));
+            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnected, "onConnected"]));
           }
         }
       },
@@ -222,45 +222,46 @@ export default class {
       onConnectionLost: {
         get: () => this.client.onConnectionLost,
         set: (newOnConnectionLost) => {
-          if(typeof newOnConnectionLost === 'function') {
+          if(typeof newOnConnectionLost === "function") {
             this.client.onConnectionLost = newOnConnectionLost;
           } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnectionLost, 'onConnectionLost']));
+            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnectionLost, "onConnectionLost"]));
           }
         }
       },
       onMessageDelivered: {
         get: () => this.client.onMessageDelivered,
         set: (newOnMessageDelivered) => {
-          if(typeof newOnMessageDelivered === 'function') {
+          if(typeof newOnMessageDelivered === "function") {
             this.client.onMessageDelivered = newOnMessageDelivered;
           } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageDelivered, 'onMessageDelivered']));
+            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageDelivered, "onMessageDelivered"]));
           }
         }
       },
       onMessageArrived: {
         get: () => this.client.onMessageArrived,
         set: (newOnMessageArrived) => {
-          if(typeof newOnMessageArrived === 'function') {
+          if(typeof newOnMessageArrived === "function") {
             this.client.onMessageArrived = newOnMessageArrived;
           } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, 'onMessageArrived']));
+            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
           }
         }
       },
       trace: {
         get: () => this.client.traceFunction,
         set: (trace) => {
-          if(typeof trace === 'function') {
+          if(typeof trace === "function") {
             this.client.traceFunction = trace;
           } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof trace, 'onTrace']));
+            throw new Error(format(ERROR.INVALID_TYPE, [typeof trace, "onTrace"]));
           }
         }
       }
     });
   }
+
   /**
      * Connect this Messaging client to its server.
      *
@@ -326,22 +327,22 @@ export default class {
   connect(connectOptions) {
     connectOptions = connectOptions || {};
     validate(connectOptions,  {
-      timeout:             'number',
-      userName:            'string',
-      password:            'string',
-      willMessage:         'object',
-      keepAliveInterval:   'number',
-      cleanSession:        'boolean',
-      useSSL:              'boolean',
-      invocationContext:   'object',
-      onSuccess:           'function',
-      onFailure:           'function',
-      hosts:               'object',
-      ports:               'object',
-      reconnect:           'boolean',
-      mqttVersion:         'number',
-      mqttVersionExplicit: 'boolean',
-      uris:                'object'
+      timeout:             "number",
+      userName:            "string",
+      password:            "string",
+      willMessage:         "object",
+      keepAliveInterval:   "number",
+      cleanSession:        "boolean",
+      useSSL:              "boolean",
+      invocationContext:   "object",
+      onSuccess:           "function",
+      onFailure:           "function",
+      hosts:               "object",
+      ports:               "object",
+      reconnect:           "boolean",
+      mqttVersion:         "number",
+      mqttVersionExplicit: "boolean",
+      uris:                "object"
     });
 
     // If no keep alive interval is set, assume 60 seconds.
@@ -350,7 +351,7 @@ export default class {
     }
 
     if(connectOptions.mqttVersion > 4 || connectOptions.mqttVersion < 3) {
-      throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.mqttVersion, 'connectOptions.mqttVersion']));
+      throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.mqttVersion, "connectOptions.mqttVersion"]));
     }
 
     if(connectOptions.mqttVersion === undefined) {
@@ -362,70 +363,69 @@ export default class {
 
     // Check that if password is set, so is username
     if(connectOptions.password !== undefined && connectOptions.userName === undefined) {
-      throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.password, 'connectOptions.password']));
+      throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.password, "connectOptions.password"]));
     }
 
     if(connectOptions.willMessage) {
       if(!(connectOptions.willMessage instanceof Message)) {
-        throw new Error(format(ERROR.INVALID_TYPE, [connectOptions.willMessage, 'connectOptions.willMessage']));
+        throw new Error(format(ERROR.INVALID_TYPE, [connectOptions.willMessage, "connectOptions.willMessage"]));
       }
       // The will message must have a payload that can be represented as a string.
       // Cause the willMessage to throw an exception if this is not the case.
       connectOptions.willMessage.stringPayload = null;
 
-      if(typeof connectOptions.willMessage.destinationName === 'undefined') {
-        throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.willMessage.destinationName, 'connectOptions.willMessage.destinationName']));
+      if(typeof connectOptions.willMessage.destinationName === "undefined") {
+        throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.willMessage.destinationName, "connectOptions.willMessage.destinationName"]));
       }
     }
-    if(typeof connectOptions.cleanSession === 'undefined') {
+    if(typeof connectOptions.cleanSession === "undefined") {
       connectOptions.cleanSession = true;
     }
     if(connectOptions.hosts) {
       if(!(connectOptions.hosts instanceof Array)) {
-        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts, 'connectOptions.hosts']));
+        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts, "connectOptions.hosts"]));
       }
       if(connectOptions.hosts.length < 1) {
-        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts, 'connectOptions.hosts']));
+        throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts, "connectOptions.hosts"]));
       }
 
       let usingURIs = false;
-      for(var i = 0; i < connectOptions.hosts.length; i++) {
-        if(typeof connectOptions.hosts[i] !== 'string') {
-          throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], 'connectOptions.hosts[' + i + ']']));
+      for(let i = 0; i < connectOptions.hosts.length; i++) {
+        if(typeof connectOptions.hosts[i] !== "string") {
+          throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], "connectOptions.hosts[" + i + "]"]));
         }
         if(/^(wss?):\/\/((\[(.+)\])|([^/]+?))(:(\d+))?(\/.*)$/.test(connectOptions.hosts[i])) {
           if(i === 0) {
             usingURIs = true;
           } else if(!usingURIs) {
-            throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], 'connectOptions.hosts[' + i + ']']));
+            throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts[" + i + "]"]));
           }
         } else if(usingURIs) {
-          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], 'connectOptions.hosts[' + i + ']']));
+          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.hosts[i], "connectOptions.hosts[" + i + "]"]));
         }
       }
 
       if(!usingURIs) {
         if(!connectOptions.ports) {
-          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, 'connectOptions.ports']));
+          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
         }
         if(!(connectOptions.ports instanceof Array)) {
-          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, 'connectOptions.ports']));
+          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
         }
         if(connectOptions.hosts.length !== connectOptions.ports.length) {
-          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, 'connectOptions.ports']));
+          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
         }
 
         connectOptions.uris = [];
-
-        for(i = 0; i < connectOptions.hosts.length; i++) {
-          if(typeof connectOptions.ports[i] !== 'number' || connectOptions.ports[i] < 0) {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], 'connectOptions.ports[' + i + ']']));
+        for(let i = 0; i < connectOptions.hosts.length; i++) {
+          if(typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0) {
+            throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectOptions.ports[" + i + "]"]));
           }
           const host = connectOptions.hosts[i];
           const port = connectOptions.ports[i];
 
-          const ipv6 = (host.indexOf(':') !== -1);
-          this.uri = 'ws://' + (ipv6 ? '[' + host + ']' : host) + ':' + port + this.path;
+          const ipv6 = (host.indexOf(":") !== -1);
+          this.uri = "ws://" + (ipv6 ? "[" + host + "]" : host) + ":" + port + this.path;
           connectOptions.uris.push(this.uri);
         }
       } else {
@@ -469,21 +469,21 @@ export default class {
      * @throws {InvalidState} if the client is not in connected state.
      */
   subscribe(filter, subscribeOptions) {
-    if(typeof filter !== 'string' && filter.constructor !== Array) {
-      throw new Error('Invalid argument:' + filter);
+    if(typeof filter !== "string" && filter.constructor !== Array) {
+      throw new Error("Invalid argument:" + filter);
     }
     subscribeOptions = subscribeOptions || {};
-    validate(subscribeOptions,  {qos:               'number',
-      invocationContext: 'object',
-      onSuccess:         'function',
-      onFailure:         'function',
-      timeout:           'number'
+    validate(subscribeOptions,  {qos:               "number",
+      invocationContext: "object",
+      onSuccess:         "function",
+      onFailure:         "function",
+      timeout:           "number"
     });
     if(subscribeOptions.timeout && !subscribeOptions.onFailure) {
-      throw new Error('subscribeOptions.timeout specified with no onFailure callback.');
+      throw new Error("subscribeOptions.timeout specified with no onFailure callback.");
     }
-    if(typeof subscribeOptions.qos !== 'undefined' && !(subscribeOptions.qos === 0 || subscribeOptions.qos === 1 || subscribeOptions.qos === 2)) {
-      throw new Error(format(ERROR.INVALID_ARGUMENT, [subscribeOptions.qos, 'subscribeOptions.qos']));
+    if(typeof subscribeOptions.qos !== "undefined" && !(subscribeOptions.qos === 0 || subscribeOptions.qos === 1 || subscribeOptions.qos === 2)) {
+      throw new Error(format(ERROR.INVALID_ARGUMENT, [subscribeOptions.qos, "subscribeOptions.qos"]));
     }
     this.client.subscribe(filter, subscribeOptions);
   }
@@ -517,17 +517,17 @@ export default class {
      * @throws {InvalidState} if the client is not in connected state.
      */
   unsubscribe(filter, unsubscribeOptions) {
-    if(typeof filter !== 'string' && filter.constructor !== Array) {
-      throw new Error('Invalid argument:' + filter);
+    if(typeof filter !== "string" && filter.constructor !== Array) {
+      throw new Error("Invalid argument:" + filter);
     }
     unsubscribeOptions = unsubscribeOptions || {};
-    validate(unsubscribeOptions,  {invocationContext: 'object',
-      onSuccess:         'function',
-      onFailure:         'function',
-      timeout:           'number'
+    validate(unsubscribeOptions,  {invocationContext: "object",
+      onSuccess:         "function",
+      onFailure:         "function",
+      timeout:           "number"
     });
     if(unsubscribeOptions.timeout && !unsubscribeOptions.onFailure) {
-      throw new Error('unsubscribeOptions.timeout specified with no onFailure callback.');
+      throw new Error("unsubscribeOptions.timeout specified with no onFailure callback.");
     }
     this.client.unsubscribe(filter, unsubscribeOptions);
   }
@@ -558,15 +558,15 @@ export default class {
     let message;
 
     if(arguments.length === 0) {
-      throw new Error('Invalid argument.' + 'length');
+      throw new Error("Invalid argument." + "length");
     } else if(arguments.length == 1) {
-      if(!(topic instanceof Message) && (typeof topic !== 'string')) {
-        throw new Error('Invalid argument:' + typeof topic);
+      if(!(topic instanceof Message) && (typeof topic !== "string")) {
+        throw new Error("Invalid argument:" + typeof topic);
       }
 
       message = topic;
-      if(typeof message.destinationName === 'undefined') {
-        throw new Error(format(ERROR.INVALID_ARGUMENT, [message.destinationName, 'Message.destinationName']));
+      if(typeof message.destinationName === "undefined") {
+        throw new Error(format(ERROR.INVALID_ARGUMENT, [message.destinationName, "Message.destinationName"]));
       }
       this.client.send(message);
     } else {
@@ -610,15 +610,15 @@ export default class {
     let message;
 
     if(arguments.length === 0) {
-      throw new Error('Invalid argument.' + 'length');
+      throw new Error("Invalid argument." + "length");
     } else if(arguments.length == 1) {
-      if(!(topic instanceof Message) && (typeof topic !== 'string')) {
-        throw new Error('Invalid argument:' + typeof topic);
+      if(!(topic instanceof Message) && (typeof topic !== "string")) {
+        throw new Error("Invalid argument:" + typeof topic);
       }
 
       message = topic;
-      if(typeof message.destinationName === 'undefined') {
-        throw new Error(format(ERROR.INVALID_ARGUMENT, [message.destinationName, 'Message.destinationName']));
+      if(typeof message.destinationName === "undefined") {
+        throw new Error(format(ERROR.INVALID_ARGUMENT, [message.destinationName, "Message.destinationName"]));
       }
       this.client.send(message);
     } else {
@@ -680,4 +680,4 @@ export default class {
   isConnected() {
     return this.client.connected;
   }
-};
+}

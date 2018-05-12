@@ -33,18 +33,18 @@
 *
 */
 
-import { stringToUTF8, UTF8Length, ERROR, format, parseUTF8 } from './definitions';
+import { ERROR, UTF8Length, format, parseUTF8, stringToUTF8 } from "./definitions";
 
 export default class {
   constructor(newPayload) {
     let payload;
-    if(typeof newPayload === 'string' ||
+    if(typeof newPayload === "string" ||
         newPayload instanceof ArrayBuffer ||
           (ArrayBuffer.isView(newPayload) && !(newPayload instanceof DataView))
     ) {
       payload = newPayload;
     } else {
-      throw (format(ERROR.INVALID_ARGUMENT, [newPayload, 'newPayload']));
+      throw (format(ERROR.INVALID_ARGUMENT, [newPayload, "newPayload"]));
     }
 
     let destinationName;
@@ -56,7 +56,7 @@ export default class {
       payloadString: {
         enumerable: true,
         get:        function() {
-          if(typeof payload === 'string') {
+          if(typeof payload === "string") {
             return payload;
           } else {
             return parseUTF8(payload, 0, payload.length);
@@ -66,7 +66,7 @@ export default class {
       payloadBytes: {
         enumerable: true,
         get:        function() {
-          if(typeof payload === 'string') {
+          if(typeof payload === "string") {
             const buffer = new ArrayBuffer(UTF8Length(payload));
             const byteStream = new Uint8Array(buffer);
             stringToUTF8(payload, byteStream, 0);
@@ -83,10 +83,10 @@ export default class {
           return destinationName;
         },
         set: function(newDestinationName) {
-          if(typeof newDestinationName === 'string') {
+          if(typeof newDestinationName === "string") {
             destinationName = newDestinationName;
           } else {
-            throw new Error(format(ERROR.INVALID_ARGUMENT, [newDestinationName, 'newDestinationName']));
+            throw new Error(format(ERROR.INVALID_ARGUMENT, [newDestinationName, "newDestinationName"]));
           }
         }
       },
@@ -99,7 +99,7 @@ export default class {
           if(newQos === 0 || newQos === 1 || newQos === 2) {
             qos = newQos;
           } else {
-            throw new Error('Invalid argument:' + newQos);
+            throw new Error("Invalid argument:" + newQos);
           }
         }
       },
@@ -109,10 +109,10 @@ export default class {
           return retained;
         },
         set: function(newRetained) {
-          if(typeof newRetained === 'boolean') {
+          if(typeof newRetained === "boolean") {
             retained = newRetained;
           } else {
-            throw new Error(format(ERROR.INVALID_ARGUMENT, [newRetained, 'newRetained']));
+            throw new Error(format(ERROR.INVALID_ARGUMENT, [newRetained, "newRetained"]));
           }
         }
       },
@@ -136,4 +136,4 @@ export default class {
       }
     });
   }
-};
+}

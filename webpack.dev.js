@@ -9,26 +9,50 @@ const webpack = require('webpack'),
     filename: '[name].css'
   });
 
-module.exports = {
-  devtool: 'source-map',
-  entry: {
-    'paho.mqtt.javascript': './src',
-    'utility': './utility/utility.js'
-  },
-
-  output: {
+const pkgJson = require('./package.json'),
+  output = {
     path: path.join(__dirname, 'dist'),
     filename: '[name].js',
     pathinfo: true,
     publicPath: '/'
-  },
+  };
 
+module.exports = [{
+  devtool: 'source-map',
+  entry: {
+    'paho.mqtt.javascript': './src'
+  },
+  output: Object.assign({
+    library: "Paho",
+    libraryTarget: "umd", // "var" for simple variable 'Paho'
+    libraryExport: 'default'
+  }, output),
+  target: 'node',
+  module: {
+    rules: [{
+      test:    /\.js$/i,
+      include: path.resolve(__dirname, 'src'),
+      use:     ['babel-loader']
+    }]
+  },
+  plugins: [
+    new webpack.EnvironmentPlugin({
+      VERSION: pkgJson.version
+    }),
+    new webpack.BannerPlugin({
+      banner: fs.readFileSync(path.join(__dirname, 'src/header.txt'), {
+        encoding: 'utf8'
+      }),
+      raw: true
+    })
+  ]
+}, {
+  devtool: 'source-map',
+  entry: {
+    'utility': './utility/utility.js'
+  },
+  output,
   target: 'web',
-
-  node: {
-    // node polyfills
-  },
-
   devServer: {
     hot: false,
     inline: true,
@@ -44,31 +68,35 @@ module.exports = {
 
   module: {
     rules: [{
+      test:    /\.js$/i,
+      include: path.resolve(__dirname, 'src'),
+      use:     ['babel-loader']
+    }, {
       test: /\.css$/i,
-      use:  extractCSS.extract({
+      use: extractCSS.extract({
         fallback: 'style-loader',
-        use:      {
-          loader:  'css-loader',
+        use: {
+          loader: 'css-loader',
           options: {
             sourceMap: true,
-            minimize:  false
+            minimize: false
           }
         }
       })
     }, {
       test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
-      use:  [{
-        loader:  'url-loader',
+      use: [{
+        loader: 'url-loader',
         options: {
-          limit:    10000,
+          limit: 10000,
           mimetype: 'application/font-woff',
-          name:     '[name].[ext]'
+          name: '[name].[ext]'
         }
       }]
     }, {
       test: /\.svg?$/i,
-      use:  [{
-        loader:  'file-loader',
+      use: [{
+        loader: 'file-loader',
         options: {
           name: '[name].[ext]'
         }
@@ -83,6 +111,9 @@ module.exports = {
       './utility/paho-small-logo.png'
     ]),
     extractCSS,
+    new webpack.EnvironmentPlugin({
+      VERSION: pkgJson.version
+    }),
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: `${__dirname}/utility/index.html`
@@ -94,9 +125,8 @@ module.exports = {
       jQuery: "jquery"
     })
   ],
-
   resolve: {
     mainFields: ['jsnext:main', 'module', 'browser', 'main'],
     aliasFields: ['browser']
   }
-};
+}];

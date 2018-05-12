@@ -1,8 +1,8 @@
 global.self = global;
 
 const ws = require('nodejs-websocket'),
-      Paho = require('../paho-mqtt')
-
+      Paho = require('../../dist/paho.mqtt.javascript')
+console.dir(Paho)
 require('dotenv').config();
 
 global.WebSocket = function (wsurl, protocol) {

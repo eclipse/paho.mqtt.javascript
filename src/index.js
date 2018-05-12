@@ -1,3 +1,3 @@
-import Paho from './paho-mqtt';
+import Paho from "./paho-mqtt";
 
-window.Paho = Paho;
+export default Paho;

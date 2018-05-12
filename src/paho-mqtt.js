@@ -80,18 +80,8 @@ function onMessageArrived(message) {
  * @namespace Paho
  */
 
-import WireMessage from './WireMessage';
-import Client from './Client';
-import Message from './Message';
-
-// Private variables below, these are only visible inside the function closure
-// which is used to define the module.
-var version = "@VERSION@-@BUILDLEVEL@";
-
-// Collection of utility methods used to simplify module code
-// and promote the DRY pattern.
-
-
+import Client from "./Client";
+import Message from "./Message";
 
 // Module contents.
 export default {

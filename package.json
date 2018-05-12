@@ -42,7 +42,7 @@
 	"scripts": {
 		"build": "webpack --config ./webpack.dev.js",
 		"dev": "webpack-dev-server --config ./webpack.dev.js",
-		"lint": "eslint src -c ./eslintrc.json --ext js",
+		"lint": "eslint src -c ./.eslintrc.json --ext js --ignore-pattern test",
 		"test": "jasmine-node --verbose --forceexit src/test/"
 	}
 }
