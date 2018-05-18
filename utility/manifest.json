@@ -14,5 +14,5 @@
 			"connect": ""
 		}
 	},
-	"permissions": ["*://*/*"]
+	"permissions": ["*://*/*", "storage"]
 }

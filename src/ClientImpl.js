@@ -11,6 +11,7 @@ import Message from "./Message";
 import Pinger from "./Pinger";
 import Timeout from "./Timeout";
 import WireMessage from "./WireMessage";
+import Storage from "./Storage";
 
 /**
  * Return a new function which runs the user function bound
@@ -186,15 +187,13 @@ export default class {
       receiveBuffer: null,
 
       _traceBuffer:       null,
-      _MAX_TRACE_ENTRIES: 100
+      _MAX_TRACE_ENTRIES: 100,
+      storage:             new Storage(host + ":" + port + (path != "/mqtt" ? ":" + path : "") + ":" + clientId + ":")
     });
 
     // Check dependencies are satisfied in this browser.
     if(!("WebSocket" in global && global.WebSocket !== null)) {
       throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
-    }
-    if(!("localStorage" in global && global.localStorage !== null)) {
-      throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
     }
     if(!("ArrayBuffer" in global && global.ArrayBuffer !== null)) {
       throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
@@ -207,12 +206,6 @@ export default class {
     this.uri = uri;
     this.clientId = clientId;
     this._wsuri = null;
-
-    // Local storagekeys are qualified with the following string.
-    // The conditional inclusion of path in the key is for backward
-    // compatibility to when the path was not configurable and assumed to
-    // be /mqtt
-    this._localKey = host + ":" + port + (path != "/mqtt" ? ":" + path : "") + ":" + clientId + ":";
 
     // Create private instance-only message queue
     // Internal queue of messages to be sent, in sending order.
@@ -239,11 +232,7 @@ export default class {
     this._sequence = 0;
 
     // Load the local state, if any, from the saved version, only restore state relevant to this client.
-    for(const key in localStorage) {
-      if(key.indexOf("Sent:" + this._localKey) === 0 || key.indexOf("Received:" + this._localKey) === 0) {
-        this.restore(key);
-      }
-    }
+    this.storage.getValues().map(value => this.restore(value));
   }
 
   connect(connectOptions) {
@@ -519,13 +508,10 @@ export default class {
       default:
         throw Error(format(ERROR.INVALID_STORED_DATA, [prefix + this._localKey + wireMessage.messageIdentifier, storedMessage]));
     }
-    localStorage.setItem(prefix + this._localKey + wireMessage.messageIdentifier, JSON.stringify(storedMessage));
+    this.storage.setItem(prefix, wireMessage.messageIdentifier, storedMessage);
   }
 
-  restore(key) {
-    const value = localStorage.getItem(key);
-    const storedMessage = JSON.parse(value);
-
+  restore(storedMessage) {
     const wireMessage = new WireMessage(storedMessage.type, storedMessage);
 
     switch (storedMessage.type) {
@@ -555,7 +541,7 @@ export default class {
         break;
       }
       default:
-        throw Error(format(ERROR.INVALID_STORED_DATA, [key, value]));
+        throw Error(format(ERROR.INVALID_STORED_DATA, [JSON.stringify(storedMessage)]));
     }
 
     if(key.indexOf("Sent:" + this._localKey) === 0) {
@@ -673,10 +659,12 @@ export default class {
 
           // If we have started using clean session then clear up the local state.
           if(this.connectOptions.cleanSession) {
-            Object.values(this._sentMessages).forEach((sentMessage) => localStorage.removeItem("Sent:" + this._localKey + sentMessage.messageIdentifier)
+            Object.values(this._sentMessages).forEach((sentMessage) =>
+              this.storage.removeItem("Sent:", sentMessage.messageIdentifier)
             );
             this._sentMessages = {};
-            Object.values(this._receivedMessages).forEach((receivedMessage) => localStorage.removeItem("Received:" + this._localKey + receivedMessage.messageIdentifier)
+            Object.values(this._receivedMessages).forEach((receivedMessage) =>
+              this.storage.removeItem("Received:", receivedMessage.messageIdentifier)
             );
             this._receivedMessages = {};
           }
@@ -756,7 +744,7 @@ export default class {
           // If this is a re flow of a PUBACK after we have restarted receivedMessage will not exist.
           if(sentMessage) {
             delete this._sentMessages[wireMessage.messageIdentifier];
-            localStorage.removeItem("Sent:" + this._localKey + wireMessage.messageIdentifier);
+            this.storage.removeItem("Sent:", wireMessage.messageIdentifier);
             if(this.onMessageDelivered) {
               this.onMessageDelivered(sentMessage.payloadMessage);
             }
@@ -776,7 +764,7 @@ export default class {
         }
         case MESSAGE_TYPE.PUBREL: {
           const receivedMessage = this._receivedMessages[wireMessage.messageIdentifier];
-          localStorage.removeItem("Received:" + this._localKey + wireMessage.messageIdentifier);
+          this.storage.removeItem("Received:", wireMessage.messageIdentifier);
           // If this is a re flow of a PUBREL after we have restarted receivedMessage will not exist.
           if(receivedMessage) {
             this._receiveMessage(receivedMessage);
@@ -791,7 +779,7 @@ export default class {
         case MESSAGE_TYPE.PUBCOMP: {
           const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           delete this._sentMessages[wireMessage.messageIdentifier];
-          localStorage.removeItem("Sent:" + this._localKey + wireMessage.messageIdentifier);
+          this.storage.removeItem("Sent:", wireMessage.messageIdentifier);
           if(this.onMessageDelivered) {
             this.onMessageDelivered(sentMessage.payloadMessage);
           }

@@ -19,7 +19,7 @@ const ERROR = {
   INVALID_TYPE:              {code: 12, text: "AMQJS0012E Invalid type {0} for {1}."},
   INVALID_ARGUMENT:          {code: 13, text: "AMQJS0013E Invalid argument {0} for {1}."},
   UNSUPPORTED_OPERATION:     {code: 14, text: "AMQJS0014E Unsupported operation."},
-  INVALID_STORED_DATA:       {code: 15, text: "AMQJS0015E Invalid data in local storage key={0} value={1}."},
+  INVALID_STORED_DATA:       {code: 15, text: "AMQJS0015E Invalid data in storage value={1}."},
   INVALID_MQTT_MESSAGE_TYPE: {code: 16, text: "AMQJS0016E Invalid MQTT message type {0}."},
   MALFORMED_UNICODE:         {code: 17, text: "AMQJS0017E Malformed Unicode string:{0} {1}."},
   BUFFER_FULL:               {code: 18, text: "AMQJS0018E Message buffer is full, maximum buffer size: {0}."}
