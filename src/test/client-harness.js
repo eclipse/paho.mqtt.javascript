@@ -1,66 +1,66 @@
 global.self = global;
 
-const ws = require('nodejs-websocket'),
-      Paho = require('../../dist/paho.mqtt.javascript')
-console.dir(Paho)
+const ws = require('nodejs-websocket');
 require('dotenv').config();
 
 global.WebSocket = function (wsurl, protocol) {
     var connection = ws.connect(wsurl, {
         protocols: protocol
     });
+    var onBinary = null;
     var obj = {
         send: function (msg) {
             var nodeBuf = new Buffer(new Uint8Array(msg));
             connection.send(nodeBuf);
         },
-        get readyState() { return ws.readyState; }
+        get readyState() { return connection.readyState; },
+        addEventListener: function(event, callback) {
+            switch(event) {
+                case "open":
+                    connection.on("connect", callback);
+                    break;
+                case "message":
+                    onBinary = function(message) {
+                        var data = new Buffer(0);
+                        message.on("readable", function () {
+                            var newData = message.read()
+                            if (newData)
+                                data = Buffer.concat([data, newData], data.length + newData.length)
+                        });
+                        message.on("end", function () {
+                            callback({ data });
+                        });
+                    };
+                    connection.on("binary", onBinary);
+                    break;
+                default:
+                    connection.on(event, callback);
+                    break;
+            };
+        },
+        removeEventListener(event, callback) {
+            switch(event) {
+                case "open":
+                    connection.removeListener("connect", callback);
+                    break;
+                case "message":
+                    connection.removeListener("binary", onBinary);
+                    break;
+                default:
+                    connection.removeListener(event, callback);
+                    break;
+            };
+        }
     };
 
     ws.binaryType = 'arraybuffer';
-
-    connection.on("connect", function () {
-        conn = connection;
-        conn.on("error", function (error) {
-            console.log("socket error ", error);
-            if (obj.onerror) {
-                obj.onerror();
-            }
-        });
-
-        conn.on("close", function (reasonCode, description) {
-            console.log("socket closed ", description);
-        })
-
-        conn.on("binary", function (message) {
-            if (obj.onmessage) {
-                var data = new Buffer(0);
-                message.on("readable", function () {
-                    var newData = message.read()
-                    if (newData)
-                        data = Buffer.concat([data, newData], data.length + newData.length)
-                })
-                message.on("end", function () {
-                    obj.onmessage({ data });
-                })
-            }
-        });
-        if (obj.onopen) {
-            obj.onopen();
-        }
-    });
-    connection.on('error', function (error) {
-        console.log('Connect Error: ' + error.toString());
-        if (obj.onerror) {
-            obj.onerror(error);
-        }
-    });
     return obj;
 }
 
 var LocalStorage = require('node-localstorage').LocalStorage;
 global.localStorage = new LocalStorage('./persistence');
 
+const Paho = require('../../dist/paho.mqtt.javascript')
 global.Paho = Paho;
 
 function ensureValue(prop, value) {
@@ -95,7 +95,7 @@ module.exports = {
   interopServer: ensureValue(process.env.TEST_INTEROPSERVER, 'iot.eclipse.org'),
   interopPort:   parseInt(ensureValue(process.env.TEST_INTEROPPORT, '443')),
   interopPath:   ensureValue(process.env.TEST_INTEROPPATH, '/ws'),
-  useSSL:        ensureValue((process.env.TEST_USE_SSL === 'true'), true),
+  useSSL:        ensureValue((!process.env.TEST_USE_SSL || process.env.TEST_USE_SSL === 'true'), true),
   topicPrefix:   'paho-mqtt-test-' + guid(),
   Paho:          Paho,
   printConfig:   printConfig

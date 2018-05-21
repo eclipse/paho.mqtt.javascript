@@ -31,7 +31,7 @@ function localStorageProvider(nativeStorage) {
 }
 
 if("localStorage" in global && global.localStorage !== null) {
-  Storage = localStorageProvider(localStorage);
+  Storage = localStorageProvider(global.localStorage);
 } else if(global.chrome && global.chrome.storage && global.chrome.storage.local) {
   Storage = localStorageProvider(global.chrome.storage.local);
 }
