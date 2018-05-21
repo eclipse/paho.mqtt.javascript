@@ -1,17 +1,10 @@
-/*
- * Internal implementation of the Websockets MQTT V3.1 client.
- *
- * @name Paho.MQTT.ClientImpl @constructor
- * @param {String} host the DNS nameof the webSocket host.
- * @param {Number} port the port number for that host.
- * @param {String} clientId the MQ client identifier.
- */
 import { ERROR, MESSAGE_TYPE, format, parseUTF8 } from "./definitions";
 import Message from "./Message";
 import Pinger from "./Pinger";
+import Socket from "./Socket";
+import Storage from "./Storage";
 import Timeout from "./Timeout";
 import WireMessage from "./WireMessage";
-import Storage from "./Storage";
 
 /**
  * Return a new function which runs the user function bound
@@ -139,25 +132,20 @@ function _traceMask(traceObject, masked) {
 }
 
 /**
- * Internal implementation of the Websockets MQTT V3.1 client.
+ * Internal implementation of the MQTT V3.1 client.
  *
  * @name Paho.ClientImpl @constructor
- * @param {String} host the DNS nameof the webSocket host.
- * @param {Number} port the port number for that host.
  * @param {String} clientId the MQ client identifier.
  */
 export default class {
-  constructor(uri, host, port, path, clientId) {
+  constructor(uri, clientId) {
     Object.assign(this, {
       // Messaging Client public instance members.
-      host:     null,
-      port:     null,
-      path:     null,
       uri:      null,
       clientId: null,
 
       // Messaging Client private instance members.
-      socket:                 null,
+      socket:                 new Socket(uri),
       /* true once we have received an acknowledgement to a CONNECT packet. */
       connected:              false,
       /* The largest message identifier allowed, may not be larger than 2**16 but
@@ -188,24 +176,17 @@ export default class {
 
       _traceBuffer:       null,
       _MAX_TRACE_ENTRIES: 100,
-      storage:             new Storage(host + ":" + port + (path != "/mqtt" ? ":" + path : "") + ":" + clientId + ":")
+      storage:             new Storage(uri + ":" + clientId)
     });
 
-    // Check dependencies are satisfied in this browser.
-    if(!("WebSocket" in global && global.WebSocket !== null)) {
-      throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
-    }
     if(!("ArrayBuffer" in global && global.ArrayBuffer !== null)) {
       throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
     }
-    this._trace("Paho.Client", uri, host, port, path, clientId);
+    this._trace("Paho.Client", uri, clientId);
 
-    this.host = host;
-    this.port = port;
-    this.path = path;
-    this.uri = uri;
+    this.uri      = uri;
     this.clientId = clientId;
-    this._wsuri = null;
+    this._uri     = null;
 
     // Create private instance-only message queue
     // Internal queue of messages to be sent, in sending order.
@@ -232,7 +213,7 @@ export default class {
     this._sequence = 0;
 
     // Load the local state, if any, from the saved version, only restore state relevant to this client.
-    this.storage.getValues().map(value => this.restore(value));
+    this.storage.entries().map(([key, value]) => this.restore(key, value));
   }
 
   connect(connectOptions) {
@@ -242,7 +223,7 @@ export default class {
     if(this.connected) {
       throw new Error(format(ERROR.INVALID_STATE, ["already connected"]));
     }
-    if(this.socket) {
+    if(this.socket.isOpen()) {
       throw new Error(format(ERROR.INVALID_STATE, ["already connected"]));
     }
 
@@ -284,21 +265,31 @@ export default class {
 
     if(subscribeOptions.onSuccess) {
       wireMessage.onSuccess = function(grantedQos) {
-        subscribeOptions.onSuccess({invocationContext: subscribeOptions.invocationContext, grantedQos: grantedQos});
+        subscribeOptions.onSuccess({
+          invocationContext:  subscribeOptions.invocationContext,
+          grantedQos:         grantedQos
+        });
       };
     }
 
     if(subscribeOptions.onFailure) {
       wireMessage.onFailure = function(errorCode) {
-        subscribeOptions.onFailure({invocationContext: subscribeOptions.invocationContext, errorCode: errorCode, errorMessage: format(errorCode)});
+        subscribeOptions.onFailure({
+          invocationContext:  subscribeOptions.invocationContext,
+          errorCode:          errorCode,
+          errorMessage:       format(errorCode)
+        });
       };
     }
 
     if(subscribeOptions.timeout) {
       wireMessage.timeOut = new Timeout(this, self, subscribeOptions.timeout, subscribeOptions.onFailure,
-                                        [{invocationContext: subscribeOptions.invocationContext,
-                                          errorCode:         ERROR.SUBSCRIBE_TIMEOUT.code,
-                                          errorMessage:      format(ERROR.SUBSCRIBE_TIMEOUT)}]);
+        [{
+          invocationContext: subscribeOptions.invocationContext,
+          errorCode:         ERROR.SUBSCRIBE_TIMEOUT.code,
+          errorMessage:      format(ERROR.SUBSCRIBE_TIMEOUT)
+        }]
+      );
     }
 
     // All subscriptions return a SUBACK.
@@ -319,14 +310,19 @@ export default class {
 
     if(unsubscribeOptions.onSuccess) {
       wireMessage.callback = function() {
-        unsubscribeOptions.onSuccess({invocationContext: unsubscribeOptions.invocationContext});
+        unsubscribeOptions.onSuccess({
+          invocationContext: unsubscribeOptions.invocationContext
+        });
       };
     }
     if(unsubscribeOptions.timeout) {
       wireMessage.timeOut = new Timeout(this, self, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
-                                        [{invocationContext: unsubscribeOptions.invocationContext,
-                                          errorCode:         ERROR.UNSUBSCRIBE_TIMEOUT.code,
-                                          errorMessage:      format(ERROR.UNSUBSCRIBE_TIMEOUT)}]);
+        [{
+          invocationContext: unsubscribeOptions.invocationContext,
+          errorCode:         ERROR.UNSUBSCRIBE_TIMEOUT.code,
+          errorMessage:      format(ERROR.UNSUBSCRIBE_TIMEOUT)
+        }]
+      );
     }
 
     // All unsubscribes return a SUBACK.
@@ -385,7 +381,7 @@ export default class {
       this._reconnecting = false;
     }
 
-    if(!this.socket) {
+    if(!this.socket.isOpen()) {
       throw new Error(format(ERROR.INVALID_STATE, ["not connecting or connected"]));
     }
 
@@ -421,26 +417,28 @@ export default class {
     delete this._traceBuffer;
   }
 
-  _doConnect(wsurl) {
+  _doConnect(url) {
     // When the socket is open, this client will send the CONNECT WireMessage using the saved parameters.
     if(this.connectOptions.useSSL) {
-      const uriParts = wsurl.split(":");
-      uriParts[0] = "wss";
-      wsurl = uriParts.join(":");
+      const uriParts = url.split(":");
+      if(uriParts[0] === "ws") {
+        uriParts[0] += "s";
+      } else if(uriParts[0] === "tcp") {
+        uriParts[0] = "tls";
+      }
+      url = uriParts.join(":");
     }
-    this._wsuri = wsurl;
+    this._uri = url;
     this.connected = false;
-
-    if(this.connectOptions.mqttVersion < 4) {
-      this.socket = new WebSocket(wsurl, ["mqttv3.1"]);
-    } else {
-      this.socket = new WebSocket(wsurl, ["mqtt"]);
-    }
-    this.socket.binaryType = "arraybuffer";
-    this.socket.onopen = scope(this._onSocketOpen, this);
-    this.socket.onmessage = scope(this._onSocketMessage, this);
-    this.socket.onerror = scope(this._onSocketError, this);
-    this.socket.onclose = scope(this._onSocketClose, this);
+    
+    this.socket.on("open", this._onSocketOpen, this);
+    this.socket.on("message", this._onSocketMessage, this);
+    this.socket.on("error", this._onSocketError, this);
+    this.socket.on("close", this._onSocketClose, this);
+    this.socket.connect({
+      url,
+      mqttVersion:  this.connectOptions.mqttVersion,
+    });
 
     this.sendPinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
     this.receivePinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
@@ -451,10 +449,10 @@ export default class {
     this._connectTimeout = new Timeout(this, self, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
   }
 
-  // Schedule a new message to be sent over the WebSockets
-  // connection. CONNECT messages cause WebSocket connection
+  // Schedule a new message to be sent over the Sockets
+  // connection. CONNECT messages cause Socket connection
   // to be started. All other messages are queued internally
-  // until this has happened. When WS connection starts, process
+  // until this has happened. When connection starts, process
   // all outstanding messages.
   _scheduleMessage(message) {
     // Add messages in fifo order to array, by adding to start
@@ -506,12 +504,12 @@ export default class {
         break;
       }
       default:
-        throw Error(format(ERROR.INVALID_STORED_DATA, [prefix + this._localKey + wireMessage.messageIdentifier, storedMessage]));
+        throw Error(format(ERROR.INVALID_STORED_DATA, [prefix + wireMessage.messageIdentifier, storedMessage]));
     }
     this.storage.setItem(prefix, wireMessage.messageIdentifier, storedMessage);
   }
 
-  restore(storedMessage) {
+  restore(key, storedMessage) {
     const wireMessage = new WireMessage(storedMessage.type, storedMessage);
 
     switch (storedMessage.type) {
@@ -544,10 +542,10 @@ export default class {
         throw Error(format(ERROR.INVALID_STORED_DATA, [JSON.stringify(storedMessage)]));
     }
 
-    if(key.indexOf("Sent:" + this._localKey) === 0) {
+    if(key === "Sent:") {
       wireMessage.payloadMessage.duplicate = true;
       this._sentMessages[wireMessage.messageIdentifier] = wireMessage;
-    } else if(key.indexOf("Received:" + this._localKey) === 0) {
+    } else if(key === "Received:") {
       this._receivedMessages[wireMessage.messageIdentifier] = wireMessage;
     }
   }
@@ -591,7 +589,7 @@ export default class {
   }
 
   /**
-   * Called when the underlying websocket has been opened.
+   * Called when the underlying Socket has been opened.
    * @ignore
    */
   _onSocketOpen() {
@@ -602,7 +600,7 @@ export default class {
   }
 
   /**
-   * Called when the underlying websocket has received a complete packet.
+   * Called when the underlying Socket has received a complete packet.
    * @ignore
    */
   _onSocketMessage(event) {
@@ -659,13 +657,13 @@ export default class {
 
           // If we have started using clean session then clear up the local state.
           if(this.connectOptions.cleanSession) {
-            Object.values(this._sentMessages).forEach((sentMessage) =>
+            Object.values(this._sentMessages).forEach((sentMessage) => (
               this.storage.removeItem("Sent:", sentMessage.messageIdentifier)
-            );
+            ));
             this._sentMessages = {};
-            Object.values(this._receivedMessages).forEach((receivedMessage) =>
+            Object.values(this._receivedMessages).forEach((receivedMessage) => (
               this.storage.removeItem("Received:", receivedMessage.messageIdentifier)
-            );
+            ));
             this._receivedMessages = {};
           }
           // Client connected and ready for business.
@@ -718,7 +716,9 @@ export default class {
           // Will also now return if this connection was the result of an automatic
           // reconnect and which URI was successfully connected to.
           if(this.connectOptions.onSuccess) {
-            this.connectOptions.onSuccess({invocationContext: this.connectOptions.invocationContext});
+            this.connectOptions.onSuccess({
+              invocationContext: this.connectOptions.invocationContext
+            });
           }
 
           let reconnected = false;
@@ -729,7 +729,7 @@ export default class {
           }
 
           // Execute the onConnected callback if there is one.
-          this._connected(reconnected, this._wsuri);
+          this._connected(reconnected, this._uri);
 
           // Process all queued messages now that the connection is established.
           this._processQueue();
@@ -899,7 +899,7 @@ export default class {
   /**
    * Client has connected.
    * @param {reconnect} [boolean] indicate if this was a result of reconnect operation.
-   * @param {uri} [string] fully qualified WebSocket URI of the server.
+   * @param {uri} [string] fully qualified Socket URI of the server.
    */
   _connected(reconnect, uri) {
     // Execute the onConnected callback if there is one.
@@ -959,17 +959,11 @@ export default class {
     this._buffered_msg_queue = [];
     this._notify_msg_sent = {};
 
-    if(this.socket) {
-      // Cancel all socket callbacks so that they cannot be driven again by this socket.
-      this.socket.onopen = null;
-      this.socket.onmessage = null;
-      this.socket.onerror = null;
-      this.socket.onclose = null;
-      if(this.socket.readyState === 1) {
-        this.socket.close();
-      }
-      delete this.socket;
-    }
+    this.socket.removeListener("open", this._onSocketOpen, this);
+    this.socket.removeListener("message", this._onSocketMessage, this);
+    this.socket.removeListener("error", this._onSocketError, this);
+    this.socket.removeListener("close", this._onSocketClose, this);
+    this.socket.close();
 
     if(this.connectOptions.uris && this.hostIndex < this.connectOptions.uris.length - 1) {
       // Try the next host.
@@ -986,7 +980,12 @@ export default class {
         this.connected = false;
         // Execute the connectionLostCallback if there is one, and we were connected.
         if(this.onConnectionLost) {
-          this.onConnectionLost({errorCode: errorCode, errorMessage: errorText, reconnect: this.connectOptions.reconnect, uri: this._wsuri});
+          this.onConnectionLost({
+            errorCode:    errorCode,
+            errorMessage: errorText,
+            reconnect:    this.connectOptions.reconnect,
+            uri:          this._uri
+          });
         }
         if(errorCode !== ERROR.OK.code && this.connectOptions.reconnect) {
           // Start automatic reconnect process for the very first time since last successful connect.
@@ -1005,7 +1004,10 @@ export default class {
             this._doConnect(this.uri);
           }
         } else if(this.connectOptions.onFailure) {
-          this.connectOptions.onFailure({invocationContext: this.connectOptions.invocationContext, errorCode: errorCode, errorMessage: errorText});
+          this.connectOptions.onFailure({
+            invocationContext:  this.connectOptions.invocationContext,
+            errorCode:          errorCode,
+            errorMessage:       errorText});
         }
       }
     }

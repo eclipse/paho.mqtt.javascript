@@ -14,7 +14,7 @@ const ERROR = {
   SOCKET_ERROR:              {code: 7, text: "AMQJS0007E Socket error:{0}."},
   SOCKET_CLOSE:              {code: 8, text: "AMQJS0008I Socket closed."},
   MALFORMED_UTF:             {code: 9, text: "AMQJS0009E Malformed UTF data:{0} {1} {2}."},
-  UNSUPPORTED:               {code: 10, text: "AMQJS0010E {0} is not supported by this browser."},
+  UNSUPPORTED:               {code: 10, text: "AMQJS0010E {0} is not supported by this vm."},
   INVALID_STATE:             {code: 11, text: "AMQJS0011E Invalid state {0}."},
   INVALID_TYPE:              {code: 12, text: "AMQJS0012E Invalid type {0} for {1}."},
   INVALID_ARGUMENT:          {code: 13, text: "AMQJS0013E Invalid argument {0} for {1}."},
@@ -71,6 +71,15 @@ const format = function(error, substitutions) {
   }
   return text;
 };
+
+/** 
+ * defines how to interpret an uri
+ * protocol = match[1],
+  * host     = match[4] || match[2], // IP4 or [IP6]
+  * port     = parseInt(match[7]),
+  * path     = match[8];
+*/
+const uriRegex = /^(wss?|tcp|tls):\/\/((\[(.+)\])|([^/]+?))(:(\d+))?(\/.*)?$/;
 
 /**
 * Takes a String and writes it into an array as UTF8 encoded bytes.
@@ -191,5 +200,6 @@ module.exports = {
   format,
   stringToUTF8,
   UTF8Length,
-  parseUTF8
+  parseUTF8,
+  uriRegex
 };

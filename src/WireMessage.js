@@ -108,7 +108,7 @@ export default class {
           // Will message is always a string, sent as UTF-8 characters with a preceding length.
           willMessagePayloadBytes = this.willMessage.payloadBytes;
           if(!(willMessagePayloadBytes instanceof Uint8Array)) {
-            willMessagePayloadBytes = new Uint8Array(payloadBytes);
+            willMessagePayloadBytes = new Uint8Array(willMessagePayloadBytes);
           }
           remLength += willMessagePayloadBytes.byteLength + 2;
         }
@@ -243,10 +243,10 @@ export default class {
 
         break;
 
-      //    	    case MESSAGE_TYPE.PUBREC:
-      //    	    case MESSAGE_TYPE.PUBREL:
-      //    	    case MESSAGE_TYPE.PUBCOMP:
-      //    	    	break;
+      // case MESSAGE_TYPE.PUBREC:
+      // case MESSAGE_TYPE.PUBREL:
+      // case MESSAGE_TYPE.PUBCOMP:
+      // break;
 
       case MESSAGE_TYPE.SUBSCRIBE: {
         // SUBSCRIBE has a list of topic strings and request QoS

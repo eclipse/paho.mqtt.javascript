@@ -111,12 +111,11 @@ function connectionToggle() {
   } else {
     connect();
   }
-
-
 }
 
 
 function connect() {
+  var protocol = document.getElementById("protoInput").value;
   var hostname = document.getElementById("hostInput").value;
   var port = document.getElementById("portInput").value;
   var clientId = document.getElementById("clientIdInput").value;
@@ -136,11 +135,11 @@ function connect() {
 
 
   if (path.length > 0) {
-    client = new Paho.Client(hostname, Number(port), path, clientId);
+    client = new Paho.Client(protocol, hostname, Number(port), path, clientId);
   } else {
-    client = new Paho.Client(hostname, Number(port), clientId);
+    client = new Paho.Client(protocol, hostname, Number(port), clientId);
   }
-  logMessage("INFO", "Connecting to Server: [Host: ", hostname, ", Port: ", port, ", Path: ", client.path, ", ID: ", clientId, "]");
+  logMessage("INFO", "Connecting to Server: [Proto: ", protocol, ", Host: ", hostname, ", Port: ", port, ", Path: ", client.path, ", ID: ", clientId, "]");
 
   // set callback handlers
   client.onConnectionLost = onConnectionLost;
@@ -149,7 +148,13 @@ function connect() {
 
 
   var options = {
-    invocationContext: { host: hostname, port: port, path: client.path, clientId: clientId },
+    invocationContext: {
+      protocol: protocol,
+      host: hostname,
+      port: port,
+      path: client.path,
+      clientId: clientId
+    },
     timeout: timeout,
     keepAliveInterval: keepAlive,
     cleanSession: cleanSession,
@@ -158,8 +163,6 @@ function connect() {
     onSuccess: onConnect,
     onFailure: onFail
   };
-
-
 
   if (user.length > 0) {
     options.userName = user;
@@ -202,6 +205,7 @@ function setFormEnabledState(enabled) {
   } else {
     document.getElementById("clientConnectButton").innerHTML = "Connect";
   }
+  document.getElementById("protoInput").disabled = enabled;
   document.getElementById("hostInput").disabled = enabled;
   document.getElementById("portInput").disabled = enabled;
   document.getElementById("clientIdInput").disabled = enabled;

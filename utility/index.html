@@ -58,8 +58,16 @@
           <div class="panel-body" id="serverCollapse">
             <form>
               <div class="row">
-
-                <div class="col-lg-5">
+                <div class="col-lg-1">
+                  <div class="form-group">
+                    <label for="protoInput">Protocol</label>
+                    <select class="form-control" id="protoInput">
+                      <option>ws</option>
+                      <option>tcp</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-lg-4">
                   <div class="form-group">
                     <label for="hostInput">Host</label>
                     <input type="text" class="form-control" id="hostInput" value="iot.eclipse.org">

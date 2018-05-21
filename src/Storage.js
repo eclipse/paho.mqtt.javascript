@@ -9,17 +9,20 @@ function localStorageProvider(nativeStorage) {
       // be /mqtt
       this.key = key;
     }
+
     setItem(type, identifier, obj) {
       nativeStorage.setItem(type + this.key + identifier, JSON.stringify(obj));
     }
+
     removeItem(type, identifier) {
       nativeStorage.removeItem(type + this.key + identifier);
     }
-    getValues() {
+
+    entries() {
       const all = [];
       for(const key in nativeStorage) {
         if(key.indexOf("Sent:" + this.key) === 0 || key.indexOf("Received:" + this.key) === 0) {
-          all.push(nativeStorage);
+          all.push([key.replace(/:.*/, ":"), JSON.parse(nativeStorage.getItem(key))]);
         }
       }
       return all;

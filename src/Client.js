@@ -72,7 +72,7 @@
 * @property {function} trace - called whenever trace is called. TODO
 */
 
-import { ERROR, format } from "./definitions";
+import { ERROR, format, uriRegex } from "./definitions";
 import ClientImpl from "./ClientImpl";
 import Message from "./Message";
 
@@ -107,30 +107,42 @@ const validate = function(obj, keys) {
 };
 
 export default class {
-  constructor(host, port, path, clientId) {
-    let uri;
+  constructor(...args) {
+    let clientId, host, path, port, protocol, uri;
 
-    if(typeof host !== "string") {
-      throw new Error(format(ERROR.INVALID_TYPE, [typeof host, "host"]));
-    }
-
-    if(arguments.length == 2) {
+    if(args.length == 2) {
       // host: must be full ws:// uri
-      // port: clientId
-      clientId = port;
-      uri = host;
-      const match = uri.match(/^(wss?):\/\/((\[(.+)\])|([^/]+?))(:(\d+))?(\/.*)$/);
-      if(match) {
-        host = match[4] || match[2];
-        port = parseInt(match[7]);
-        path = match[8];
-      } else {
-        throw new Error(format(ERROR.INVALID_ARGUMENT, [host, "host"]));
+      [uri, clientId] = args;
+      const match = uri.match(uriRegex);
+      /*
+        protocol = match[1];
+        host     = match[4] || match[2];
+        port     = parseInt(match[7]);
+        path     = match[8];
+      */
+      if(!match) {
+        throw new Error(format(ERROR.INVALID_ARGUMENT, [uri, "host"]));
       }
     } else {
-      if(arguments.length == 3) {
-        clientId = path;
+      if(args.length === 3) {
+        [host, port, clientId] = args;
+        protocol = "ws";
         path = "/mqtt";
+      } else if(args.length === 4) {
+        [host, port, path, clientId] = args;
+        if(typeof path === "number") {
+          [protocol, host, port, clientId] = args;
+          path = undefined;
+        } else {
+          protocol = "ws";
+        }
+      } else {
+        [protocol, host, port, path, clientId] = args;
+      }
+      if(protocol.startsWith("ws")) {
+        path = path || "/mqtt";
+      } else {
+        path = "";
       }
       if(typeof port !== "number" || port < 0) {
         throw new Error(format(ERROR.INVALID_TYPE, [typeof port, "port"]));
@@ -140,7 +152,7 @@ export default class {
       }
 
       const ipv6AddSBracket = (host.indexOf(":") !== -1 && host.slice(0, 1) !== "[" && host.slice(-1) !== "]");
-      uri = "ws://" + (ipv6AddSBracket ? "[" + host + "]" : host) + ":" + port + path;
+      uri = protocol + "://" + (ipv6AddSBracket ? "[" + host + "]" : host) + ":" + port + path;
     }
 
     let clientIdLength = 0;
@@ -155,7 +167,7 @@ export default class {
       throw new Error(format(ERROR.INVALID_ARGUMENT, [clientId, "clientId"]));
     }
 
-    this.client = new ClientImpl(uri, host, port, path, clientId);
+    this.client = new ClientImpl(uri, clientId);
 
     // Public Properties
     Object.defineProperties(this, {
@@ -337,6 +349,7 @@ export default class {
       invocationContext:   "object",
       onSuccess:           "function",
       onFailure:           "function",
+      protocols:           "object",
       hosts:               "object",
       ports:               "object",
       reconnect:           "boolean",
@@ -394,7 +407,7 @@ export default class {
         if(typeof connectOptions.hosts[i] !== "string") {
           throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.hosts[i], "connectOptions.hosts[" + i + "]"]));
         }
-        if(/^(wss?):\/\/((\[(.+)\])|([^/]+?))(:(\d+))?(\/.*)$/.test(connectOptions.hosts[i])) {
+        if(uriRegex.test(connectOptions.hosts[i])) {
           if(i === 0) {
             usingURIs = true;
           } else if(!usingURIs) {
@@ -406,6 +419,16 @@ export default class {
       }
 
       if(!usingURIs) {
+        if(!connectOptions.protocols) {
+          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.protocols, "connectOptions.protocols"]));
+        }
+        if(!(connectOptions.protocols instanceof Array)) {
+          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.protocols, "connectOptions.protocols"]));
+        }
+        if(connectOptions.hosts.length !== connectOptions.protocols.length) {
+          throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.protocols, "connectOptions.protocols"]));
+        }
+        
         if(!connectOptions.ports) {
           throw new Error(format(ERROR.INVALID_ARGUMENT, [connectOptions.ports, "connectOptions.ports"]));
         }
@@ -418,14 +441,18 @@ export default class {
 
         connectOptions.uris = [];
         for(let i = 0; i < connectOptions.hosts.length; i++) {
+          if(typeof connectOptions.protocols[i] !== "string") {
+            throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.protocols[i], "connectOptions.prototols[" + i + "]"]));
+          }
           if(typeof connectOptions.ports[i] !== "number" || connectOptions.ports[i] < 0) {
             throw new Error(format(ERROR.INVALID_TYPE, [typeof connectOptions.ports[i], "connectOptions.ports[" + i + "]"]));
           }
-          const host = connectOptions.hosts[i];
-          const port = connectOptions.ports[i];
+          const protocol = connectOptions.protocols[i];
+          const host     = connectOptions.hosts[i];
+          const port     = connectOptions.ports[i];
 
           const ipv6 = (host.indexOf(":") !== -1);
-          this.uri = "ws://" + (ipv6 ? "[" + host + "]" : host) + ":" + port + this.path;
+          this.uri = protocol + "://" + (ipv6 ? "[" + host + "]" : host) + ":" + port + this.path;
           connectOptions.uris.push(this.uri);
         }
       } else {
