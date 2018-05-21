@@ -41,6 +41,7 @@
 		"webpack-dev-server": "^2.9.3"
 	},
 	"scripts": {
+		"postinstall": "npm run build",
 		"build": "webpack --config ./webpack.dev.js",
 		"dev": "webpack-dev-server --config ./webpack.dev.js",
 		"lint": "eslint src -c ./.eslintrc.json --ext js --ignore-pattern test",
