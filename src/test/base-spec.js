@@ -1,33 +1,33 @@
-var settings = require('./client-harness')
+const settings        = require("./client-harness");
 
-var testServer = settings.server
-var testPort = settings.port
-var testPath = settings.path
-var testMqttVersion = settings.mqttVersion
-var topicPrefix = settings.topicPrefix
-var testUseSSL = settings.useSSL
+const testMqttVersion = settings.mqttVersion,
+      testPath        = settings.path,
+      testPort        = settings.port,
+      testServer      = settings.server,
+      testUseSSL      = settings.useSSL,
+      topicPrefix     = settings.topicPrefix;
 
 
-describe('client', function() {
-  var client = this;
-  var connected = false;
-  var subscribed = false;
-  var messageReceived = false;
+describe("client", function() {
+  let client          = null,
+      connected       = false,
+      messageReceived = false,
+      subscribed      = false;
 
   function onConnect() {
     connected = true;
-  };
+  }
 
   function onSubscribe() {
     subscribed = true;
-  };
+  }
 
-  function messageArrived(response) {
+  function messageArrived() {
     messageReceived = true;
     //reponse.invocationContext.onMessageArrived = null;
-  };
+  }
 
-  it('should create a new client', function() {
+  it("should create a new client", function() {
     client = new settings.Paho.Client(testServer, testPort, testPath, "testclientid");
     client.onMessageArrived = messageArrived;
 
@@ -37,7 +37,7 @@ describe('client', function() {
     expect(client.path).toBe(testPath);
   });
 
-  it('should connect to a server', function() {
+  it("should connect to a server", function() {
     runs(function() {
       client.connect({
         onSuccess: onConnect,
@@ -55,7 +55,7 @@ describe('client', function() {
     });
   });
 
-  it('should subscribe to a topic', function() {
+  it("should subscribe to a topic", function() {
     runs(function() {
       client.subscribe(topicPrefix + "/World", {
         onSuccess: onSubscribe
@@ -71,12 +71,12 @@ describe('client', function() {
     });
   });
 
-  it('should send and receive a message', function() {
+  it("should send and receive a message", function() {
     runs(function() {
-      message = new settings.Paho.Message("Hello");
+      const message = new settings.Paho.Message("Hello");
       message.destinationName = topicPrefix + "/World";
       client.send(message);
-    })
+    });
 
     waitsFor(function() {
       return messageReceived;
@@ -84,6 +84,6 @@ describe('client', function() {
 
     runs(function() {
       expect(messageReceived).toBe(true);
-    })
+    });
   });
-})
+});

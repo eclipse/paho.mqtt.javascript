@@ -1,52 +1,51 @@
-var settings = require('./client-harness');
+/* eslint-disable no-console */
+const settings = require("./client-harness");
 
+const testMqttVersion = settings.mqttVersion,
+      testPath        = settings.path,
+      testPort        = settings.port,
+      testServer      = settings.server,
+      testUseSSL      = settings.useSSL,
+      topicPrefix     = settings.topicPrefix;
 
-var testServer = settings.server;
-var testPort = settings.port;
-var testPath = settings.path;
-var testMqttVersion = settings.mqttVersion;
-var topicPrefix = settings.topicPrefix;
-var testUseSSL = settings.useSSL;
-var genStr = function(str) {
-  var time = new Date();
-  return str + '.' + time.getTime();
+const genStr = function(str) {
+  const time = new Date();
+  return str + "." + time.getTime();
 };
 
-describe('BasicTest', function() {
+describe("BasicTest", function() {
   //var client = null;
-  var clientId = this.description;
-  var connected = false;
-  var failure = false;
-  var disconnectError = null;
-  var disconnectErrorMsg = null;
-
-  var subscribed = false;
-  var isMessageReceived = false;
-  var isMessageDelivered = false;
-  var strTopic = topicPrefix + '/' + makeid() + '/World';
-  var strTopic2 = topicPrefix + '/' + makeid() + '/Mars';
-  var strMessageReceived = '';
-  var strMessageSend = 'Hello';
-  var strMessageSend2 = '你好'; // Hello in Traditional Chinese and a good UTF-8 test
-  var strTopicReceived = '';
+  let connected          = false,
+      disconnectError    = null,
+      disconnectErrorMsg = null,
+      isMessageDelivered = false,
+      isMessageReceived  = false,
+      strMessageReceived = "",
+      strTopicReceived   = "",
+      subscribed         = false;
+  // eslint-disable-next-line no-invalid-this
+  const clientId         = this.description,
+        strMessageSend   = "Hello",
+        strMessageSend2  = "你好", // Hello in Traditional Chinese and a good UTF-8 test
+        strTopic         = topicPrefix + "/" + makeid() + "/World",
+        strTopic2        = topicPrefix + "/" + makeid() + "/Mars";
 
   settings.printConfig(settings);
 
-
   function makeid() {
-    var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let text = "";
+    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-    for (var i = 0; i < 5; i++)
+    for (let i = 0; i < 5; i++) {
       text += possible.charAt(Math.floor(Math.random() * possible.length));
-
+    }
     return text;
   }
 
-  function onConnectSuccess(responseObj) {
+  function onConnectSuccess() {
     //console.log("connected %s",responseObj);
     connected = true;
-  };
+  }
 
   function onConnectionLost(err) {
     connected = false;
@@ -55,46 +54,45 @@ describe('BasicTest', function() {
       disconnectErrorMsg = err.errorMessage;
     }
     console.log("connection lost. ErrorCode: %s, ErrorMsg: %s", disconnectError, disconnectErrorMsg);
-  };
+  }
 
   function onConnectFailure(err) {
     connected = false;
-    console.log('Connect fail. ErrorCode: %s, ErrorMsg: %s', err.errCode, err.errorMessage);
-  };
+    console.log("Connect fail. ErrorCode: %s, ErrorMsg: %s", err.errCode, err.errorMessage);
+  }
 
   function onSubscribeSuccess() {
     subscribed = true;
     //console.log("subscribed",subscribed);
-  };
+  }
 
   function onSubscribeFailure(err) {
     subscribed = false;
     console.log("subscribe fail. ErrorCode: %s, ErrorMsg: %s", err.errCode, err.errorMessage);
-  };
+  }
 
   function onUnsubscribeSuccess() {
     subscribed = false;
     //console.log("unsubscribed",subscribed);
-  };
+  }
 
   function messageDelivered(response) {
     console.log("messageDelivered. topic:%s, duplicate:%s, payloadString:%s,qos:%s,retained:%s", response.destinationName, response.duplicate, response.payloadString, response.qos, response.retained);
     isMessageDelivered = true;
     //reponse.invocationContext.onMessageArrived = null;
-  };
+  }
 
   function messageArrived(message) {
-    console.log("messageArrived.", 'topic:', message.destinationName, ' ;content:', message.payloadString);
+    console.log("messageArrived.", "topic:", message.destinationName, " ;content:", message.payloadString);
     isMessageReceived = true;
     strMessageReceived = message.payloadString;
     strTopicReceived = message.destinationName;
 
     //reponse.invocationContext.onMessageArrived = null;
-  };
+  }
 
   beforeEach(function() {
     connected = false;
-    failure = false;
     disconnectError = null;
     disconnectErrorMsg = null;
     //if(!client){
@@ -108,13 +106,12 @@ describe('BasicTest', function() {
   	}
   });
   */
-  it('it should create and connect and disconnect to a server.', function() {
-    var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+  it("it should create and connect and disconnect to a server.", function() {
+    const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
     client.onConnectionLost = onConnectionLost;
     expect(client).not.toBe(null);
 
-
-    console.log('Connecting...');
+    console.log("Connecting...");
     runs(function() {
       client.connect({
         onSuccess: onConnectSuccess,
@@ -123,156 +120,99 @@ describe('BasicTest', function() {
         useSSL: testUseSSL
       });
     });
-    waitsFor(function() {
-      return connected;
-    }, "the client should connect", 2000);
-    runs(function() {
-      expect(connected).toBe(true);
-    });
+    waitsFor(() => connected, "the client should connect", 2000);
+    runs(() => expect(connected).toBe(true));
 
-    console.log('Disconnecting...');
-    runs(function() {
-      client.disconnect();
-    });
-    waitsFor(function() {
-      return (connected == false);
-    }, "the client should disconnect", 2000);
-    runs(function() {
-      expect(connected).not.toBe(true);
-    });
+    console.log("Disconnecting...");
+    runs(() => client.disconnect());
+    waitsFor(() => (connected == false), "the client should disconnect", 2000);
+    runs(() => expect(connected).not.toBe(true));
 
-    console.log('Re-Connecting...');
-    runs(function() {
-      client.connect({
-        onSuccess: onConnectSuccess,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
+    console.log("Re-Connecting...");
+    runs(() => client.connect({
+      onSuccess: onConnectSuccess,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
 
-    waitsFor(function() {
-      return connected;
-    }, "the client should re-connect", 2000);
+    waitsFor(() => connected, "the client should re-connect", 2000);
 
-    runs(function() {
-      expect(connected).toBe(true);
-    });
-
+    runs(() => expect(connected).toBe(true));
   });
 
-  it('it should fallback from MQTTv3.1.1 to v3.1', function() {
-    var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+  it("it should fallback from MQTTv3.1.1 to v3.1", function() {
+    const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
     client.onConnectionLost = onConnectionLost;
     expect(client).not.toBe(null);
 
-    console.log('Connecting...');
-    runs(function() {
-      client.connect({
-        onSuccess: onConnectSuccess,
-        onFailure: onConnectFailure,
-        timeout: 1,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return connected;
-    }, "the client should connect", 4000);
-    runs(function() {
-      expect(connected).toBe(true);
-    });
+    console.log("Connecting...");
+    runs(() => client.connect({
+      onSuccess: onConnectSuccess,
+      onFailure: onConnectFailure,
+      timeout: 1,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => connected, "the client should connect", 4000);
+    runs(() => expect(connected).toBe(true));
 
-    console.log('Disconnecting...');
-    runs(function() {
-      client.disconnect();
-    });
-    waitsFor(function() {
-      return (connected == false);
-    }, "the client should disconnect", 2000);
-    runs(function() {
-      expect(connected).not.toBe(true);
-    });
+    console.log("Disconnecting...");
+    runs(() => client.disconnect());
+    waitsFor(() => (connected == false), "the client should disconnect", 2000);
+    runs(() => expect(connected).not.toBe(true));
   });
 
-  it('it should connect to a list of server(HA connection).', function() {
-    var defaultServer = testServer;
-    var defaultPort = testPort;
-    var arrHosts = ['localhost', testServer, ];
-    var arrPorts = [2000, testPort];
-
-    var client = new Paho.Client(defaultServer, defaultPort, testPath, genStr(clientId));
+  it("it should connect to a list of server(HA connection).", function() {
+    const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
     client.onConnectionLost = onConnectionLost;
     expect(client).not.toBe(null);
 
-    console.log('should connect to a available server from list');
-    runs(function() {
-      client.connect({
-        onSuccess: onConnectSuccess,
-        onFailure: onConnectFailure,
-        hosts: arrHosts,
-        ports: arrPorts,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
+    console.log("should connect to a available server from list");
+    runs(() => client.connect({
+      onSuccess: onConnectSuccess,
+      onFailure: onConnectFailure,
+      hosts: ["localhost", testServer],
+      ports: [2000, testPort],
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
 
-    waitsFor(function() {
-      return connected;
-    }, "the client should connect", 2000);
+    waitsFor(() => connected, "the client should connect", 2000);
 
-    runs(function() {
-      expect(connected).toBe(true);
-      //client.disconnect();
-    });
-
+    runs(() => expect(connected).toBe(true)); //client.disconnect();
   });
 
+  it("it should publish and subscribe.", function() {
 
-  it('it should publish and subscribe.', function() {
-
-    var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+    const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
     client.onMessageArrived = messageArrived;
     client.onMessageDelivered = messageDelivered;
 
-    runs(function() {
-      client.connect({
-        onSuccess: onConnectSuccess,
-        onFailure: onConnectFailure,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return connected;
-    }, "the client should connect", 5000);
-    runs(function() {
-      expect(connected).toBe(true);
-    });
+  runs(() => client.connect({
+      onSuccess: onConnectSuccess,
+      onFailure: onConnectFailure,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => connected, "the client should connect", 5000);
+    runs(() => expect(connected).toBe(true));
 
-    console.log('Subscribe a topic...');
-    runs(function() {
-      client.subscribe(strTopic, {
-        onSuccess: onSubscribeSuccess,
-        onFailure: onSubscribeFailure
-      });
-    });
+    console.log("Subscribe a topic...");
+    runs(() => client.subscribe(strTopic, {
+      onSuccess: onSubscribeSuccess,
+      onFailure: onSubscribeFailure
+    }));
 
-    waitsFor(function() {
-      return subscribed;
-    }, "the client should subscribe", 2000);
+    waitsFor(() => subscribed, "the client should subscribe", 2000);
 
-    runs(function() {
-      expect(subscribed).toBe(true);
-    });
+    runs(() => expect(subscribed).toBe(true));
 
-    console.log('Send and receive message...');
+    console.log("Send and receive message...");
     runs(function() {
-      var message = new Paho.Message(strMessageSend);
+      const message = new Paho.Message(strMessageSend);
       message.destinationName = strTopic;
       client.send(message);
     });
-    waitsFor(function() {
-      return isMessageReceived;
-    }, "the client should send and receive a message", 2000);
+    waitsFor(() => isMessageReceived, "the client should send and receive a message", 2000);
     runs(function() {
       //to do Check message sent
       expect(isMessageDelivered).toBe(true);
@@ -282,42 +222,32 @@ describe('BasicTest', function() {
       expect(strMessageReceived).toEqual(strMessageSend);
       //Check topic
       expect(strTopicReceived).toEqual(strTopic);
-
-      //disconnect
-      //client.disconnect();
-
-    });
-
-    console.log('Unsubscribe a topic...');
-    runs(function() {
-      client.unsubscribe(strTopic, {
-        onSuccess: onUnsubscribeSuccess
-      });
-    });
-    waitsFor(function() {
-      return !subscribed;
-    }, "the client should subscribe", 2000);
-    runs(function() {
-      expect(subscribed).toBe(false);
       //disconnect
       //client.disconnect();
     });
+
+    console.log("Unsubscribe a topic...");
+    runs(() => client.unsubscribe(strTopic, {
+      onSuccess: onUnsubscribeSuccess
+    }));
+    waitsFor(() => !subscribed, "the client should subscribe", 2000);
+    runs(() => expect(subscribed).toBe(false));
+      //disconnect
+      //client.disconnect();
 
     //should not receive a message after unsubscribe
     runs(function() {
       //console.log('isMessageReceived',isMessageReceived);
       isMessageDelivered = false;
       isMessageReceived = false;
-      strMessageReceived = '';
-      strTopicReceived = '';
+      strMessageReceived = "";
+      strTopicReceived = "";
 
-      var message = new Paho.Message(genStr(strMessageSend));
+      const message = new Paho.Message(genStr(strMessageSend));
       message.destinationName = strTopic;
       client.send(message);
-    })
-    waitsFor(function() {
-      return isMessageDelivered;
-    }, "the client should send and receive a message", 2000);
+    });
+    waitsFor(() => isMessageDelivered, "the client should send and receive a message", 2000);
 
     runs(function() {
       //to do Check message sent
@@ -325,23 +255,21 @@ describe('BasicTest', function() {
       //Check msg received
       expect(isMessageReceived).toBe(false);
       //Check message
-      expect(strMessageReceived).toEqual('');
+      expect(strMessageReceived).toEqual("");
       //Check topic
-      expect(strTopicReceived).toEqual('');
-
+      expect(strTopicReceived).toEqual("");
       //disconnect
       //client.disconnect();
-
-    })
+    });
   });
 
-  it('check message properties.', function() {
-    var strMsg = 'test Msg';
-    var strDes = topicPrefix + '/test';
-    var message = new Paho.Message(strMsg);
+  it("check message properties.", function() {
+    const strDes = topicPrefix + "/test",
+          strMsg = "test Msg";
+    const message = new Paho.Message(strMsg);
     message.destinationName = strDes;
 
-    console.log('Check default for message with payload.');
+    console.log("Check default for message with payload.");
     expect(message.qos).toBe(0);
     expect(message.duplicate).toBe(false);
     expect(message.retained).toBe(false);
@@ -349,12 +277,10 @@ describe('BasicTest', function() {
     expect(message.payloadBytes.length).toBeGreaterThan(0);
     expect(message.destinationName).toEqual(strDes);
 
-    console.log('Check empty msg to throw error');
-    expect(function() {
-      var empMsg = new Paho.Message();
-    }).toThrow();
+    console.log("Check empty msg to throw error");
+    expect(() => new Paho.Message()).toThrow();
 
-    console.log('Check message qos');
+    console.log("Check message qos");
     message.qos = 0;
     expect(message.qos).toBe(0);
     message.qos = 1;
@@ -370,19 +296,19 @@ describe('BasicTest', function() {
       message.qos = 1;
     }).not.toThrow();
 
-    console.log('Check payload');
-    var strPayload = 'payload is a string';
+    console.log("Check payload");
+    const strPayload = "payload is a string";
     message.payloadString = strPayload;
-    console.log('not allowed to set payload');
+    console.log("not allowed to set payload");
     expect(message.payloadString).not.toEqual(strPayload);
 
-    console.log('Check retained');
+    console.log("Check retained");
     message.retained = false;
     expect(message.retained).toBe(false);
     message.retained = true;
     expect(message.retained).toBe(true);
 
-    console.log('Check duplicate');
+    console.log("Check duplicate");
     message.duplicate = false;
     expect(message.duplicate).toBe(false);
     message.duplicate = true;
@@ -402,53 +328,39 @@ describe('BasicTest', function() {
     */
   });
 
-  it('it should subscribe to multiple topics.', function() {
+  it("it should subscribe to multiple topics.", function() {
 
-    var client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+    const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
     client.onMessageArrived = messageArrived;
     client.onMessageDelivered = messageDelivered;
 
-    runs(function() {
-      client.connect({
-        onSuccess: onConnectSuccess,
-        onFailure: onConnectFailure,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return connected;
-    }, "the client should connect", 5000);
-    runs(function() {
-      expect(connected).toBe(true);
-    });
+    runs(() => client.connect({
+      onSuccess: onConnectSuccess,
+      onFailure: onConnectFailure,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => connected, "the client should connect", 5000);
+    runs(() => expect(connected).toBe(true));
 
-    console.log('Subscribe multiple topics...');
-    runs(function() {
-      client.subscribe([strTopic, strTopic2], {
-        onSuccess: onSubscribeSuccess,
-        onFailure: onSubscribeFailure
-      });
-    });
+    console.log("Subscribe multiple topics...");
+    runs(() => client.subscribe([strTopic, strTopic2], {
+      onSuccess: onSubscribeSuccess,
+      onFailure: onSubscribeFailure
+    }));
 
-    waitsFor(function() {
-      return subscribed;
-    }, "the client should subscribe to multiple topics.", 2000);
+    waitsFor(() => subscribed, "the client should subscribe to multiple topics.", 2000);
 
-    runs(function() {
-      expect(subscribed).toBe(true);
-    });
+    runs(() => expect(subscribed).toBe(true));
 
-    console.log('Send and receive message to the first topic...');
+    console.log("Send and receive message to the first topic...");
     runs(function() {
-      var message= new Paho.Message(strMessageSend);
+      const message= new Paho.Message(strMessageSend);
       message.destinationName = strTopic;
       client.send(message);
     });
 
-    waitsFor(function() {
-      return isMessageReceived;
-    }, "the client should send and receive a message", 2000);
+    waitsFor(() => isMessageReceived, "the client should send and receive a message", 2000);
     runs(function() {
       //to do Check message sent
       expect(isMessageDelivered).toBe(true);
@@ -458,28 +370,21 @@ describe('BasicTest', function() {
       expect(strMessageReceived).toEqual(strMessageSend);
       //Check topic
       expect(strTopicReceived).toEqual(strTopic);
-
       //disconnect
       //client.disconnect();
-
     });
 
-    waitsFor(function() {
-      return isMessageReceived;
-    }, "Send and receive message to the second topic...", 2000);
+    waitsFor(() => isMessageReceived, "Send and receive message to the second topic...", 2000);
     runs(function() {
       isMessageReceived = false;
-      var message= new Paho.Message(strMessageSend2);
+      const message= new Paho.Message(strMessageSend2);
       message.destinationName = strTopic2;
       client.send(message);
-
     });
 
    
 
-    waitsFor(function() {
-      return isMessageReceived;
-    }, "the client should send and receive a message", 2000);
+    waitsFor(() => isMessageReceived, "the client should send and receive a message", 2000);
     runs(function() {
       //to do Check message sent
       expect(isMessageDelivered).toBe(true);
@@ -489,26 +394,17 @@ describe('BasicTest', function() {
       expect(strMessageReceived).toEqual(strMessageSend2);
       //Check topic
       expect(strTopicReceived).toEqual(strTopic2);
-
-      //disconnect
-      //client.disconnect();
-
-    });
-
-    console.log('Unsubscribe from both topics...');
-    runs(function() {
-      client.unsubscribe([strTopic, strTopic2], {
-        onSuccess: onUnsubscribeSuccess
-      });
-    });
-    waitsFor(function() {
-      return !subscribed;
-    }, "the client should subscribe", 2000);
-    runs(function() {
-      expect(subscribed).toBe(false);
       //disconnect
       //client.disconnect();
     });
+
+    console.log("Unsubscribe from both topics...");
+    runs(() => client.unsubscribe([strTopic, strTopic2], {
+      onSuccess: onUnsubscribeSuccess
+    }));
+    waitsFor(() => !subscribed, "the client should subscribe", 2000);
+    runs(() => expect(subscribed).toBe(false));
+      //disconnect
+      //client.disconnect();
   });
-
 });

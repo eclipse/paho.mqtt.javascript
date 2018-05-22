@@ -10,7 +10,8 @@
 		"browser": true,
 		"node": true,
 		"es6": true,
-		"amd": true
+		"amd": true,
+		"jasmine": true
 	},
 	"extends": "eslint:recommended",
 	"globals" : {

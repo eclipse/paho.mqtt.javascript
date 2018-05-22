@@ -1,27 +1,27 @@
-var settings = require('./client-harness');
+const settings = require("./client-harness");
 
 
-var testServer = settings.server;
-var testPort = settings.port;
-var testPath = settings.path;
-var testMqttVersion = settings.mqttVersion;
-var topicPrefix = settings.topicPrefix;
-var testUseSSL = settings.useSSL
+const testServer = settings.server;
+const testPort = settings.port;
+const testPath = settings.path;
+const testMqttVersion = settings.mqttVersion;
+const topicPrefix = settings.topicPrefix;
+const testUseSSL = settings.useSSL;
 
 
-describe('LiveTakeOver', function() {
+describe("LiveTakeOver", function() {
 
   //*************************************************************************
   // Client wrapper - define a client wrapper to ease testing
   //*************************************************************************
-  var MqttClient = function(clientId) {
-    var client = new Paho.Client(testServer, testPort, testPath, clientId);
+  const MqttClient = function(clientId) {
+    const client = new Paho.Client(testServer, testPort, testPath, clientId);
     //states
-    var connected = false;
-    var subscribed = false;
-    var messageReceived = false;
-    var messageDelivered = false;
-    var receivedMessage = null;
+    let connected = false;
+    let subscribed = false;
+    let messageReceived = false;
+    let messageDelivered = false;
+    let receivedMessage = null;
 
     this.states = {
       connected: connected
@@ -37,36 +37,36 @@ describe('LiveTakeOver', function() {
     };
 
     //callbacks
-    var onConnect = function() {
+    const onConnect = function() {
       console.log("%s connected", clientId);
       connected = true;
     };
 
-    var onDisconnect = function(response) {
+    const onDisconnect = function(response) {
       console.log("%s disconnected", clientId);
       connected = false;
     };
 
-    var onSubscribe = function() {
+    const onSubscribe = function() {
       console.log("%s subscribed", clientId);
       subscribed = true;
     };
 
-    var onUnsubscribe = function() {
+    const onUnsubscribe = function() {
       console.log("%s unsubscribed", clientId);
       subscribed = false;
     };
 
-    var onMessageArrived = function(msg) {
+    const onMessageArrived = function(msg) {
       console.log("%s received msg: %s", clientId, msg.payloadString);
       messageReceived = true;
       receivedMessage = msg;
     };
 
-    var onMessageDelivered = function(msg) {
+    const onMessageDelivered = function(msg) {
       console.log("%s delivered message: %s", clientId, msg.payloadString);
       messageDelivered = true;
-    }
+    };
 
     //set callbacks
     client.onMessageArrived = onMessageArrived;
@@ -152,11 +152,11 @@ describe('LiveTakeOver', function() {
     //publish and verify
     this.publish = function(topic, qos, payload) {
       runs(function() {
-        var message = new Paho.Message(payload);
+        const message = new Paho.Message(payload);
         message.destinationName = topic;
         message.qos = qos;
         client.send(message);
-      })
+      });
 
       waitsFor(function() {
         return messageDelivered;
@@ -199,7 +199,7 @@ describe('LiveTakeOver', function() {
         //reset state after each publish
         messageReceived = false;
         receivedMessage = null;
-      })
+      });
     };
   };
 
@@ -207,20 +207,20 @@ describe('LiveTakeOver', function() {
   // Tests
   //*************************************************************************
 
-  it('should be taken over by another client for the actively doing work.', function() {
-    var clientId = "TakeOverClient1";
-    var testTopic = topicPrefix + "FirstClient/Topic";
-    var subscribedQoS = 2;
-    var publishQoS = 1;
-    var payload = "TakeOverPayload";
+  it("should be taken over by another client for the actively doing work.", function() {
+    const clientId = "TakeOverClient1";
+    const testTopic = topicPrefix + "FirstClient/Topic";
+    const subscribedQoS = 2;
+    const publishQoS = 1;
+    const payload = "TakeOverPayload";
 
     //will msg
-    var willMessage = new Paho.Message("will-payload");
+    const willMessage = new Paho.Message("will-payload");
     willMessage.destinationName = topicPrefix + "willTopic";
     willMessage.qos = 2;
     willMessage.retained = true;
 
-    var client1 = new MqttClient(clientId);
+    const client1 = new MqttClient(clientId);
     client1.connect({
       cleanSession: false,
       willMessage: willMessage,
@@ -232,7 +232,7 @@ describe('LiveTakeOver', function() {
     client1.subscribe(testTopic, subscribedQoS);
 
     //publish some messwage
-    for (var i = 0; i < 9; i++) {
+    for (let i = 0; i < 9; i++) {
       client1.publish(testTopic, publishQoS, payload);
       client1.receive(testTopic, publishQoS, subscribedQoS, payload);
     }
@@ -240,7 +240,7 @@ describe('LiveTakeOver', function() {
     // Now lets take over the connection
     // Create a second MQTT client connection with the same clientid. The
     // server should spot this and kick the first client connection off.
-    var client2 = new MqttClient(clientId);
+    const client2 = new MqttClient(clientId);
     client2.connect({
       cleanSession: false,
       willMessage: willMessage,
@@ -262,4 +262,4 @@ describe('LiveTakeOver', function() {
   });
 
 
-})
+});

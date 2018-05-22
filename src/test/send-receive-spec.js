@@ -1,29 +1,29 @@
-var settings = require('./client-harness');
+const settings = require("./client-harness");
 
 
-var testServer = settings.server;
-var testPort = settings.port;
-var testPath = settings.path;
-var testMqttVersion = settings.mqttVersion;
-var topicPrefix = settings.topicPrefix;
-var testUseSSL = settings.useSSL
+const testServer = settings.server;
+const testPort = settings.port;
+const testPath = settings.path;
+const testMqttVersion = settings.mqttVersion;
+const topicPrefix = settings.topicPrefix;
+const testUseSSL = settings.useSSL;
 
 //define a default clientID
-var clientId = "testClient1";
+const clientId = "testClient1";
 
-describe('SendReceive', function() {
+describe("SendReceive", function() {
 
   //*************************************************************************
   // Client wrapper - define a client wrapper to ease testing
   //*************************************************************************
-  var MqttClient = function(clientId) {
-    var client = new Paho.Client(testServer, testPort, testPath, clientId);
+  const MqttClient = function(clientId) {
+    const client = new Paho.Client(testServer, testPort, testPath, clientId);
     //states
-    var connected = false;
-    var subscribed = false;
-    var messageReceived = false;
-    var messageDelivered = false;
-    var receivedMessage = null;
+    let connected = false;
+    let subscribed = false;
+    let messageReceived = false;
+    let messageDelivered = false;
+    let receivedMessage = null;
 
     //reset all states
     this.resetStates = function() {
@@ -35,36 +35,36 @@ describe('SendReceive', function() {
     };
 
     //callbacks
-    var onConnect = function() {
+    const onConnect = function() {
       console.log("%s connected", clientId);
       connected = true;
     };
 
-    var onDisconnect = function(response) {
+    const onDisconnect = function(response) {
       console.log("%s disconnected", clientId);
       connected = false;
     };
 
-    var onSubscribe = function() {
+    const onSubscribe = function() {
       console.log("%s subscribed", clientId);
       subscribed = true;
     };
 
-    var onUnsubscribe = function() {
+    const onUnsubscribe = function() {
       console.log("%s unsubscribed", clientId);
       subscribed = false;
     };
 
-    var onMessageArrived = function(msg) {
+    const onMessageArrived = function(msg) {
       console.log("%s received msg: %s", clientId, msg.payloadString);
       messageReceived = true;
       receivedMessage = msg;
     };
 
-    var onMessageDelivered = function(msg) {
+    const onMessageDelivered = function(msg) {
       console.log("%s delivered message: %s", clientId, msg.payloadString);
       messageDelivered = true;
-    }
+    };
 
     //set callbacks
     client.onMessageArrived = onMessageArrived;
@@ -150,11 +150,11 @@ describe('SendReceive', function() {
     //publish and verify
     this.publish = function(topic, qos, payload) {
       runs(function() {
-        var message = new Paho.Message(payload);
+        const message = new Paho.Message(payload);
         message.destinationName = topic;
         message.qos = qos;
         client.send(message);
-      })
+      });
 
       waitsFor(function() {
         return messageDelivered;
@@ -197,7 +197,7 @@ describe('SendReceive', function() {
         //reset state after each publish
         messageReceived = false;
         receivedMessage = null;
-      })
+      });
     };
   };
 
@@ -205,8 +205,8 @@ describe('SendReceive', function() {
   // Tests
   //*************************************************************************
 
-  it('should connect to a server and disconnect from a server', function() {
-    var client = new MqttClient(clientId);
+  it("should connect to a server and disconnect from a server", function() {
+    const client = new MqttClient(clientId);
 
     //connect and verify
     client.connect({
@@ -219,8 +219,8 @@ describe('SendReceive', function() {
   });
 
 
-  it('should pub/sub using largish messages', function() {
-    var client = new MqttClient(clientId);
+  it("should pub/sub using largish messages", function() {
+    const client = new MqttClient(clientId);
 
     //connect and verify
     client.connect({
@@ -229,8 +229,8 @@ describe('SendReceive', function() {
     });
 
     //subscribe and verify
-    var testTopic = topicPrefix + "pubsub/topic";
-    var subscribedQoS = 0;
+    const testTopic = topicPrefix + "pubsub/topic";
+    const subscribedQoS = 0;
     client.subscribe(testTopic, subscribedQoS);
 
     //unsubscribe and verify
@@ -240,10 +240,10 @@ describe('SendReceive', function() {
     client.subscribe(testTopic, subscribedQoS);
 
     //publish a large message to the topic and verify
-    var publishQoS = 0;
-    var payload = "";
-    var largeSize = 10000;
-    for (var i = 0; i < largeSize; i++) {
+    const publishQoS = 0;
+    let payload = "";
+    const largeSize = 10000;
+    for (let i = 0; i < largeSize; i++) {
       payload += "s";
     }
     client.publish(testTopic, publishQoS, payload);
@@ -256,8 +256,8 @@ describe('SendReceive', function() {
   });
 
 
-  it('should preserve QOS values between publishers and subscribers', function() {
-    var client = new MqttClient(clientId);
+  it("should preserve QOS values between publishers and subscribers", function() {
+    const client = new MqttClient(clientId);
 
     //connect and verify
     client.connect({
@@ -266,16 +266,16 @@ describe('SendReceive', function() {
     });
 
     //subscribe and verify
-    var testTopics = ["pubsub/topic1", "pubsub/topic2", "pubsub/topic3"];
-    var subscribedQoSs = [0, 1, 2];
+    const testTopics = ["pubsub/topic1", "pubsub/topic2", "pubsub/topic3"];
+    const subscribedQoSs = [0, 1, 2];
     for (var i = 0; i < testTopics.length; i++) {
       client.subscribe(topicPrefix + testTopics[i], subscribedQoSs[i]);
     }
 
     //publish, receive and verify
     for (var i = 0; i < testTopics.length; i++) {
-      var payload = "msg-" + i;
-      for (var qos = 0; qos < 3; qos++) {
+      const payload = "msg-" + i;
+      for (let qos = 0; qos < 3; qos++) {
         client.publish(topicPrefix + testTopics[i], qos, payload);
         //receive and verify
         client.receive(topicPrefix + testTopics[i], qos, subscribedQoSs[i], payload);
@@ -286,13 +286,13 @@ describe('SendReceive', function() {
     client.disconnect();
   });
 
-  it('should work using multiple publishers and subscribers.', function() {
+  it("should work using multiple publishers and subscribers.", function() {
     //topic to publish
-    var topic = topicPrefix + "multiplePubSub/topic";
+    const topic = topicPrefix + "multiplePubSub/topic";
 
     //create publishers and connect
-    var publishers = [];
-    var publishersNum = 2;
+    const publishers = [];
+    const publishersNum = 2;
     for (var i = 0; i < publishersNum; i++) {
       publishers[i] = new MqttClient("publisher-" + i);
       publishers[i].connect({
@@ -302,9 +302,9 @@ describe('SendReceive', function() {
     }
 
     //create subscribers and connect
-    var subscribedQoS = 0;
-    var subscribers = [];
-    var subscribersNum = 10;
+    const subscribedQoS = 0;
+    const subscribers = [];
+    const subscribersNum = 10;
     for (var i = 0; i < subscribersNum; i++) {
       subscribers[i] = new MqttClient("subscriber-" + i);
       subscribers[i].connect({
@@ -315,13 +315,13 @@ describe('SendReceive', function() {
     }
 
     //do publish and receive with verify
-    var publishQoS = 0;
-    var pubishMsgNum = 10;
-    for (var m = 0; m < pubishMsgNum; m++) {
-      var payload = "multi-pub-sub-msg-" + m;
+    const publishQoS = 0;
+    const pubishMsgNum = 10;
+    for (let m = 0; m < pubishMsgNum; m++) {
+      const payload = "multi-pub-sub-msg-" + m;
       for (var i = 0; i < publishersNum; i++) {
         publishers[i].publish(topic, publishQoS, payload);
-        for (var j = 0; j < subscribersNum; j++) {
+        for (let j = 0; j < subscribersNum; j++) {
           subscribers[j].receive(topic, publishQoS, subscribedQoS, payload);
         }
       }
@@ -337,9 +337,9 @@ describe('SendReceive', function() {
 
   });
 
-  it('should clean up before re-connecting if cleanSession flag is set.', function() {
+  it("should clean up before re-connecting if cleanSession flag is set.", function() {
     //connect with cleanSession flag=false and verify
-    var client = new MqttClient("client-1");
+    const client = new MqttClient("client-1");
     client.connect({
       cleanSession: false,
       mqttVersion: testMqttVersion,
@@ -347,20 +347,20 @@ describe('SendReceive', function() {
     });
 
     //subscribe and verify
-    var testTopic = topicPrefix + "cleanSession/topic1";
-    var subscribedQoS = 0;
+    const testTopic = topicPrefix + "cleanSession/topic1";
+    const subscribedQoS = 0;
     client.subscribe(testTopic, subscribedQoS);
 
     //publish and verify
-    var publishQoS = 1;
-    var payload = "cleanSession-msg";
+    const publishQoS = 1;
+    const payload = "cleanSession-msg";
     client.publish(testTopic, publishQoS, payload);
     client.receive(testTopic, publishQoS, subscribedQoS, payload);
     //disconnect
     client.disconnect();
 
     // Send a message from another client, to our durable subscription.
-    var anotherClient = new MqttClient("anotherClient-1");
+    const anotherClient = new MqttClient("anotherClient-1");
     anotherClient.connect({
       cleanSession: true,
       mqttVersion: testMqttVersion,
@@ -389,4 +389,4 @@ describe('SendReceive', function() {
   });
 
 
-})
+});

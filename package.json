@@ -44,7 +44,7 @@
 		"postinstall": "npm run build",
 		"build": "webpack --config ./webpack.dev.js",
 		"dev": "webpack-dev-server --config ./webpack.dev.js",
-		"lint": "eslint src -c ./.eslintrc.json --ext js --ignore-pattern test",
+		"lint": "eslint src/test -c ./.eslintrc.json --ext js",
 		"test": "jasmine-node --verbose --forceexit src/test/"
 	}
 }

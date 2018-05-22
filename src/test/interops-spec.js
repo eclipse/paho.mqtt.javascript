@@ -1,45 +1,33 @@
-var settings = require('./client-harness');
+/* eslint-disable no-console */
+const settings = require("./client-harness");
 
 
-var testServer = settings.interopServer;
-var testPort = settings.interopPort;
-var testPath = settings.interopPath;
-var topicPrefix = settings.topicPrefix;
-var testUseSSL = settings.useSSL
-var testMqttVersion = settings.mqttVersion;
+const testMqttVersion = settings.mqttVersion,
+      testPath        = settings.path,
+      testPort        = settings.port,
+      testServer      = settings.server,
+      testUseSSL      = settings.useSSL,
+      topicPrefix     = settings.topicPrefix,
+      topics          = ["TopicA", "TopicA/B", "Topic/C", "TopicA/C", "/TopicA"];
+      // nosubscribetopics = ["test/nosubscribe"],
+      // wildtopics        = ["TopicA/+", "+/C", "#", "/#", "/+", "+/+", "TopicA/#"];
 
-var genStr = function(str) {
-  var time = new Date();
-  return str + '.' + time.getTime();
-};
-
-var topics = ["TopicA", "TopicA/B", "Topic/C", "TopicA/C", "/TopicA"];
-var wildtopics = ["TopicA/+", "+/C", "#", "/#", "/+", "+/+", "TopicA/#"];
-var nosubscribetopics = ["test/nosubscribe", ];
-
-describe('InteropsTests', function() {
-  var clientId = this.description;
-  var client = null;
-  var failure = false;
-  var subscribed = false;
-  var disconnectError = null;
-  var disconnectErrorMsg = null;
-
-  var subscribed = false;
-  var messageReceivedCount = 0;
-  var messagePublishedCount = 0;
-  var sendingComplete = false;
-  var receivingComplete = false;
+describe("InteropsTests", function() {
+  // eslint-disable-next-line no-invalid-this
+  let client                = null,
+      connected             = false,
+      messagePublishedCount = 0,
+      messageReceivedCount  = 0,
+      receivingComplete     = false,
+      sendingComplete       = false,
+      subscribed            = false;
 
   beforeEach(function() {
-    failure = false;
-    subscribed = false;
-    disconnectError = null;
-    disconnectErrorMsg = null;
-    messageReceivedCount = 0
+    messageReceivedCount  = 0;
     messagePublishedCount = 0;
-    sendingComplete = false;
-    receivingComplete = false;
+    receivingComplete     = false;
+    sendingComplete       = false;
+    subscribed            = false;
   });
 
   afterEach(function() {
@@ -49,7 +37,7 @@ describe('InteropsTests', function() {
     client = null;
   });
 
-  var callbacks = {
+  const callbacks = {
     onConnectionLost: function(err) {
       console.log("connectionLost " + err.errorMessage);
     },
@@ -60,20 +48,20 @@ describe('InteropsTests', function() {
         receivingComplete = true;
       }
     },
-    onConnectSuccess: function(response) {
+    onConnectSuccess: function() {
       connected = true;
     },
     onConnectFailure: function(err) {
-      console.log('Connect failed %s %s', err.errCode, err.errorMessage);
+      console.log("Connect failed %s %s", err.errCode, err.errorMessage);
     },
-    onDisconnectSuccess: function(response) {
+    onDisconnectSuccess: function() {
       connected = false;
-      console.log("Disconnected from server")
+      console.log("Disconnected from server");
     },
     onDisconnectFailure: function(err) {
-      console.log('Disconnect failed %s %s', err.errCode, err.errorMessage);
+      console.log("Disconnect failed %s %s", err.errCode, err.errorMessage);
     },
-    onMessageDelivered: function(reponse) {
+    onMessageDelivered: function() {
       messagePublishedCount++;
       if (messagePublishedCount == 3) {
         sendingComplete = true;
@@ -84,114 +72,74 @@ describe('InteropsTests', function() {
     },
   };
 
-  it('should connect, disconnect, subscribe, publish and receive messages', function() {
+  it("should connect, disconnect, subscribe, publish and receive messages", function() {
     client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
     client.onMessageArrived = callbacks.onMessageArrived;
     client.onMessageDelivered = callbacks.onMessageDelivered;
 
     expect(client).not.toBe(null);
 
-    runs(function() {
-      client.connect({
-        onSuccess: callbacks.onConnectSuccess,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return client.isConnected();
-    }, "the client should connect", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(true);
-    });
+    runs(() => client.connect({
+      onSuccess: callbacks.onConnectSuccess,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => client.isConnected(), "the client should connect", 5000);
+    runs(() => expect(client.isConnected()).toBe(true));
+
+    runs(() => client.disconnect());
+    waitsFor(() => true, "the client should disconnect", 5000);
+    runs(() => expect(client.isConnected()).toBe(false));
+
+  runs(client.connect({
+      onSuccess: callbacks.onConnectSuccess,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => client.isConnected(), "the client should connect again", 5000);
+    runs(() => expect(client.isConnected()).toBe(true));
+
+    runs(() => client.subscribe(topicPrefix + topics[0], {
+      qos: 2,
+      onSuccess: callbacks.onSubscribeSuccess
+    }));
+    waitsFor(() => subscribed, "the client should subscribe", 2000);
+    runs(() => expect(subscribed).toBe(true));
 
     runs(function() {
-      client.disconnect();
-    });
-    waitsFor(function() {
-      return true;
-    }, "the client should disconnect", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(false);
-    });
-
-    runs(function() {
-      client.connect({
-        onSuccess: callbacks.onConnectSuccess,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return client.isConnected();
-    }, "the client should connect again", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(true);
-    });
-
-    runs(function() {
-      client.subscribe(topicPrefix + topics[0], {
-        qos: 2,
-        onSuccess: callbacks.onSubscribeSuccess
-      });
-    });
-    waitsFor(function() {
-      return subscribed;
-    }, "the client should subscribe", 2000);
-    runs(function() {
-      expect(subscribed).toBe(true);
-    });
-
-    runs(function() {
-      for (var i = 0; i < 3; i++) {
-        var message = new Paho.Message("qos " + i);
+      for (let i = 0; i < 3; i++) {
+        const message = new Paho.Message("qos " + i);
         message.destinationName = topicPrefix + topics[0];
         message.qos = i;
         client.send(message);
       }
     });
-    waitsFor(function() {
-      return sendingComplete;
-    }, "the client should send 3 messages", 5000);
-    waitsFor(function() {
-      return receivingComplete;
-    }, "the client should receive 3 messages", 5000);
+    waitsFor(() => sendingComplete, "the client should send 3 messages", 5000);
+    waitsFor(() => receivingComplete, "the client should receive 3 messages", 5000);
     runs(function() {
       expect(messagePublishedCount).toBe(3);
-      expect(messageReceivedCount).toBe(3)
+      expect(messageReceivedCount).toBe(3);
     });
 
-    runs(function() {
-      client.disconnect({
-        onSuccess: callbacks.onDisconnectSuccess
-      });
-    });
-    waitsFor(function() {
-      return connected;
-    }, "the client should disconnect", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(false);
-    });
+    runs(() => client.disconnect({
+      onSuccess: callbacks.onDisconnectSuccess
+    }));
+    waitsFor(() => connected, "the client should disconnect", 5000);
+    runs(() => expect(client.isConnected()).toBe(false));
   });
 
-  it('should connect, attempt to connect again and fail', function() {
-    var exception = false;
+  it("should connect, attempt to connect again and fail", function() {
     client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
+    let exception = false;
     expect(client).not.toBe(null);
 
-    runs(function() {
-      client.connect({
-        onSuccess: callbacks.onConnectSuccess,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return client.isConnected();
-    }, "the client should connect", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(true);
-    });
+  runs(() => client.connect({
+      onSuccess: callbacks.onConnectSuccess,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => client.isConnected(), "the client should connect", 5000);
+    runs(() => expect(client.isConnected()).toBe(true));
 
     runs(function() {
       try {
@@ -201,69 +149,49 @@ describe('InteropsTests', function() {
           useSSL: testUseSSL
         });
       } catch (e) {
-        console.log(e.message)
+        console.log(e.message);
         if (e.message == "AMQJS0011E Invalid state already connected.") {
-          exception = true
+          exception = true;
         }
       }
     });
-    runs(function() {
-      expect(exception).toBe(true);
-    });
+    runs(() => expect(exception).toBe(true));
   });
 
-  it('should connect successfully with a 0 length clientid with cleansession true', function() {
+  it("should connect successfully with a 0 length clientid with cleansession true", function() {
     client = new Paho.Client(testServer, testPort, testPath, "");
     expect(client).not.toBe(null);
 
-    runs(function() {
-      client.connect({
-        cleanSession: true,
-        onSuccess: callbacks.onConnectSuccess,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return client.isConnected();
-    }, "the client should connect", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(true);
-    });
+  runs(() => client.connect({
+      cleanSession: true,
+      onSuccess: callbacks.onConnectSuccess,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => client.isConnected(), "the client should connect", 5000);
+    runs(() => expect(client.isConnected()).toBe(true));
 
-    runs(function() {
-      client.disconnect();
-    });
-    waitsFor(function() {
-      return true;
-    }, "the client should disconnect", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(false);
-    });
+    runs(() => client.disconnect());
+    waitsFor(() => true, "the client should disconnect", 5000);
+    runs(() => expect(client.isConnected()).toBe(false));
   });
 
-  it('should fail to connect successfully with a 0 length clientid with cleansession false', function() {
-    var connectFail = false;
-    var failCallback = function(err) {
+  it("should fail to connect successfully with a 0 length clientid with cleansession false", function() {
+    let connectFail = false;
+    const failCallback = function() {
       connectFail = true;
-    }
+    };
     client = new Paho.Client(testServer, testPort, testPath, "");
     expect(client).not.toBe(null);
 
-    runs(function() {
-      client.connect({
-        cleanSession: false,
-        onFailure: failCallback,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
-    waitsFor(function() {
-      return connectFail
-    }, "the client should fail to connect", 5000);
-    runs(function() {
-      expect(client.isConnected()).toBe(false);
-    });
+    runs(() => client.connect({
+      cleanSession: false,
+      onFailure: failCallback,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
+    waitsFor(() => connectFail, "the client should fail to connect", 5000);
+    runs(() => expect(client.isConnected()).toBe(false));
   });
   /*
   it('should queue up messages on the server for offline clients', function() {
@@ -403,4 +331,4 @@ describe('InteropsTests', function() {
   	});
   });
   */
-})
+});
