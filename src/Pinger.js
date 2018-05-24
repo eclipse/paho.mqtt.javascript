@@ -1,9 +1,9 @@
 /**
-* Repeat keepalive requests, monitor responses.
-* @ignore
-*/
+  * Repeat keepalive requests, monitor responses.
+  * @ignore
+  */
 
-import { ERROR, MESSAGE_TYPE, format } from "./definitions";
+import { ERROR, global, MESSAGE_TYPE, format } from "./definitions";
 import WireMessage from "./WireMessage";
 
 function doTimeout(pinger) {
@@ -17,9 +17,8 @@ function doTimeout(pinger) {
 * @ignore
 */
 export default class {
-  constructor(client, self, keepAliveInterval) {
+  constructor(client, keepAliveInterval) {
     this._client = client;
-    this._self = self;
     this._keepAliveInterval = keepAliveInterval * 1000;
     this.isReset = false;
 
@@ -35,19 +34,19 @@ export default class {
       this.isReset = false;
       this._client._trace("Pinger.doPing", "send PINGREQ");
       this._client.socket.send(this.pingReq);
-      this.timeout = this._self.setTimeout(doTimeout(this), this._keepAliveInterval);
+      this.timeout = global.setTimeout(doTimeout(this), this._keepAliveInterval);
     }
   }
 
   reset() {
     this.isReset = true;
-    this._self.clearTimeout(this.timeout);
+    global.clearTimeout(this.timeout);
     if(this._keepAliveInterval > 0) {
       this.timeout = setTimeout(doTimeout(this), this._keepAliveInterval);
     }
   }
 
   cancel() {
-    this._self.clearTimeout(this.timeout);
+    global.clearTimeout(this.timeout);
   }
 }

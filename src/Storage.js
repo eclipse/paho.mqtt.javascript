@@ -1,3 +1,4 @@
+import { global } from "./definitions";
 let Storage;
 
 function localStorageProvider(nativeStorage) {

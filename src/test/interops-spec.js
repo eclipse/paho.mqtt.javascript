@@ -91,7 +91,7 @@ describe("InteropsTests", function() {
     waitsFor(() => true, "the client should disconnect", 5000);
     runs(() => expect(client.isConnected()).toBe(false));
 
-  runs(client.connect({
+    runs(() => client.connect({
       onSuccess: callbacks.onConnectSuccess,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL

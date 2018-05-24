@@ -1,12 +1,12 @@
+/* eslint-disable no-console */
 const settings = require("./client-harness");
 
-
-const testServer = settings.server;
-const testPort = settings.port;
-const testPath = settings.path;
-const testMqttVersion = settings.mqttVersion;
-const topicPrefix = settings.topicPrefix;
-const testUseSSL = settings.useSSL;
+const testMqttVersion = settings.mqttVersion,
+      testPath        = settings.path,
+      testPort        = settings.port,
+      testServer      = settings.server,
+      testUseSSL      = settings.useSSL,
+      topicPrefix     = settings.topicPrefix;
 
 
 describe("LiveTakeOver", function() {
@@ -17,11 +17,11 @@ describe("LiveTakeOver", function() {
   const MqttClient = function(clientId) {
     const client = new Paho.Client(testServer, testPort, testPath, clientId);
     //states
-    let connected = false;
-    let subscribed = false;
-    let messageReceived = false;
-    let messageDelivered = false;
-    let receivedMessage = null;
+    let connected = false,
+        messageDelivered = false,
+        messageReceived = false,
+        receivedMessage = null,
+        subscribed = false;
 
     this.states = {
       connected: connected
@@ -42,7 +42,7 @@ describe("LiveTakeOver", function() {
       connected = true;
     };
 
-    const onDisconnect = function(response) {
+    const onDisconnect = function() {
       console.log("%s disconnected", clientId);
       connected = false;
     };
@@ -77,7 +77,7 @@ describe("LiveTakeOver", function() {
     //connect and verify
     this.connect = function(connectOptions) {
       connectOptions = connectOptions || {};
-      if (!connectOptions.hasOwnProperty("onSuccess")) {
+      if(!connectOptions.hasOwnProperty("onSuccess")) {
         connectOptions.onSuccess = onConnect;
         connectOptions.mqttVersion = testMqttVersion;
         connectOptions.useSSL = testUseSSL;
@@ -86,11 +86,9 @@ describe("LiveTakeOver", function() {
         client.connect(connectOptions);
       });
 
-      waitsFor(function() {
-        return connected;
-      }, "the client should connect", 10000);
+      waitsFor(() => connected, "the client should connect", 10000);
 
-      runs(function() {
+      runs(() => {
         expect(connected).toBe(true);
         //reset state
         connected = false;
@@ -99,33 +97,23 @@ describe("LiveTakeOver", function() {
 
     //disconnect and verify
     this.disconnect = function() {
-      runs(function() {
-        client.disconnect();
-      });
+      runs(() => client.disconnect());
 
-      waitsFor(function() {
-        return !connected;
-      }, "the client should disconnect", 10000);
+      waitsFor(() => !connected, "the client should disconnect", 10000);
 
-      runs(function() {
-        expect(connected).not.toBe(true);
-      });
+      runs(() => expect(connected).not.toBe(true));
     };
 
     //subscribe and verify
     this.subscribe = function(topic, qos) {
-      runs(function() {
-        client.subscribe(topic, {
-          qos: qos,
-          onSuccess: onSubscribe
-        });
-      });
+      runs(() => client.subscribe(topic, {
+        qos: qos,
+        onSuccess: onSubscribe
+      }));
 
-      waitsFor(function() {
-        return subscribed;
-      }, "the client should subscribe", 2000);
+      waitsFor(() => subscribed, "the client should subscribe", 2000);
 
-      runs(function() {
+      runs(() => {
         expect(subscribed).toBe(true);
         //reset state
         subscribed = false;
@@ -134,19 +122,13 @@ describe("LiveTakeOver", function() {
 
     //unsubscribe and verify
     this.unsubscribe = function(topic) {
-      runs(function() {
-        client.unsubscribe(topic, {
-          onSuccess: onUnsubscribe
-        });
-      });
+      runs(() => client.unsubscribe(topic, {
+        onSuccess: onUnsubscribe
+      }));
 
-      waitsFor(function() {
-        return !subscribed;
-      }, "the client should subscribe", 2000);
+      waitsFor(() => !subscribed, "the client should subscribe", 2000);
 
-      runs(function() {
-        expect(subscribed).not.toBe(true);
-      });
+      runs(() => expect(subscribed).not.toBe(true));
     };
 
     //publish and verify
@@ -158,11 +140,9 @@ describe("LiveTakeOver", function() {
         client.send(message);
       });
 
-      waitsFor(function() {
-        return messageDelivered;
-      }, "the client should delivered a message", 10000);
+      waitsFor(() => messageDelivered, "the client should delivered a message", 10000);
 
-      runs(function() {
+      runs(() => {
         //reset state
         messageDelivered = false;
       });
@@ -172,7 +152,7 @@ describe("LiveTakeOver", function() {
     //verify no message received
     this.receiveNone = function() {
       waits(2000);
-      runs(function() {
+      runs(() => {
         expect(messageReceived).toBe(false);
         expect(receivedMessage).toBeNull();
       });
@@ -181,9 +161,7 @@ describe("LiveTakeOver", function() {
     //verify the receive message
     this.receive = function(expectedTopic, publishedQoS, subscribedQoS, expectedPayload) {
 
-      waitsFor(function() {
-        return messageReceived;
-      }, "the client should send and receive a message", 10000);
+      waitsFor(() => messageReceived, "the client should send and receive a message", 10000);
 
       runs(function() {
         expect(messageReceived).toBe(true);
@@ -208,11 +186,11 @@ describe("LiveTakeOver", function() {
   //*************************************************************************
 
   it("should be taken over by another client for the actively doing work.", function() {
-    const clientId = "TakeOverClient1";
-    const testTopic = topicPrefix + "FirstClient/Topic";
-    const subscribedQoS = 2;
-    const publishQoS = 1;
-    const payload = "TakeOverPayload";
+    const clientId = "TakeOverClient1",
+          payload = "TakeOverPayload",
+          publishQoS = 1,
+          subscribedQoS = 2,
+          testTopic = topicPrefix + "FirstClient/Topic";
 
     //will msg
     const willMessage = new Paho.Message("will-payload");
@@ -248,9 +226,7 @@ describe("LiveTakeOver", function() {
       useSSL: testUseSSL
     });
 
-    waitsFor(function() {
-      return !client1.states.connected;
-    }, "the previous client should be disconnected", 10000);
+    waitsFor(() => !client1.states.connected, "the previous client should be disconnected", 10000);
 
     // We should have taken over the first Client's subscription...
     //Now check we have grabbed his subscription by publishing.
@@ -260,6 +236,4 @@ describe("LiveTakeOver", function() {
     //disconnect
     client2.disconnect();
   });
-
-
 });

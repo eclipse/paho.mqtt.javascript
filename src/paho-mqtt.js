@@ -37,12 +37,12 @@
  * <p>
  * The API consists of two main objects:
  * <dl>
- * <dt><b>{@link Paho.Client}</b></dt>
+ * <dt><b>{@link Client}</b></dt>
  * <dd>This contains methods that provide the functionality of the API,
  * including provision of callbacks that notify the application when a message
  * arrives from or is delivered to the messaging server,
  * or when the status of its connection to the messaging server changes.</dd>
- * <dt><b>{@link Paho.Message}</b></dt>
+ * <dt><b>{@link Message}</b></dt>
  * <dd>This encapsulates the payload of the message along with various attributes
  * associated with its delivery, in particular the destination to which it has
  * been (or is about to be) sent.</dd>
@@ -55,7 +55,7 @@
  * Example:
  *
  * <code><pre>
-var client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
+var client = new Paho.Client(location.hostname, Number(location.port), "clientId");
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
 client.connect({onSuccess:onConnect});
@@ -64,7 +64,7 @@ function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
   client.subscribe("/World");
-  var message = new Paho.MQTT.Message("Hello");
+  var message = new Paho.Message("Hello");
   message.destinationName = "/World";
   client.send(message);
 };

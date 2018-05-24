@@ -1,26 +1,29 @@
-const webpack = require('webpack'),
-  path = require('path'),
-  fs = require('fs'),
-  CopyWebpackPlugin = require('copy-webpack-plugin'),
-  ExtractTextPlugin = require('extract-text-webpack-plugin'),
-  HtmlWebpackPlugin = require('html-webpack-plugin'),
+const webpack     = require('webpack'),
+      path        = require('path'),
+      fs          = require('fs'),
+      CleanPlugin = require('clean-webpack-plugin'),
+          
+      CopyWebpackPlugin = require('copy-webpack-plugin'),
+      ExtractTextPlugin = require('extract-text-webpack-plugin'),
+      HtmlWebpackPlugin = require('html-webpack-plugin'),
 
   extractCSS = new ExtractTextPlugin({
     filename: '[name].css'
   });
 
-const pkgJson = require('./package.json'),
+const pkgJson = require('../package.json'),
   output = {
-    path: path.join(__dirname, 'dist'),
+    path: path.join(__dirname, '../dist'),
     filename: '[name].js',
     pathinfo: true,
-    publicPath: '/'
+    publicPath: './'
   };
 
 module.exports = [{
   devtool: 'source-map',
   entry: {
-    'paho.mqtt.javascript': './src'
+    'paho.mqtt.javascript': path.join(__dirname, '../src'),
+    'paho.mqtt.javascript.min': path.join(__dirname, '../src')
   },
   output: Object.assign({
     library: "Paho",
@@ -31,16 +34,32 @@ module.exports = [{
   module: {
     rules: [{
       test:    /\.js$/i,
-      include: path.resolve(__dirname, 'src'),
+      include: path.resolve(__dirname, '../src'),
       use:     ['babel-loader']
     }]
   },
   plugins: [
+    new CleanPlugin(['dist'], {
+      root: path.resolve(__dirname, '..')
+    }),
     new webpack.EnvironmentPlugin({
       VERSION: pkgJson.version
     }),
+    new webpack.optimize.UglifyJsPlugin({
+      sourceMap: false,
+      comments: false,
+      compress: {
+        drop_console: true
+      },
+      mangle: true,
+      sourceMap: false,
+      include: /.min.js$/
+    }),
+    new webpack.LoaderOptionsPlugin({
+      minimize: true
+    }),
     new webpack.BannerPlugin({
-      banner: fs.readFileSync(path.join(__dirname, 'src/header.txt'), {
+      banner: fs.readFileSync(path.join(__dirname, 'header.txt'), {
         encoding: 'utf8'
       }),
       raw: true
@@ -49,27 +68,15 @@ module.exports = [{
 }, {
   devtool: 'source-map',
   entry: {
-    'utility': './utility/utility.js'
+    'utility': path.join(__dirname, '../utility/utility.js')
   },
   output,
   target: 'web',
-  devServer: {
-    hot: false,
-    inline: true,
-    progress: true,
-    https: false,
-    proxy: {
-      '/eclipse': {
-        target: 'http://iot.eclipse.org:443'
-        //, agent: require('http-proxy-agent')('http://localhost:3128')
-      }
-    }
-  },
 
   module: {
     rules: [{
       test:    /\.js$/i,
-      include: path.resolve(__dirname, 'src'),
+      include: path.resolve(__dirname, '../src'),
       use:     ['babel-loader']
     }, {
       test: /\.css$/i,
@@ -106,9 +113,9 @@ module.exports = [{
 
   plugins: [
     new CopyWebpackPlugin([
-      "./utility/background.js",
-      "./utility/manifest.json",
-      './utility/paho-small-logo.png'
+      path.join(__dirname, "../utility/background.js"),
+      path.join(__dirname, "../utility/manifest.json"),
+      path.join(__dirname, "../utility/paho-small-logo.png")
     ]),
     extractCSS,
     new webpack.EnvironmentPlugin({
@@ -116,7 +123,7 @@ module.exports = [{
     }),
     new HtmlWebpackPlugin({
       filename: 'index.html',
-      template: `${__dirname}/utility/index.html`
+      template: path.join(__dirname, '../utility/index.html')
     }),
     // display relative path of module on Hot Module Replacement
     new webpack.NamedModulesPlugin(),

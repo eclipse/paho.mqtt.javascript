@@ -58,7 +58,7 @@ describe("BasicTest", function() {
 
   function onConnectFailure(err) {
     connected = false;
-    console.log("Connect fail. ErrorCode: %s, ErrorMsg: %s", err.errCode, err.errorMessage);
+    console.error("Connect fail. ErrorCode: %s, ErrorMsg: %s", err.errCode, err.errorMessage);
   }
 
   function onSubscribeSuccess() {
@@ -68,7 +68,7 @@ describe("BasicTest", function() {
 
   function onSubscribeFailure(err) {
     subscribed = false;
-    console.log("subscribe fail. ErrorCode: %s, ErrorMsg: %s", err.errCode, err.errorMessage);
+    console.error("subscribe fail. ErrorCode: %s, ErrorMsg: %s", err.errCode, err.errorMessage);
   }
 
   function onUnsubscribeSuccess() {
@@ -172,6 +172,7 @@ describe("BasicTest", function() {
       onFailure: onConnectFailure,
       hosts: ["localhost", testServer],
       ports: [2000, testPort],
+      protocols: ["ws", "ws"],
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));

@@ -1,9 +1,11 @@
+import { ERROR, UTF8Length, format, parseUTF8, stringToUTF8 } from "./definitions";
+
 /**
 * An application message, sent or received.
 * <p>
 * All attributes may be null, which implies the default values.
 *
-* @name Paho.Message
+* @name Message
 * @constructor
 * @param {String|ArrayBuffer} payload The message data to be sent.
 * <p>
@@ -32,9 +34,6 @@
 *                     This is only set on messages received from the server.
 *
 */
-
-import { ERROR, UTF8Length, format, parseUTF8, stringToUTF8 } from "./definitions";
-
 export default class {
   constructor(newPayload) {
     let payload;

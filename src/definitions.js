@@ -201,5 +201,6 @@ module.exports = {
   stringToUTF8,
   UTF8Length,
   parseUTF8,
-  uriRegex
+  uriRegex,
+  global: (typeof global === "undefined") ? window : global
 };

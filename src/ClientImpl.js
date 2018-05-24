@@ -1,4 +1,4 @@
-import { ERROR, MESSAGE_TYPE, format, parseUTF8 } from "./definitions";
+import { ERROR, format, global, MESSAGE_TYPE, parseUTF8 } from "./definitions";
 import Message from "./Message";
 import Pinger from "./Pinger";
 import Socket from "./Socket";
@@ -283,7 +283,7 @@ export default class {
     }
 
     if(subscribeOptions.timeout) {
-      wireMessage.timeOut = new Timeout(this, self, subscribeOptions.timeout, subscribeOptions.onFailure,
+      wireMessage.timeOut = new Timeout(this, subscribeOptions.timeout, subscribeOptions.onFailure,
         [{
           invocationContext: subscribeOptions.invocationContext,
           errorCode:         ERROR.SUBSCRIBE_TIMEOUT.code,
@@ -316,7 +316,7 @@ export default class {
       };
     }
     if(unsubscribeOptions.timeout) {
-      wireMessage.timeOut = new Timeout(this, self, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
+      wireMessage.timeOut = new Timeout(this, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
         [{
           invocationContext: unsubscribeOptions.invocationContext,
           errorCode:         ERROR.UNSUBSCRIBE_TIMEOUT.code,
@@ -440,13 +440,13 @@ export default class {
       mqttVersion:  this.connectOptions.mqttVersion,
     });
 
-    this.sendPinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
-    this.receivePinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
+    this.sendPinger = new Pinger(this, this.connectOptions.keepAliveInterval);
+    this.receivePinger = new Pinger(this, this.connectOptions.keepAliveInterval);
     if(this._connectTimeout) {
       this._connectTimeout.cancel();
       this._connectTimeout = null;
     }
-    this._connectTimeout = new Timeout(this, self, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
+    this._connectTimeout = new Timeout(this, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
   }
 
   // Schedule a new message to be sent over the Sockets
@@ -943,7 +943,7 @@ export default class {
 
     if(errorCode !== undefined && this._reconnecting) {
       // Continue automatic reconnect process
-      this._reconnectTimeout = new Timeout(this, self, this._reconnectInterval, this._reconnect);
+      this._reconnectTimeout = new Timeout(this, this._reconnectInterval, this._reconnect);
       return;
     }
 

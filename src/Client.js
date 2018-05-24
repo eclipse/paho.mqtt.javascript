@@ -2,76 +2,6 @@
 // Public Programming interface.
 // ------------------------------------------------------------------------
 
-/**
-* The JavaScript application communicates to the server using a {@link Paho.Client} object.
-* <p>
-* Most applications will create just one Client object and then call its connect() method,
-* however applications can create more than one Client object if they wish.
-* In this case the combination of host, port and clientId attributes must be different for each Client object.
-* <p>
-* The send, subscribe and unsubscribe methods are implemented as asynchronous JavaScript methods
-* (even though the underlying protocol exchange might be synchronous in nature).
-* This means they signal their completion by calling back to the application,
-* via Success or Failure callback functions provided by the application on the method in question.
-* Such callbacks are called at most once per method invocation and do not persist beyond the lifetime
-* of the script that made the invocation.
-* <p>
-* In contrast there are some callback functions, most notably <i>onMessageArrived</i>,
-* that are defined on the {@link Paho.Client} object.
-* These may get called multiple times, and aren't directly related to specific method invocations made by the client.
-*
-* @name Paho.Client
-*
-* @constructor
-*
-* @param {string} host - the address of the messaging server, as a fully qualified WebSocket URI, as a DNS name or dotted decimal IP address.
-* @param {number} port - the port number to connect to - only required if host is not a URI
-* @param {string} path - the path on the host to connect to - only used if host is not a URI. Default: '/mqtt'.
-* @param {string} clientId - the Messaging client identifier, between 1 and 23 characters in length.
-*
-* @property {string} host - <i>read only</i> the server's DNS hostname or dotted decimal IP address.
-* @property {number} port - <i>read only</i> the server's port.
-* @property {string} path - <i>read only</i> the server's path.
-* @property {string} clientId - <i>read only</i> used when connecting to the server.
-* @property {function} onConnectionLost - called when a connection has been lost.
-*                            after a connect() method has succeeded.
-*                            Establish the call back used when a connection has been lost. The connection may be
-*                            lost because the client initiates a disconnect or because the server or network
-*                            cause the client to be disconnected. The disconnect call back may be called without
-*                            the connectionComplete call back being invoked if, for example the client fails to
-*                            connect.
-*                            A single response object parameter is passed to the onConnectionLost callback containing the following fields:
-*                            <ol>
-*                            <li>errorCode
-*                            <li>errorMessage
-*                            </ol>
-* @property {function} onMessageDelivered - called when a message has been delivered.
-*                            All processing that this Client will ever do has been completed. So, for example,
-*                            in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
-*                            and the message has been removed from persistent storage before this callback is invoked.
-*                            Parameters passed to the onMessageDelivered callback are:
-*                            <ol>
-*                            <li>{@link Paho.Message} that was delivered.
-*                            </ol>
-* @property {function} onMessageArrived - called when a message has arrived in this Paho.client.
-*                            Parameters passed to the onMessageArrived callback are:
-*                            <ol>
-*                            <li>{@link Paho.Message} that has arrived.
-*                            </ol>
-* @property {function} onConnected - called when a connection is successfully made to the server.
-*                                  after a connect() method.
-*                                  Parameters passed to the onConnected callback are:
-*                                  <ol>
-*                                  <li>reconnect (boolean) - If true, the connection was the result of a reconnect.</li>
-*                                  <li>URI (string) - The URI used to connect to the server.</li>
-*                                  </ol>
-* @property {boolean} disconnectedPublishing - if set, will enable disconnected publishing in
-*                                            in the event that the connection to the server is lost.
-* @property {number} disconnectedBufferSize - Used to set the maximum number of messages that the disconnected
-*                                             buffer will hold before rejecting new messages. Default size: 5000 messages
-* @property {function} trace - called whenever trace is called. TODO
-*/
-
 import { ERROR, format, uriRegex } from "./definitions";
 import ClientImpl from "./ClientImpl";
 import Message from "./Message";
@@ -106,6 +36,78 @@ const validate = function(obj, keys) {
   }
 };
 
+/**
+* The JavaScript application communicates to the server using a {@link Client} object.
+* <p>
+* Most applications will create just one Client object and then call its connect() method,
+* however applications can create more than one Client object if they wish.
+* In this case the combination of host, port and clientId attributes must be different for each Client object.
+* <p>
+* The send, subscribe and unsubscribe methods are implemented as asynchronous JavaScript methods
+* (even though the underlying protocol exchange might be synchronous in nature).
+* This means they signal their completion by calling back to the application,
+* via Success or Failure callback functions provided by the application on the method in question.
+* Such callbacks are called at most once per method invocation and do not persist beyond the lifetime
+* of the script that made the invocation.
+* <p>
+* In contrast there are some callback functions, most notably <i>onMessageArrived</i>,
+* that are defined on the {@link Client} object.
+* These may get called multiple times, and aren't directly related to specific method invocations made by the client.
+*
+* @name Client
+*
+* @constructor
+*
+* @param {string} protocol - optionally the protocol to be used. Defaults to Websocket (ws/wss), but could also be tcp/tls
+* @param {string} host     - the address of the messaging server, as a fully qualified WebSocket URI, as a DNS name or dotted decimal IP address.
+* @param {number} port     - the port number to connect to - only required if host is not an URI
+* @param {string} path     - the path on the host to connect to - only used if host is not an URI and for protocol 'ws'. Default: '/mqtt'.
+* @param {string} clientId - the Messaging client identifier, between 1 and 23 characters in length.
+*
+* @property {string} protocol - <i>read only</i> the protocol used for communication to the server.
+* @property {string} host - <i>read only</i> the server's DNS hostname or dotted decimal IP address.
+* @property {number} port - <i>read only</i> the server's port.
+* @property {string} path - <i>read only</i> the server's path.
+* @property {string} clientId - <i>read only</i> used when connecting to the server.
+* @property {function} onConnectionLost - called when a connection has been lost.
+*                            after a connect() method has succeeded.
+*                            Establish the call back used when a connection has been lost. The connection may be
+*                            lost because the client initiates a disconnect or because the server or network
+*                            cause the client to be disconnected. The disconnect call back may be called without
+*                            the connectionComplete call back being invoked if, for example the client fails to
+*                            connect.
+*                            A single response object parameter is passed to the onConnectionLost callback containing the following fields:
+*                            <ol>
+*                            <li>errorCode
+*                            <li>errorMessage
+*                            </ol>
+* @property {function} onMessageDelivered - called when a message has been delivered.
+*                            All processing that this Client will ever do has been completed. So, for example,
+*                            in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
+*                            and the message has been removed from persistent storage before this callback is invoked.
+*                            Parameters passed to the onMessageDelivered callback are:
+*                            <ol>
+*                            <li>{@link Message} that was delivered.
+*                            </ol>
+* @property {function} onMessageArrived - called when a message has arrived in this client.
+*                            Parameters passed to the onMessageArrived callback are:
+*                            <ol>
+*                            <li>{@link Message} that has arrived.
+*                            </ol>
+* @property {function} onConnected - called when a connection is successfully made to the server.
+*                                  after a connect() method.
+*                                  Parameters passed to the onConnected callback are:
+*                                  <ol>
+*                                  <li>reconnect (boolean) - If true, the connection was the result of a reconnect.</li>
+*                                  <li>URI (string) - The URI used to connect to the server.</li>
+*                                  </ol>
+* @property {boolean} disconnectedPublishing - if set, will enable disconnected publishing in
+*                                            in the event that the connection to the server is lost.
+* @property {number} disconnectedBufferSize - Used to set the maximum number of messages that the disconnected
+*                                             buffer will hold before rejecting new messages. Default size: 5000 messages
+* @property {function} trace - called whenever trace is called. TODO
+*/
+
 export default class {
   constructor(...args) {
     let clientId, host, path, port, protocol, uri;
@@ -114,12 +116,10 @@ export default class {
       // host: must be full ws:// uri
       [uri, clientId] = args;
       const match = uri.match(uriRegex);
-      /*
-        protocol = match[1];
-        host     = match[4] || match[2];
-        port     = parseInt(match[7]);
-        path     = match[8];
-      */
+      protocol = match[1];
+      host     = match[4] || match[2];
+      port     = parseInt(match[7]);
+      path     = match[8];
       if(!match) {
         throw new Error(format(ERROR.INVALID_ARGUMENT, [uri, "host"]));
       }
@@ -171,6 +171,14 @@ export default class {
 
     // Public Properties
     Object.defineProperties(this, {
+      protocol: {
+        get: function() {
+          return host;
+        },
+        set: function() {
+          throw new Error(format(ERROR.UNSUPPORTED_OPERATION));
+        }
+      },
       host: {
         get: function() {
           return host;
@@ -277,7 +285,7 @@ export default class {
   /**
      * Connect this Messaging client to its server.
      *
-     * @name Paho.Client#connect
+     * @name Client#connect
      * @function
      * @param {object} connectOptions - Attributes used with the connection.
      * @param {number} connectOptions.timeout - If the connect has not succeeded within this
@@ -285,7 +293,7 @@ export default class {
      *                    The default is 30 seconds.
      * @param {string} connectOptions.userName - Authentication username for this connection.
      * @param {string} connectOptions.password - Authentication password for this connection.
-     * @param {Paho.Message} connectOptions.willMessage - sent by the server when the client
+     * @param {Message} connectOptions.willMessage - sent by the server when the client
      *                    disconnects abnormally.
      * @param {number} connectOptions.keepAliveInterval - the server disconnects this client if
      *                    there is no activity for this number of seconds.
@@ -311,6 +319,7 @@ export default class {
      * WebSocket URIs (ws://iot.eclipse.org:80/ws), that are tried in order in place
      * of the host and port paramater on the construtor. The hosts are tried one at at time in order until
      * one of then succeeds.
+     * @param {array} connectOptions.protocols - If hosts is present, this contains the corresponding protocols to be used with the list of hosts
      * @param {array} connectOptions.ports - If present the set of ports matching the hosts. If hosts contains URIs, this property
      * is not used.
      * @param {boolean} connectOptions.reconnect - Sets whether the client will automatically attempt to reconnect
@@ -452,8 +461,8 @@ export default class {
           const port     = connectOptions.ports[i];
 
           const ipv6 = (host.indexOf(":") !== -1);
-          this.uri = protocol + "://" + (ipv6 ? "[" + host + "]" : host) + ":" + port + this.path;
-          connectOptions.uris.push(this.uri);
+          const uri = protocol + "://" + (ipv6 ? "[" + host + "]" : host) + ":" + port + this.path;
+          connectOptions.uris.push(uri);
         }
       } else {
         connectOptions.uris = connectOptions.hosts;
@@ -466,7 +475,7 @@ export default class {
   /**
      * Subscribe for messages, request receipt of a copy of messages sent to the destinations described by the filter.
      *
-     * @name Paho.Client#subscribe
+     * @name Client#subscribe
      * @function
      * @param {string} filter describing the destinations to receive messages from.
      * <br>
@@ -518,7 +527,7 @@ export default class {
   /**
      * Unsubscribe for messages, stop receiving messages sent to destinations described by the filter.
      *
-     * @name Paho.Client#unsubscribe
+     * @name Client#unsubscribe
      * @function
      * @param {string} filter - describing the destinations to receive messages from.
      * @param {object} unsubscribeOptions - used to control the subscription
@@ -562,10 +571,10 @@ export default class {
   /**
      * Send a message to the consumers of the destination in the Message.
      *
-     * @name Paho.Client#send
+     * @name Client#send
      * @function
-     * @param {string|Paho.Message} topic - <b>mandatory</b> The name of the destination to which the message is to be sent.
-     * 					   - If it is the only parameter, used as Paho.Message object.
+     * @param {string|Message} topic - <b>mandatory</b> The name of the destination to which the message is to be sent.
+     * 					   - If it is the only parameter, used as Message object.
      * @param {String|ArrayBuffer} payload - The message data to be sent.
      * @param {number} qos The Quality of Service used to deliver the message.
      * 		<dl>
@@ -612,12 +621,12 @@ export default class {
 
   /**
      * Publish a message to the consumers of the destination in the Message.
-     * Synonym for Paho.Mqtt.Client#send
+     * Synonym for Client#send
      *
-     * @name Paho.Client#publish
+     * @name Client#publish
      * @function
-     * @param {string|Paho.Message} topic - <b>mandatory</b> The name of the topic to which the message is to be published.
-     * 					   - If it is the only parameter, used as Paho.Message object.
+     * @param {string|Message} topic - <b>mandatory</b> The name of the topic to which the message is to be published.
+     * 					   - If it is the only parameter, used as Message object.
      * @param {String|ArrayBuffer} payload - The message data to be published.
      * @param {number} qos The Quality of Service used to deliver the message.
      * 		<dl>
@@ -665,7 +674,7 @@ export default class {
   /**
      * Normal disconnect of this Messaging client from its server.
      *
-     * @name Paho.Client#disconnect
+     * @name Client#disconnect
      * @function
      * @throws {InvalidState} if the client is already disconnected.
      */
@@ -676,7 +685,7 @@ export default class {
   /**
      * Get the contents of the trace log.
      *
-     * @name Paho.Client#getTraceLog
+     * @name Client#getTraceLog
      * @function
      * @return {Object[]} tracebuffer containing the time ordered trace records.
      */
@@ -687,7 +696,7 @@ export default class {
   /**
      * Start tracing.
      *
-     * @name Paho.Client#startTrace
+     * @name Client#startTrace
      * @function
      */
   startTrace() {
@@ -697,7 +706,7 @@ export default class {
   /**
      * Stop tracing.
      *
-     * @name Paho.Client#stopTrace
+     * @name Client#stopTrace
      * @function
      */
   stopTrace() {

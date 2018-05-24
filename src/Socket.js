@@ -1,4 +1,4 @@
-import { ERROR, format, uriRegex } from "./definitions";
+import { ERROR, format, global, uriRegex } from "./definitions";
 import EventEmitter from "eventemitter3";
 
 const readyState = {
@@ -20,20 +20,21 @@ export default class extends EventEmitter {
     if(!("WebSocket" in global && global.WebSocket !== null)) {
       throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
     }
+    let socket = undefined;
     if(mqttVersion < 4) {
-      this.socket = new WebSocket(url, ["mqttv3.1"]);
+      socket = this.socket = new global.WebSocket(url, ["mqttv3.1"]);
     } else {
-      this.socket = new WebSocket(url, ["mqtt"]);
+      socket = this.socket = new global.WebSocket(url, ["mqtt"]);
     }
     this.socket.binaryType = "arraybuffer";
     const onClose = (event) => {
-            if(this.socket) {
-              this.socket.removeEventListener("close", onClose);
-              this.socket.removeEventListener("error", onError);
-              this.socket.removeEventListener("message", onMessage);
-              this.socket.removeEventListener("open", onOpen);
+            socket.removeEventListener("close", onClose);
+            socket.removeEventListener("error", onError);
+            socket.removeEventListener("message", onMessage);
+            socket.removeEventListener("open", onOpen);
+            if(socket === this.socket) {
+              this.emit("close", event);
             }
-            this.emit("close", event);
           },
           onError = (event) => {
             this.emit("error", event);
@@ -81,6 +82,7 @@ export default class extends EventEmitter {
           global.chrome.sockets.tcp.onReceiveError.removeListener(errorFilter);
           global.chrome.sockets.tcp.disconnect(socketId, () => {
             global.chrome.sockets.tcp.close(socketId, () => {
+              socket.readyState = readyState.CLOSED;
               if(this.socket === socket) {
                 this.emit("close");
               }

@@ -1,12 +1,12 @@
+/* eslint-disable no-console */
 const settings = require("./client-harness");
 
-
-const testServer = settings.server;
-const testPort = settings.port;
-const testPath = settings.path;
-const testMqttVersion = settings.mqttVersion;
-const topicPrefix = settings.topicPrefix;
-const testUseSSL = settings.useSSL;
+const testMqttVersion = settings.mqttVersion,
+      testPath        = settings.path,
+      testPort        = settings.port,
+      testServer      = settings.server,
+      testUseSSL      = settings.useSSL,
+      topicPrefix     = settings.topicPrefix;
 
 //define a default clientID
 const clientId = "testClient1";
@@ -40,7 +40,7 @@ describe("SendReceive", function() {
       connected = true;
     };
 
-    const onDisconnect = function(response) {
+    const onDisconnect = function() {
       console.log("%s disconnected", clientId);
       connected = false;
     };
@@ -80,15 +80,11 @@ describe("SendReceive", function() {
         connectOptions.mqttVersion = testMqttVersion;
         connectOptions.useSSL = testUseSSL;
       }
-      runs(function() {
-        client.connect(connectOptions);
-      });
+      runs(() => client.connect(connectOptions));
 
-      waitsFor(function() {
-        return connected;
-      }, "the client should connect", 10000);
+      waitsFor(() => connected, "the client should connect", 10000);
 
-      runs(function() {
+      runs(() => {
         expect(connected).toBe(true);
         //reset state
         connected = false;
@@ -97,33 +93,25 @@ describe("SendReceive", function() {
 
     //disconnect and verify
     this.disconnect = function() {
-      runs(function() {
-        client.disconnect();
-      });
+      runs(() => client.disconnect());
 
-      waitsFor(function() {
-        return !connected;
-      }, "the client should disconnect", 10000);
+      waitsFor(() => !connected, "the client should disconnect", 10000);
 
-      runs(function() {
-        expect(connected).not.toBe(true);
-      });
+      runs(() => expect(connected).not.toBe(true));
     };
 
     //subscribe and verify
     this.subscribe = function(topic, qos) {
-      runs(function() {
+      runs(() => {
         client.subscribe(topic, {
           qos: qos,
           onSuccess: onSubscribe
         });
       });
 
-      waitsFor(function() {
-        return subscribed;
-      }, "the client should subscribe", 2000);
+      waitsFor(() => subscribed, "the client should subscribe", 2000);
 
-      runs(function() {
+      runs(() => {
         expect(subscribed).toBe(true);
         //reset state
         subscribed = false;
@@ -132,35 +120,29 @@ describe("SendReceive", function() {
 
     //unsubscribe and verify
     this.unsubscribe = function(topic) {
-      runs(function() {
+      runs(() => {
         client.unsubscribe(topic, {
           onSuccess: onUnsubscribe
         });
       });
 
-      waitsFor(function() {
-        return !subscribed;
-      }, "the client should subscribe", 2000);
+      waitsFor(() => !subscribed, "the client should subscribe", 2000);
 
-      runs(function() {
-        expect(subscribed).not.toBe(true);
-      });
+      runs(() => expect(subscribed).not.toBe(true));
     };
 
     //publish and verify
     this.publish = function(topic, qos, payload) {
-      runs(function() {
+      runs(() => {
         const message = new Paho.Message(payload);
         message.destinationName = topic;
         message.qos = qos;
         client.send(message);
       });
 
-      waitsFor(function() {
-        return messageDelivered;
-      }, "the client should delivered a message", 10000);
+      waitsFor(() => messageDelivered, "the client should delivered a message", 10000);
 
-      runs(function() {
+      runs(() => {
         //reset state
         messageDelivered = false;
       });
@@ -170,7 +152,7 @@ describe("SendReceive", function() {
     //verify no message received
     this.receiveNone = function() {
       waits(2000);
-      runs(function() {
+      runs(() => {
         expect(messageReceived).toBe(false);
         expect(receivedMessage).toBeNull();
       });
@@ -179,11 +161,9 @@ describe("SendReceive", function() {
     //verify the receive message
     this.receive = function(expectedTopic, publishedQoS, subscribedQoS, expectedPayload) {
 
-      waitsFor(function() {
-        return messageReceived;
-      }, "the client should send and receive a message", 10000);
+      waitsFor(() => messageReceived, "the client should send and receive a message", 10000);
 
-      runs(function() {
+      runs(() => {
         expect(messageReceived).toBe(true);
         expect(receivedMessage).not.toBeNull();
         expect(receivedMessage.qos).toBe(Math.min(publishedQoS, subscribedQoS));
@@ -240,9 +220,9 @@ describe("SendReceive", function() {
     client.subscribe(testTopic, subscribedQoS);
 
     //publish a large message to the topic and verify
-    const publishQoS = 0;
+    const largeSize  = 10000,
+          publishQoS = 0;
     let payload = "";
-    const largeSize = 10000;
     for (let i = 0; i < largeSize; i++) {
       payload += "s";
     }
@@ -266,14 +246,14 @@ describe("SendReceive", function() {
     });
 
     //subscribe and verify
-    const testTopics = ["pubsub/topic1", "pubsub/topic2", "pubsub/topic3"];
-    const subscribedQoSs = [0, 1, 2];
-    for (var i = 0; i < testTopics.length; i++) {
+    const subscribedQoSs = [0, 1, 2],
+          testTopics     = ["pubsub/topic1", "pubsub/topic2", "pubsub/topic3"];
+    for (let i = 0; i < testTopics.length; i++) {
       client.subscribe(topicPrefix + testTopics[i], subscribedQoSs[i]);
     }
 
     //publish, receive and verify
-    for (var i = 0; i < testTopics.length; i++) {
+    for (let i = 0; i < testTopics.length; i++) {
       const payload = "msg-" + i;
       for (let qos = 0; qos < 3; qos++) {
         client.publish(topicPrefix + testTopics[i], qos, payload);
@@ -287,13 +267,13 @@ describe("SendReceive", function() {
   });
 
   it("should work using multiple publishers and subscribers.", function() {
-    //topic to publish
-    const topic = topicPrefix + "multiplePubSub/topic";
-
     //create publishers and connect
-    const publishers = [];
-    const publishersNum = 2;
-    for (var i = 0; i < publishersNum; i++) {
+    const publishers = [],
+          publishersNum = 2,
+          //topic to publish
+          topic = topicPrefix + "multiplePubSub/topic";
+
+    for (let i = 0; i < publishersNum; i++) {
       publishers[i] = new MqttClient("publisher-" + i);
       publishers[i].connect({
         mqttVersion: testMqttVersion,
@@ -302,10 +282,10 @@ describe("SendReceive", function() {
     }
 
     //create subscribers and connect
-    const subscribedQoS = 0;
-    const subscribers = [];
-    const subscribersNum = 10;
-    for (var i = 0; i < subscribersNum; i++) {
+    const subscribedQoS = 0,
+          subscribers = [],
+          subscribersNum = 10;
+    for (let i = 0; i < subscribersNum; i++) {
       subscribers[i] = new MqttClient("subscriber-" + i);
       subscribers[i].connect({
         mqttVersion: testMqttVersion,
@@ -315,11 +295,11 @@ describe("SendReceive", function() {
     }
 
     //do publish and receive with verify
-    const publishQoS = 0;
-    const pubishMsgNum = 10;
+    const pubishMsgNum = 10,
+          publishQoS   = 0;
     for (let m = 0; m < pubishMsgNum; m++) {
       const payload = "multi-pub-sub-msg-" + m;
-      for (var i = 0; i < publishersNum; i++) {
+      for (let i = 0; i < publishersNum; i++) {
         publishers[i].publish(topic, publishQoS, payload);
         for (let j = 0; j < subscribersNum; j++) {
           subscribers[j].receive(topic, publishQoS, subscribedQoS, payload);
@@ -328,10 +308,10 @@ describe("SendReceive", function() {
     }
 
     //disconnect publishers and subscribers
-    for (var i = 0; i < publishersNum; i++) {
+    for (let i = 0; i < publishersNum; i++) {
       publishers[i].disconnect();
     }
-    for (var i = 0; i < subscribersNum; i++) {
+    for (let i = 0; i < subscribersNum; i++) {
       subscribers[i].disconnect();
     }
 
@@ -347,13 +327,13 @@ describe("SendReceive", function() {
     });
 
     //subscribe and verify
-    const testTopic = topicPrefix + "cleanSession/topic1";
-    const subscribedQoS = 0;
+    const subscribedQoS = 0,
+          testTopic = topicPrefix + "cleanSession/topic1";
     client.subscribe(testTopic, subscribedQoS);
 
     //publish and verify
-    const publishQoS = 1;
-    const payload = "cleanSession-msg";
+    const payload = "cleanSession-msg",
+          publishQoS = 1;
     client.publish(testTopic, publishQoS, payload);
     client.receive(testTopic, publishQoS, subscribedQoS, payload);
     //disconnect
