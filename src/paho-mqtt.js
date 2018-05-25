@@ -280,7 +280,8 @@ function onMessageArrived(message) {
 			var remLength = 0;
 			var topicStrLength = [];
 			var destinationNameLength = 0;
-			var willMessagePayloadBytes;
+			var willMessagePayloadBytes; // used only for MESSAGE_TYPE.CONNECT
+			var payloadBytes; // used only for MESSAGE_TYPE.PUBLISH
 
 			// if the message contains a messageIdentifier then we need two bytes for that
 			if (this.messageIdentifier !== undefined)
@@ -304,7 +305,7 @@ function onMessageArrived(message) {
 					// Will message is always a string, sent as UTF-8 characters with a preceding length.
 					willMessagePayloadBytes = this.willMessage.payloadBytes;
 					if (!(willMessagePayloadBytes instanceof Uint8Array))
-						willMessagePayloadBytes = new Uint8Array(payloadBytes);
+						willMessagePayloadBytes = new Uint8Array(willMessagePayloadBytes);
 					remLength += willMessagePayloadBytes.byteLength +2;
 				}
 				if (this.userName !== undefined)
@@ -342,7 +343,7 @@ function onMessageArrived(message) {
 				if (this.payloadMessage.retained) first |= 0x01;
 				destinationNameLength = UTF8Length(this.payloadMessage.destinationName);
 				remLength += destinationNameLength + 2;
-				var payloadBytes = this.payloadMessage.payloadBytes;
+				payloadBytes = this.payloadMessage.payloadBytes;
 				remLength += payloadBytes.byteLength;
 				if (payloadBytes instanceof ArrayBuffer)
 					payloadBytes = new Uint8Array(payloadBytes);
