@@ -47,6 +47,6 @@
 		"dev": "webpack-dev-server --config ./conf/webpack.dev.js",
 		"lint": "eslint src/test -c ./.eslintrc.json --ext js",
 		"test": "jasmine-node --verbose --forceexit src/test/",
-		"docs": "jsdoc dist/paho.mqtt.javascript.js -d dist/docs"
+		"docs": "jsdoc src/Message.js src/Client.js src/paho-mqtt.js -d dist/docs"
 	}
 }
