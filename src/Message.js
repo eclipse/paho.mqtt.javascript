@@ -6,7 +6,7 @@ import { ERROR, UTF8Length, format, parseUTF8, stringToUTF8 } from "./definition
 * All attributes may be null, which implies the default values.
 *
 * @name Message
-* @constructor
+* @class
 * @param {String|ArrayBuffer} payload The message data to be sent.
 * <p>
 * @property {string} payloadString <i>read only</i> The payload as a string if the payload consists of valid UTF-8 characters.

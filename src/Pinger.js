@@ -3,7 +3,7 @@
   * @ignore
   */
 
-import { ERROR, global, MESSAGE_TYPE, format } from "./definitions";
+import { ERROR, MESSAGE_TYPE, format, global } from "./definitions";
 import WireMessage from "./WireMessage";
 
 function doTimeout(pinger) {

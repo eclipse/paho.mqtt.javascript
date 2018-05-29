@@ -23,10 +23,10 @@ describe("client-uris", function() {
     connected = false;
   }
 
-  function messageArrived() {
+  function messageArrived(/* message */) {
     console.log("messageArrived");
     // messageReceived = true;
-    //reponse.invocationContext.onMessageArrived = null;
+    // message.invocationContext.onMessageArrived = null;
   }
 
   it("should create a new client with a default path", function() {
@@ -109,8 +109,8 @@ describe("client-uris", function() {
     const client = new Paho.Client(testServer, testPort, "testclientid");
     expect(client).not.toBe(null);
 
-    client.onMessageArrived = messageArrived;
-    client.onConnectionLost = onDisconnect;
+    client.on("arrived", messageArrived);
+    client.on("connectionLost", onDisconnect);
 
     runs(() => client.connect({
       onSuccess: onConnect,

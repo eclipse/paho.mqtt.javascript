@@ -9,32 +9,25 @@ const readyState = {
 };
 
 export default class extends EventEmitter {
-  /*
   constructor() {
-    super(); 
+    super();
+    this.on("close", () => {
+      this.socket = null;
+    });
   }
-  */
   
-  connectWs(url, mqttVersion) {
+  async connectWs(url, mqttVersion) {
     // Check dependencies are satisfied in this browser.
     if(!("WebSocket" in global && global.WebSocket !== null)) {
       throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
     }
-    let socket = undefined;
-    if(mqttVersion < 4) {
-      socket = this.socket = new global.WebSocket(url, ["mqttv3.1"]);
-    } else {
-      socket = this.socket = new global.WebSocket(url, ["mqtt"]);
-    }
-    this.socket.binaryType = "arraybuffer";
+    const ws = new global.WebSocket(url, [(mqttVersion < 4) ? "mqttv3.1" : "mqtt"]);
+    ws.binaryType = "arraybuffer";
     const onClose = (event) => {
-            socket.removeEventListener("close", onClose);
-            socket.removeEventListener("error", onError);
-            socket.removeEventListener("message", onMessage);
-            socket.removeEventListener("open", onOpen);
-            if(socket === this.socket) {
-              this.emit("close", event);
-            }
+            ws.removeEventListener("close", onClose);
+            ws.removeEventListener("error", onError);
+            ws.removeEventListener("message", onMessage);
+            this.emit("close", event);
           },
           onError = (event) => {
             this.emit("error", event);
@@ -42,106 +35,99 @@ export default class extends EventEmitter {
           onMessage = (event) => {
             this.emit("message", event);
           },
-          onOpen = (event) => {
-            this.emit("open", event);
-          };
-    this.socket.addEventListener("close", onClose);
-    this.socket.addEventListener("error", onError);
-    this.socket.addEventListener("message", onMessage);
-    this.socket.addEventListener("open", onOpen);
-  } 
-
-  connectTcp(host, port, useSsl) {
-    global.chrome.sockets.tcp.create({}, ({socketId}) => {
-      if(global.chrome.runtime.lastError) {
-        this.emit("error", {
-          data: global.chrome.runtime.lastError
-        });
-        return true;
-      }
-      const errorFilter = (event) => {
-              if (event.socketId === socketId) {
-                this.emit("error", {
-                  data: event.resultCode
-                });
-              }
+          promisifyEvent = (name) => new Promise((resolve, reject) => {
+            const localOnEvent = (event) => {
+                    ws.removeEventListener(name, localOnEvent);
+                    ws.removeEventListener("error", localOnError);
+                    resolve(event);
+                  },
+                  localOnError = (err) => {
+                    ws.removeEventListener(name, localOnEvent);
+                    ws.removeEventListener("error", localOnError);
+                    reject(err);
+                  };
+            ws.addEventListener(name, localOnEvent);
+            ws.addEventListener("error", localOnError);
+          }),
+          socket = {
+            get readyState() {
+              return ws.readyState;
             },
-            messageFilter = (event) => {
-              if (event.socketId === socketId) {
-                this.emit("message", event);
-              }
-            };
-      const socket = this.socket = {
-        readyState: readyState.CONNECTING,
-        send: (buffer) => (
-          // eslint-disable-next-line no-empty-function
-          global.chrome.sockets.tcp.send(socketId, buffer, () => {})
-        ),
-        close: () => {
-          global.chrome.sockets.tcp.onReceive.removeListener(messageFilter);
-          global.chrome.sockets.tcp.onReceiveError.removeListener(errorFilter);
-          global.chrome.sockets.tcp.disconnect(socketId, () => {
-            global.chrome.sockets.tcp.close(socketId, () => {
-              socket.readyState = readyState.CLOSED;
-              if(this.socket === socket) {
-                this.emit("close");
-              }
-            });
-          });
-        }
-      };
-      const hasError = () => {
-        if(socket !== this.socket) {
-          // not current anymore (timeout?!)
-          return true;
-        }
-        if(global.chrome.runtime.lastError) {
-          this.emit("error", {
-            data: global.chrome.runtime.lastError
-          });
-          return true;
-        }
-      },
-      open = () => {
-        socket.readyState = readyState.OPEN;
-        this.emit("open");
-        global.chrome.sockets.tcp.onReceive.addListener(messageFilter);
-        global.chrome.sockets.tcp.onReceiveError.addListener(errorFilter);
-      };
-      if(useSsl) {
-        global.chrome.sockets.tcp.setPaused(socketId, true, () => {
-          if(hasError()) {
-            return;
-          }
-          global.chrome.sockets.tcp.connect(socketId, host, port, () => {
-            if(hasError()) {
-              return;
+            send: (buffer) => ws.send(buffer),
+            close: () => {
+              ws.close();
+              return promisifyEvent("close");
             }
-            global.chrome.sockets.tcp.secure(socketId, () => {
-              if(hasError()) {
-                return;
-              }
-              global.chrome.sockets.tcp.setPaused(socketId, false, () => {
-                if(hasError()) {
-                  return;
-                }
-                open();
-              });
-            });
-          });
-        });
-      } else {
-        global.chrome.sockets.tcp.connect(socketId, host, port, () => {
-          if(hasError()) {
-            return;
-          }
-          open();
-        });
-      }
+          };
+    return promisifyEvent("open")
+      .then((event) => {
+        ws.addEventListener("close", onClose);
+        ws.addEventListener("error", onError);
+        ws.addEventListener("message", onMessage);
+      return ws;
     });
   }
 
-  connect({url, mqttVersion}) {
+  async connectTcp(host, port, useSsl) {
+    const promisify = (fn, ...args) => (
+      new Promise((fnresolve, fnreject) => {
+        fn(...args, (fnresult) => {
+          if(global.chrome.runtime.lastError) {  
+            return fnreject(global.chrome.runtime.lastError);
+          }
+          fnresolve(fnresult);
+        })
+      })
+    );
+    const {socketId} = await promisify(global.chrome.sockets.tcp.create, {});
+    const errorFilter = (event) => {
+            if (event.socketId === socketId) {
+              this.emit("error", {
+                data: event.resultCode
+              });
+            }
+          },
+          messageFilter = (event) => {
+            if (event.socketId === socketId) {
+              this.emit("message", event);
+            }
+          },
+          open = () => {
+            global.chrome.sockets.tcp.onReceive.addListener(messageFilter);
+            global.chrome.sockets.tcp.onReceiveError.addListener(errorFilter);
+            socket.readyState = readyState.OPEN;
+            return socket;
+          },
+          socket = {
+            readyState: readyState.CONNECTING,
+            send: (buffer) => (
+              // eslint-disable-next-line no-empty-function
+              global.chrome.sockets.tcp.send(socketId, buffer, () => {})
+            ),
+            close: () => {
+              global.chrome.sockets.tcp.onReceive.removeListener(messageFilter);
+              global.chrome.sockets.tcp.onReceiveError.removeListener(errorFilter);
+              return promisify(global.chrome.sockets.tcp.disconnect, socketId)
+                .then(() => promisify(global.chrome.sockets.tcp.close, socketId))
+                .then(() => {
+                  socket.readyState = readyState.CLOSED;
+                  this.emit("close");
+                });
+            }
+          };
+    if(useSsl) {
+      return promisify(global.chrome.sockets.tcp.setPaused, socketId, true)
+      .then(() => promisify(global.chrome.sockets.tcp.connect, socketId, host, port))
+      .then(() => promisify(global.chrome.sockets.tcp.secure, socketId))
+      .then(() => promisify(global.chrome.sockets.tcp.setPaused, socketId, false))
+      .then(() => open());
+    } else {
+      return promisify(global.chrome.sockets.tcp.connect, socketId, host, port)
+      .then(() => open());
+    }
+  }
+
+  async connect({url, mqttVersion}) {
     const match    = url.match(uriRegex);
     const host     = match[4] || match[2], // IP4 or [IP6]
           // path     = match[8],
@@ -151,13 +137,21 @@ export default class extends EventEmitter {
     if(this.socket) {
       throw new Error(format(ERROR.INVALID_STATE, ["connected already. Close existing connecting first"]));
     }
-    if(protocol.startsWith("ws")) {
-      return this.connectWs(url, mqttVersion);
-    } else if((protocol === "tcp" || protocol === "tls") && global.chrome && global.chrome.sockets && global.chrome.sockets.tcp) {
-      return this.connectTcp(host, port, (protocol === "tls"));
-    } else {
-      throw new Error(format(ERROR.UNSUPPORTED, ["protocol '" + protocol + "'"]));
+    try {
+      if(protocol.startsWith("ws")) {
+        this.socket = await this.connectWs(url, mqttVersion);
+      } else if((protocol === "tcp" || protocol === "tls") && global.chrome && global.chrome.sockets && global.chrome.sockets.tcp) {
+        this.socket = await this.connectTcp(host, port, (protocol === "tls"));
+      } else {
+        throw new Error(format(ERROR.UNSUPPORTED, ["protocol '" + protocol + "'"]));
+      }
+      this.emit("open", this.socket);
+    } catch(err) {
+      this.emit("error", {
+        data: err
+      });
     }
+    return this.socket;
   }
 
   send(buffer) { // type ArrayBuffer
@@ -167,11 +161,10 @@ export default class extends EventEmitter {
     this.socket.send(buffer);
   }
 
-  close() {
+  async close() {
     if(this.isOpen()) {
-      this.socket.close();
+      await this.socket.close();
     }
-    delete this.socket;
   }
 
   isOpen() {

@@ -44,7 +44,7 @@ describe("InteropsTests", function() {
     onMessageArrived: function(message) {
       console.log("messageArrived %s %s %s %s", message.destinationName, message.payloadString, message.qos, message.retained);
       messageReceivedCount++;
-      if (messageReceivedCount == 3) {
+      if(messageReceivedCount == 3) {
         receivingComplete = true;
       }
     },
@@ -61,7 +61,8 @@ describe("InteropsTests", function() {
     onDisconnectFailure: function(err) {
       console.log("Disconnect failed %s %s", err.errCode, err.errorMessage);
     },
-    onMessageDelivered: function() {
+    onMessageDelivered: function(message) {
+      console.log("messageDelivered %s %s %s %s", message.destinationName, message.payloadString, message.qos, message.retained);
       messagePublishedCount++;
       if (messagePublishedCount == 3) {
         sendingComplete = true;
@@ -74,8 +75,8 @@ describe("InteropsTests", function() {
 
   it("should connect, disconnect, subscribe, publish and receive messages", function() {
     client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
-    client.onMessageArrived = callbacks.onMessageArrived;
-    client.onMessageDelivered = callbacks.onMessageDelivered;
+    client.on("arrived", callbacks.onMessageArrived);
+    client.on("delivered", callbacks.onMessageDelivered);
 
     expect(client).not.toBe(null);
 
@@ -196,7 +197,7 @@ describe("InteropsTests", function() {
   /*
   it('should queue up messages on the server for offline clients', function() {
   	client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
-  	client.onMessageArrived = callbacks.onMessageArrived;
+  	client.on("arrived", callbacks.onMessageArrived);
 
   	expect(client).not.toBe(null);
 
@@ -231,7 +232,7 @@ describe("InteropsTests", function() {
   	});
 
   	bClient = new Paho.Client(testServer, testPort, testPath, "testclientid-js-b");
-  	bClient.onMessageDelivered = callbacks.onMessageDelivered;
+  	client.on("delivered", callbacks.onMessageDelivered);
 
   	runs(function() {
   		bClient.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:true});
@@ -299,7 +300,7 @@ describe("InteropsTests", function() {
   // server and behaviour differs between mqtt server implementations.
   it('should get a return code for failure to subscribe', function() {
   	client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
-  	client.onMessageArrived = callbacks.onMessageArrived;
+  	client.on("arrived", callbacks.onMessageArrived);
 
   	var subFailed = false;
   	var failSubscribe = function(response) {

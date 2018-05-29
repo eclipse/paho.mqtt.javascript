@@ -2,8 +2,9 @@
 // Public Programming interface.
 // ------------------------------------------------------------------------
 
-import { ERROR, format, uriRegex } from "./definitions";
+import { ERROR, format, MESSAGE_TYPE, uriRegex } from "./definitions";
 import ClientImpl from "./ClientImpl";
+import EventEmitter from "eventemitter3";
 import Message from "./Message";
 
 /**
@@ -55,8 +56,7 @@ const validate = function(obj, keys) {
 * These may get called multiple times, and aren't directly related to specific method invocations made by the client.
 *
 * @name Client
-*
-* @constructor
+* @class
 *
 * @param {string} protocol - optionally the protocol to be used. Defaults to Websocket (ws/wss), but could also be tcp/tls
 * @param {string} host     - the address of the messaging server, as a fully qualified WebSocket URI, as a DNS name or dotted decimal IP address.
@@ -69,38 +69,6 @@ const validate = function(obj, keys) {
 * @property {number} port - <i>read only</i> the server's port.
 * @property {string} path - <i>read only</i> the server's path.
 * @property {string} clientId - <i>read only</i> used when connecting to the server.
-* @property {function} onConnectionLost - called when a connection has been lost.
-*                            after a connect() method has succeeded.
-*                            Establish the call back used when a connection has been lost. The connection may be
-*                            lost because the client initiates a disconnect or because the server or network
-*                            cause the client to be disconnected. The disconnect call back may be called without
-*                            the connectionComplete call back being invoked if, for example the client fails to
-*                            connect.
-*                            A single response object parameter is passed to the onConnectionLost callback containing the following fields:
-*                            <ol>
-*                            <li>errorCode
-*                            <li>errorMessage
-*                            </ol>
-* @property {function} onMessageDelivered - called when a message has been delivered.
-*                            All processing that this Client will ever do has been completed. So, for example,
-*                            in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
-*                            and the message has been removed from persistent storage before this callback is invoked.
-*                            Parameters passed to the onMessageDelivered callback are:
-*                            <ol>
-*                            <li>{@link Message} that was delivered.
-*                            </ol>
-* @property {function} onMessageArrived - called when a message has arrived in this client.
-*                            Parameters passed to the onMessageArrived callback are:
-*                            <ol>
-*                            <li>{@link Message} that has arrived.
-*                            </ol>
-* @property {function} onConnected - called when a connection is successfully made to the server.
-*                                  after a connect() method.
-*                                  Parameters passed to the onConnected callback are:
-*                                  <ol>
-*                                  <li>reconnect (boolean) - If true, the connection was the result of a reconnect.</li>
-*                                  <li>URI (string) - The URI used to connect to the server.</li>
-*                                  </ol>
 * @property {boolean} disconnectedPublishing - if set, will enable disconnected publishing in
 *                                            in the event that the connection to the server is lost.
 * @property {number} disconnectedBufferSize - Used to set the maximum number of messages that the disconnected
@@ -108,9 +76,10 @@ const validate = function(obj, keys) {
 * @property {function} trace - called whenever trace is called. TODO
 */
 
-export default class {
+export default class extends EventEmitter {
   constructor(...args) {
     let clientId, host, path, port, protocol, uri;
+    super();
 
     if(args.length == 2) {
       // host: must be full ws:// uri
@@ -168,12 +137,36 @@ export default class {
     }
 
     this.client = new ClientImpl(uri, clientId);
+    ["arrived", "delivered"].forEach((event) => (
+      this.client.on(event, (wireMessage) => {
+        if(wireMessage.type === MESSAGE_TYPE.PUBLISH) {
+          this.emit(event, wireMessage.payloadMessage);
+        }
+      })
+    ));
+    ["connected", "connectionLost"].forEach((event) => (
+      this.client.on(event, (...args) => this.emit(event, ...args))
+    ));
+    /*
+    ["onConnected", "onConnectionLost", "onMessageArrived", "onMessageDelivered"].forEach((fnName) => (
+      Object.defineProperties(this, {
+        [fnName]: {
+          get: function() {
+            throw new Error(format(ERROR.UNSUPPORTED_OPERATION));
+          },
+          set: function() {
+            throw new Error(format(ERROR.UNSUPPORTED_OPERATION));
+          }
+        }
+      })
+    ));
+    */
 
     // Public Properties
     Object.defineProperties(this, {
       protocol: {
         get: function() {
-          return host;
+          return protocol;
         },
         set: function() {
           throw new Error(format(ERROR.UNSUPPORTED_OPERATION));
@@ -217,16 +210,6 @@ export default class {
           throw new Error(format(ERROR.UNSUPPORTED_OPERATION));
         }
       },
-      onConnected: {
-        get: () => this.client.onConnected,
-        set: (newOnConnected) => {
-          if(typeof newOnConnected === "function") {
-            this.client.onConnected = newOnConnected;
-          } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnected, "onConnected"]));
-          }
-        }
-      },
       disconnectedPublishing: {
         get: () => this.client.disconnectedPublishing,
         set: (newDisconnectedPublishing) => {
@@ -237,36 +220,6 @@ export default class {
         get: () => this.client.disconnectedBufferSize,
         set: (newDisconnectedBufferSize) => {
           this.client.disconnectedBufferSize = newDisconnectedBufferSize;
-        }
-      },
-      onConnectionLost: {
-        get: () => this.client.onConnectionLost,
-        set: (newOnConnectionLost) => {
-          if(typeof newOnConnectionLost === "function") {
-            this.client.onConnectionLost = newOnConnectionLost;
-          } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnectionLost, "onConnectionLost"]));
-          }
-        }
-      },
-      onMessageDelivered: {
-        get: () => this.client.onMessageDelivered,
-        set: (newOnMessageDelivered) => {
-          if(typeof newOnMessageDelivered === "function") {
-            this.client.onMessageDelivered = newOnMessageDelivered;
-          } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageDelivered, "onMessageDelivered"]));
-          }
-        }
-      },
-      onMessageArrived: {
-        get: () => this.client.onMessageArrived,
-        set: (newOnMessageArrived) => {
-          if(typeof newOnMessageArrived === "function") {
-            this.client.onMessageArrived = newOnMessageArrived;
-          } else {
-            throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
-          }
         }
       },
       trace: {
@@ -717,3 +670,50 @@ export default class {
     return this.client.connected;
   }
 }
+/**
+ * emitted when a connection has been lost.
+ * after a connect() method has succeeded.
+ * Establish the call back used when a connection has been lost. The connection may be
+ * lost because the client initiates a disconnect or because the server or network
+ * cause the client to be disconnected. The disconnect call back may be called without
+ * the connectionComplete call back being invoked if, for example the client fails to
+ * connect.
+ * 
+ * @event Client#connectionLost
+ * @type {object}
+ * @property {number} errorCode
+ * @property {string} errorMessage
+ * @property {boolean} reconnect
+ * @property {string} uri
+ * 
+ */
+
+/**
+ * emitted when a message has been delivered.
+ * All processing that this Client will ever do has been completed. So, for example,
+ * in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
+ * and the message has been removed from persistent storage before this callback is invoked.
+ * Parameters passed to the onMessageDelivered callback are:
+ * 
+ * @event Client#delivered
+ * @type {Message}
+ */
+
+/**
+ * called when a message has arrived in this client.
+ * Parameters passed to the onMessageArrived callback are
+ * 
+ * @event Client#arrived
+ * @type {Message}
+ */
+
+/**
+ * called when a connection is successfully made to the server.
+ * after a connect() method.
+ * Parameters passed to the onConnected callback are
+ * 
+ * @event Client#connected
+ * @type {object}
+ * @property {boolean} reconnect - If true, the connection was the result of a reconnect
+ * @property {string} uri - The URI used to connect to the server
+ */

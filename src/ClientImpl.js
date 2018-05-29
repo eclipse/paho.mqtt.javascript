@@ -1,24 +1,11 @@
-import { ERROR, format, global, MESSAGE_TYPE, parseUTF8 } from "./definitions";
+import { ERROR, MESSAGE_TYPE, format, global, parseUTF8 } from "./definitions";
+import EventEmitter from "eventemitter3";
 import Message from "./Message";
 import Pinger from "./Pinger";
 import Socket from "./Socket";
 import Storage from "./Storage";
 import Timeout from "./Timeout";
 import WireMessage from "./WireMessage";
-
-/**
- * Return a new function which runs the user function bound
- * to a fixed scope.
- * @param {function} User function
- * @param {object} Function scope
- * @return {function} User function bound to another scope
- * @private
- */
-function scope(f, scope) {
-  return function() {
-    return f.apply(scope, arguments);
-  };
-}
 
 /** CONNACK RC Meaning. */
 const CONNACK_RC = {
@@ -137,8 +124,9 @@ function _traceMask(traceObject, masked) {
  * @name Paho.ClientImpl @constructor
  * @param {String} clientId the MQ client identifier.
  */
-export default class {
+export default class extends EventEmitter {
   constructor(uri, clientId) {
+    super();
     Object.assign(this, {
       // Messaging Client public instance members.
       uri:      null,
@@ -154,10 +142,6 @@ export default class {
       maxMessageIdentifier:   65536,
       connectOptions:         null,
       hostIndex:              null,
-      onConnected:            null,
-      onConnectionLost:       null,
-      onMessageDelivered:     null,
-      onMessageArrived:       null,
       traceFunction:          null,
       _msg_queue:             null,
       _buffered_msg_queue:    null,
@@ -200,11 +184,6 @@ export default class {
     // indexed by their respective message ids.
     this._receivedMessages = {};
 
-    // Internal list of callbacks to be executed when messages
-    // have been successfully sent over web socket, e.g. disconnect
-    // when it doesn't have to wait for ACK, just message is dispatched.
-    this._notify_msg_sent = {};
-
     // Unique identifier for SEND messages, incrementing
     // counter as messages are sent.
     this._message_identifier = 1;
@@ -214,6 +193,10 @@ export default class {
 
     // Load the local state, if any, from the saved version, only restore state relevant to this client.
     this.storage.entries().map(([key, value]) => this.restore(key, value));
+
+    this.on("delivered", (message) => {
+      message.emit("delivered");
+    });
   }
 
   connect(connectOptions) {
@@ -342,8 +325,6 @@ export default class {
       // Then schedule the message.
       if(message.qos > 0) {
         this._requiresAck(wireMessage);
-      } else if(this.onMessageDelivered) {
-        this._notify_msg_sent[wireMessage] = this.onMessageDelivered(wireMessage.payloadMessage);
       }
       this._scheduleMessage(wireMessage);
     } else {
@@ -390,7 +371,7 @@ export default class {
     // Run the disconnected call back as soon as the message has been sent,
     // in case of a failure later on in the disconnect processing.
     // as a consequence, the _disconected call back may be run several times.
-    this._notify_msg_sent[wireMessage] = scope(this._disconnected, this);
+    wireMessage.on("delivered", this._disconnected, this);
 
     this._scheduleMessage(wireMessage);
   }
@@ -551,15 +532,19 @@ export default class {
   }
 
   _processQueue() {
-    let message = null;
+    let wireMessage = null;
 
     // Send all queued messages down socket connection
-    while((message = this._msg_queue.pop())) {
-      this._socketSend(message);
-      // Notify listeners that message was successfully sent
-      if(this._notify_msg_sent[message]) {
-        this._notify_msg_sent[message]();
-        delete this._notify_msg_sent[message];
+    while((wireMessage = this._msg_queue.pop())) {
+      this._socketSend(wireMessage);
+      if(wireMessage.type === MESSAGE_TYPE.PUBLISH) {
+        if(wireMessage.payloadMessage.qos === 0) {
+          // Notify listeners that message was successfully sent
+          // otherwise, _handleMessage will notify about delivery
+          this.emit("delivered", wireMessage);
+        }
+      } else {
+        this.emit("delivered", wireMessage);
       }
     }
   }
@@ -692,9 +677,6 @@ export default class {
             let msg = null;
             while((msg = this._buffered_msg_queue.pop())) {
               sequencedMessages.push(msg);
-              if(this.onMessageDelivered) {
-                this._notify_msg_sent[msg] = this.onMessageDelivered(msg.payloadMessage);
-              }
             }
           }
 
@@ -729,7 +711,7 @@ export default class {
           }
 
           // Execute the onConnected callback if there is one.
-          this._connected(reconnected, this._uri);
+          this.emit("connected", reconnected, this._uri);
 
           // Process all queued messages now that the connection is established.
           this._processQueue();
@@ -745,9 +727,7 @@ export default class {
           if(sentMessage) {
             delete this._sentMessages[wireMessage.messageIdentifier];
             this.storage.removeItem("Sent:", wireMessage.messageIdentifier);
-            if(this.onMessageDelivered) {
-              this.onMessageDelivered(sentMessage.payloadMessage);
-            }
+            this.emit("delivered", sentMessage);
           }
           break;
         }
@@ -767,7 +747,7 @@ export default class {
           this.storage.removeItem("Received:", wireMessage.messageIdentifier);
           // If this is a re flow of a PUBREL after we have restarted receivedMessage will not exist.
           if(receivedMessage) {
-            this._receiveMessage(receivedMessage);
+            this.emit("arrived", receivedMessage);
             delete this._receivedMessages[wireMessage.messageIdentifier];
           }
           // Always flow PubComp, we may have previously flowed PubComp but the server lost it and restarted.
@@ -780,9 +760,7 @@ export default class {
           const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           delete this._sentMessages[wireMessage.messageIdentifier];
           this.storage.removeItem("Sent:", wireMessage.messageIdentifier);
-          if(this.onMessageDelivered) {
-            this.onMessageDelivered(sentMessage.payloadMessage);
-          }
+          this.emit("delivered", sentMessage);
           break;
         }
         case MESSAGE_TYPE.SUBACK: {
@@ -867,13 +845,13 @@ export default class {
     switch (wireMessage.payloadMessage.qos) {
       case "undefined":
       case 0:
-        this._receiveMessage(wireMessage);
+        this.emit("arrived", wireMessage);
         break;
 
       case 1: {
         const pubAckMessage = new WireMessage(MESSAGE_TYPE.PUBACK, {messageIdentifier: wireMessage.messageIdentifier});
         this._scheduleMessage(pubAckMessage);
-        this._receiveMessage(wireMessage);
+        this.emit("arrived", wireMessage);
         break;
       }
       case 2: {
@@ -886,25 +864,6 @@ export default class {
       }
       default:
         throw Error("Invaild qos=" + wireMessage.payloadMessage.qos);
-    }
-  }
-
-  /** @ignore */
-  _receiveMessage(wireMessage) {
-    if(this.onMessageArrived) {
-      this.onMessageArrived(wireMessage.payloadMessage);
-    }
-  }
-
-  /**
-   * Client has connected.
-   * @param {reconnect} [boolean] indicate if this was a result of reconnect operation.
-   * @param {uri} [string] fully qualified Socket URI of the server.
-   */
-  _connected(reconnect, uri) {
-    // Execute the onConnected callback if there is one.
-    if(this.onConnected) {
-      this.onConnected(reconnect, uri);
     }
   }
 
@@ -957,7 +916,6 @@ export default class {
     // Clear message buffers.
     this._msg_queue = [];
     this._buffered_msg_queue = [];
-    this._notify_msg_sent = {};
 
     this.socket.removeListener("open", this._onSocketOpen, this);
     this.socket.removeListener("message", this._onSocketMessage, this);
@@ -979,14 +937,12 @@ export default class {
       if(this.connected) {
         this.connected = false;
         // Execute the connectionLostCallback if there is one, and we were connected.
-        if(this.onConnectionLost) {
-          this.onConnectionLost({
-            errorCode:    errorCode,
-            errorMessage: errorText,
-            reconnect:    this.connectOptions.reconnect,
-            uri:          this._uri
-          });
-        }
+        this.emit("connectionLost", {
+          errorCode:    errorCode,
+          errorMessage: errorText,
+          reconnect:    this.connectOptions.reconnect,
+          uri:          this._uri
+        });
         if(errorCode !== ERROR.OK.code && this.connectOptions.reconnect) {
           // Start automatic reconnect process for the very first time since last successful connect.
           this._reconnectInterval = 1;

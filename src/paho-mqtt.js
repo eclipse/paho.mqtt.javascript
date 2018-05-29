@@ -52,13 +52,9 @@
  * an Error containing an error message intended for developer use, if it detects
  * an error with any parameter.
  * <p>
- * Example:
- *
- * <code><pre>
+ * @namespace Paho
+ * @example
 var client = new Paho.Client(location.hostname, Number(location.port), "clientId");
-client.onConnectionLost = onConnectionLost;
-client.onMessageArrived = onMessageArrived;
-client.connect({onSuccess:onConnect});
 
 function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
@@ -68,16 +64,24 @@ function onConnect() {
   message.destinationName = "/World";
   client.send(message);
 };
+
 function onConnectionLost(responseObject) {
-  if (responseObject.errorCode !== 0)
-	console.log("onConnectionLost:"+responseObject.errorMessage);
+  if(responseObject.errorCode !== 0) {
+    console.log("onConnectionLost:" + responseObject.errorMessage);
+  }
 };
+
 function onMessageArrived(message) {
   console.log("onMessageArrived:"+message.payloadString);
   client.disconnect();
 };
- * </pre></code>
- * @namespace Paho
+
+client.on("connectionLost", onConnectionLost);
+client.on("arrived", onMessageArrived);
+client.connect({
+  onSuccess:  onConnect
+});
+
  */
 
 import Client from "./Client";

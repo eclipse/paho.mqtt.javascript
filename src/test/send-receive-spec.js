@@ -55,21 +55,21 @@ describe("SendReceive", function() {
       subscribed = false;
     };
 
-    const onMessageArrived = function(msg) {
-      console.log("%s received msg: %s", clientId, msg.payloadString);
+    const onMessageArrived = function(message) {
+      console.log("%s received msg: %s", clientId, message.payloadString);
       messageReceived = true;
-      receivedMessage = msg;
+      receivedMessage = message;
     };
 
-    const onMessageDelivered = function(msg) {
-      console.log("%s delivered message: %s", clientId, msg.payloadString);
+    const onMessageDelivered = function(message) {
+      console.log("%s delivered message: %s", clientId, message.payloadString);
       messageDelivered = true;
     };
 
     //set callbacks
-    client.onMessageArrived = onMessageArrived;
-    client.onConnectionLost = onDisconnect;
-    client.onMessageDelivered = onMessageDelivered;
+    client.on("arrived", onMessageArrived);
+    client.on("connectionLost", onDisconnect);
+    client.on("delivered", onMessageDelivered);
 
     //functions
     //connect and verify

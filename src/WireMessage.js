@@ -1,4 +1,5 @@
 import { MESSAGE_TYPE, UTF8Length, stringToUTF8 } from "./definitions";
+import EventEmitter from "eventemitter3";
 
 /**
  * Encodes an MQTT Multi-Byte Integer
@@ -61,8 +62,9 @@ function writeUint16(input, buffer, offset) {
 * @private
 * @ignore
 */
-export default class {
+export default class extends EventEmitter {
   constructor(type, options) {
+    super();
     this.type = type;
     for(const name in options) {
       if(options.hasOwnProperty(name)) {
@@ -80,10 +82,10 @@ export default class {
      * of all the component parts
      */
 
-    let remLength = 0;
     const topicStrLength = [];
-    let destinationNameLength = 0;
-    let willMessagePayloadBytes;
+    let destinationNameLength = 0,
+        remLength = 0,
+        willMessagePayloadBytes;
 
     // if the message contains a messageIdentifier then we need two bytes for that
     if(this.messageIdentifier !== undefined) {

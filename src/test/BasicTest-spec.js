@@ -76,10 +76,10 @@ describe("BasicTest", function() {
     //console.log("unsubscribed",subscribed);
   }
 
-  function messageDelivered(response) {
-    console.log("messageDelivered. topic:%s, duplicate:%s, payloadString:%s,qos:%s,retained:%s", response.destinationName, response.duplicate, response.payloadString, response.qos, response.retained);
+  function messageDelivered(message) {
+    console.log("messageDelivered. topic:%s, duplicate:%s, payloadString:%s,qos:%s,retained:%s", message.destinationName, message.duplicate, message.payloadString, message.qos, message.retained);
     isMessageDelivered = true;
-    //reponse.invocationContext.onMessageArrived = null;
+    //message.invocationContext.onMessageArrived = null;
   }
 
   function messageArrived(message) {
@@ -108,18 +108,16 @@ describe("BasicTest", function() {
   */
   it("it should create and connect and disconnect to a server.", function() {
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
-    client.onConnectionLost = onConnectionLost;
+    client.on("connectionLost", onConnectionLost);
     expect(client).not.toBe(null);
 
     console.log("Connecting...");
-    runs(function() {
-      client.connect({
-        onSuccess: onConnectSuccess,
-        onFailure: onConnectFailure,
-        mqttVersion: testMqttVersion,
-        useSSL: testUseSSL
-      });
-    });
+    runs(() => client.connect({
+      onSuccess: onConnectSuccess,
+      onFailure: onConnectFailure,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    }));
     waitsFor(() => connected, "the client should connect", 2000);
     runs(() => expect(connected).toBe(true));
 
@@ -142,7 +140,7 @@ describe("BasicTest", function() {
 
   it("it should fallback from MQTTv3.1.1 to v3.1", function() {
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
-    client.onConnectionLost = onConnectionLost;
+    client.on("connectionLost", onConnectionLost);
     expect(client).not.toBe(null);
 
     console.log("Connecting...");
@@ -163,7 +161,7 @@ describe("BasicTest", function() {
 
   it("it should connect to a list of server(HA connection).", function() {
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
-    client.onConnectionLost = onConnectionLost;
+    client.on("connectionLost", onConnectionLost);
     expect(client).not.toBe(null);
 
     console.log("should connect to a available server from list");
@@ -183,12 +181,11 @@ describe("BasicTest", function() {
   });
 
   it("it should publish and subscribe.", function() {
-
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
-    client.onMessageArrived = messageArrived;
-    client.onMessageDelivered = messageDelivered;
+    client.on("arrived", messageArrived);
+    client.on("delivered", messageDelivered);
 
-  runs(() => client.connect({
+    runs(() => client.connect({
       onSuccess: onConnectSuccess,
       onFailure: onConnectFailure,
       mqttVersion: testMqttVersion,
@@ -208,13 +205,13 @@ describe("BasicTest", function() {
     runs(() => expect(subscribed).toBe(true));
 
     console.log("Send and receive message...");
-    runs(function() {
+    runs(() => {
       const message = new Paho.Message(strMessageSend);
       message.destinationName = strTopic;
       client.send(message);
     });
     waitsFor(() => isMessageReceived, "the client should send and receive a message", 2000);
-    runs(function() {
+    runs(() => {
       //to do Check message sent
       expect(isMessageDelivered).toBe(true);
       //Check msg received
@@ -237,7 +234,7 @@ describe("BasicTest", function() {
       //client.disconnect();
 
     //should not receive a message after unsubscribe
-    runs(function() {
+    runs(() => {
       //console.log('isMessageReceived',isMessageReceived);
       isMessageDelivered = false;
       isMessageReceived = false;
@@ -250,7 +247,7 @@ describe("BasicTest", function() {
     });
     waitsFor(() => isMessageDelivered, "the client should send and receive a message", 2000);
 
-    runs(function() {
+    runs(() => {
       //to do Check message sent
       expect(isMessageDelivered).toBe(true);
       //Check msg received
@@ -332,8 +329,8 @@ describe("BasicTest", function() {
   it("it should subscribe to multiple topics.", function() {
 
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
-    client.onMessageArrived = messageArrived;
-    client.onMessageDelivered = messageDelivered;
+    client.on("arrived", messageArrived);
+    client.on("delivered", messageDelivered);
 
     runs(() => client.connect({
       onSuccess: onConnectSuccess,
@@ -355,14 +352,14 @@ describe("BasicTest", function() {
     runs(() => expect(subscribed).toBe(true));
 
     console.log("Send and receive message to the first topic...");
-    runs(function() {
-      const message= new Paho.Message(strMessageSend);
+    runs(() => {
+      const message = new Paho.Message(strMessageSend);
       message.destinationName = strTopic;
       client.send(message);
     });
 
     waitsFor(() => isMessageReceived, "the client should send and receive a message", 2000);
-    runs(function() {
+    runs(() => {
       //to do Check message sent
       expect(isMessageDelivered).toBe(true);
       //Check msg received
@@ -376,7 +373,7 @@ describe("BasicTest", function() {
     });
 
     waitsFor(() => isMessageReceived, "Send and receive message to the second topic...", 2000);
-    runs(function() {
+    runs(() => {
       isMessageReceived = false;
       const message= new Paho.Message(strMessageSend2);
       message.destinationName = strTopic2;
@@ -386,7 +383,7 @@ describe("BasicTest", function() {
    
 
     waitsFor(() => isMessageReceived, "the client should send and receive a message", 2000);
-    runs(function() {
+    runs(() => {
       //to do Check message sent
       expect(isMessageDelivered).toBe(true);
       //Check msg received
