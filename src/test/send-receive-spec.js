@@ -68,6 +68,7 @@ describe("SendReceive", function() {
 
     //set callbacks
     client.on("arrived", onMessageArrived);
+    client.on("connected", onConnect);
     client.on("connectionLost", onDisconnect);
     client.on("delivered", onMessageDelivered);
 
@@ -75,11 +76,8 @@ describe("SendReceive", function() {
     //connect and verify
     this.connect = function(connectOptions) {
       connectOptions = connectOptions || {};
-      if (!connectOptions.hasOwnProperty("onSuccess")) {
-        connectOptions.onSuccess = onConnect;
-        connectOptions.mqttVersion = testMqttVersion;
-        connectOptions.useSSL = testUseSSL;
-      }
+      connectOptions.mqttVersion = testMqttVersion;
+      connectOptions.useSSL = testUseSSL;
       runs(() => client.connect(connectOptions));
 
       waitsFor(() => connected, "the client should connect", 10000);

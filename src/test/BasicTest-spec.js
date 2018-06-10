@@ -109,12 +109,12 @@ describe("BasicTest", function() {
   it("it should create and connect and disconnect to a server.", function() {
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
     client.on("connectionLost", onConnectionLost);
+    client.on("connected", onConnectSuccess);
+    client.on("error", onConnectFailure);
     expect(client).not.toBe(null);
 
     console.log("Connecting...");
     runs(() => client.connect({
-      onSuccess: onConnectSuccess,
-      onFailure: onConnectFailure,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -128,7 +128,6 @@ describe("BasicTest", function() {
 
     console.log("Re-Connecting...");
     runs(() => client.connect({
-      onSuccess: onConnectSuccess,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -140,13 +139,13 @@ describe("BasicTest", function() {
 
   it("it should fallback from MQTTv3.1.1 to v3.1", function() {
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+    client.on("connected", onConnectSuccess);
+    client.on("error", onConnectFailure);
     client.on("connectionLost", onConnectionLost);
     expect(client).not.toBe(null);
 
     console.log("Connecting...");
     runs(() => client.connect({
-      onSuccess: onConnectSuccess,
-      onFailure: onConnectFailure,
       timeout: 1,
       useSSL: testUseSSL
     }));
@@ -161,13 +160,13 @@ describe("BasicTest", function() {
 
   it("it should connect to a list of server(HA connection).", function() {
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+    client.on("connected", onConnectSuccess);
+    client.on("error", onConnectFailure);
     client.on("connectionLost", onConnectionLost);
     expect(client).not.toBe(null);
 
     console.log("should connect to a available server from list");
     runs(() => client.connect({
-      onSuccess: onConnectSuccess,
-      onFailure: onConnectFailure,
       hosts: ["localhost", testServer],
       ports: [2000, testPort],
       protocols: ["ws", "ws"],
@@ -182,12 +181,12 @@ describe("BasicTest", function() {
 
   it("it should publish and subscribe.", function() {
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+    client.on("connected", onConnectSuccess);
+    client.on("error", onConnectFailure);
     client.on("arrived", messageArrived);
     client.on("delivered", messageDelivered);
 
     runs(() => client.connect({
-      onSuccess: onConnectSuccess,
-      onFailure: onConnectFailure,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -329,12 +328,12 @@ describe("BasicTest", function() {
   it("it should subscribe to multiple topics.", function() {
 
     const client = new Paho.Client(testServer, testPort, testPath, genStr(clientId));
+    client.on("connected", onConnectSuccess);
+    client.on("error", onConnectFailure);
     client.on("arrived", messageArrived);
     client.on("delivered", messageDelivered);
 
     runs(() => client.connect({
-      onSuccess: onConnectSuccess,
-      onFailure: onConnectFailure,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));

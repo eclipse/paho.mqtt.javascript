@@ -75,13 +75,13 @@ describe("InteropsTests", function() {
 
   it("should connect, disconnect, subscribe, publish and receive messages", function() {
     client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
+    client.on("connected", callbacks.onConnectSuccess);
     client.on("arrived", callbacks.onMessageArrived);
     client.on("delivered", callbacks.onMessageDelivered);
 
     expect(client).not.toBe(null);
 
     runs(() => client.connect({
-      onSuccess: callbacks.onConnectSuccess,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -93,7 +93,6 @@ describe("InteropsTests", function() {
     runs(() => expect(client.isConnected()).toBe(false));
 
     runs(() => client.connect({
-      onSuccess: callbacks.onConnectSuccess,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -122,20 +121,18 @@ describe("InteropsTests", function() {
       expect(messageReceivedCount).toBe(3);
     });
 
-    runs(() => client.disconnect({
-      onSuccess: callbacks.onDisconnectSuccess
-    }));
+    runs(() => client.disconnect());
     waitsFor(() => connected, "the client should disconnect", 5000);
     runs(() => expect(client.isConnected()).toBe(false));
   });
 
   it("should connect, attempt to connect again and fail", function() {
     client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
+    client.on("connected", callbacks.onConnectSuccess);
     let exception = false;
     expect(client).not.toBe(null);
 
-  runs(() => client.connect({
-      onSuccess: callbacks.onConnectSuccess,
+    runs(() => client.connect({
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -145,7 +142,6 @@ describe("InteropsTests", function() {
     runs(function() {
       try {
         client.connect({
-          onSuccess: callbacks.onConnectSuccess,
           mqttVersion: testMqttVersion,
           useSSL: testUseSSL
         });
@@ -161,11 +157,11 @@ describe("InteropsTests", function() {
 
   it("should connect successfully with a 0 length clientid with cleansession true", function() {
     client = new Paho.Client(testServer, testPort, testPath, "");
+    client.on("connected", callbacks.onConnectSuccess);
     expect(client).not.toBe(null);
 
-  runs(() => client.connect({
+    runs(() => client.connect({
       cleanSession: true,
-      onSuccess: callbacks.onConnectSuccess,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -183,11 +179,11 @@ describe("InteropsTests", function() {
       connectFail = true;
     };
     client = new Paho.Client(testServer, testPort, testPath, "");
+    client.on("error", failCallback);
     expect(client).not.toBe(null);
 
     runs(() => client.connect({
       cleanSession: false,
-      onFailure: failCallback,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
@@ -197,12 +193,17 @@ describe("InteropsTests", function() {
   /*
   it('should queue up messages on the server for offline clients', function() {
   	client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
-  	client.on("arrived", callbacks.onMessageArrived);
+    client.on("connected", callbacks.onConnectSuccess);
+    client.on("arrived", callbacks.onMessageArrived);
+  	client.on("delivered", callbacks.onMessageDelivered);
 
   	expect(client).not.toBe(null);
 
   	runs(function() {
-  		client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:false});
+  		client.connect({
+        mqttVersion:testMqttVersion,
+        cleanSession:false
+      });
   	});
   	waitsFor(function() {
   		return client.isConnected();
@@ -212,7 +213,7 @@ describe("InteropsTests", function() {
   	});
 
   	runs(function() {
-  		client.subscribe(wildtopics[5], {qos:2, onSuccess: callbacks.onSubscribeSuccess});
+  		client.subscribe(wildtopics[5], {qos:2});
   	});
   	waitsFor(function() {
   		return subscribed;
@@ -232,10 +233,11 @@ describe("InteropsTests", function() {
   	});
 
   	bClient = new Paho.Client(testServer, testPort, testPath, "testclientid-js-b");
-  	client.on("delivered", callbacks.onMessageDelivered);
 
   	runs(function() {
-  		bClient.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:true});
+  		bClient.connect({
+        mqttVersion:testMqttVersion,
+        cleanSession:true});
   	});
   	waitsFor(function() {
   		return bClient.isConnected();
@@ -260,7 +262,7 @@ describe("InteropsTests", function() {
   	});
 
   	runs(function() {
-  		bClient.disconnect({onSuccess: callbacks.onDisconnectSuccess});
+  		bClient.disconnect();
   	});
   	waitsFor(function() {
   		return connected;
@@ -270,7 +272,7 @@ describe("InteropsTests", function() {
   	});
 
   	runs(function() {
-  		client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:false});
+  		client.connect({mqttVersion:testMqttVersion, cleanSession:false});
   	});
   	waitsFor(function() {
   		return client.isConnected();
@@ -300,7 +302,8 @@ describe("InteropsTests", function() {
   // server and behaviour differs between mqtt server implementations.
   it('should get a return code for failure to subscribe', function() {
   	client = new Paho.Client(testServer, testPort, testPath, "testclientid-js");
-  	client.on("arrived", callbacks.onMessageArrived);
+    client.on("connected", callbacks.onConnectSuccess);
+    client.on("arrived", callbacks.onMessageArrived);
 
   	var subFailed = false;
   	var failSubscribe = function(response) {
@@ -312,7 +315,7 @@ describe("InteropsTests", function() {
   	expect(client).not.toBe(null);
 
   	runs(function() {
-  		client.connect({onSuccess: callbacks.onConnectSuccess, mqttVersion:testMqttVersion, cleanSession:true});
+  		client.connect({mqttVersion:testMqttVersion, cleanSession:true});
   	});
   	waitsFor(function() {
   		return client.isConnected();

@@ -4,7 +4,6 @@ import Message from "./Message";
 import Pinger from "./Pinger";
 import Socket from "./Socket";
 import Storage from "./Storage";
-import Timeout from "./Timeout";
 import WireMessage from "./WireMessage";
 
 /** CONNACK RC Meaning. */
@@ -194,8 +193,8 @@ export default class extends EventEmitter {
     // Load the local state, if any, from the saved version, only restore state relevant to this client.
     this.storage.entries().map(([key, value]) => this.restore(key, value));
 
-    this.on("delivered", (message) => {
-      message.emit("delivered");
+    this.on("delivered", (message, ...args) => {
+      message.emit("delivered", ...args);
     });
   }
 
@@ -213,7 +212,7 @@ export default class extends EventEmitter {
     if(this._reconnecting) {
       // connect() function is called while reconnect is in progress.
       // Terminate the auto reconnect process to use new connect options.
-      this._reconnectTimeout.cancel();
+      global.clearTimeout(this._reconnectTimeout);
       this._reconnectTimeout = null;
       this._reconnecting = false;
     }
@@ -236,7 +235,25 @@ export default class extends EventEmitter {
       throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
     }
 
-    const wireMessage = new WireMessage(MESSAGE_TYPE.SUBSCRIBE);
+    const wireMessage = new WireMessage(MESSAGE_TYPE.SUBSCRIBE),
+          onDelivered = (returnCode) => {
+            if(wireMessage.timeOut) {
+              global.clearTimeout(wireMessage.timeOut);
+            }
+            if(returnCode[0] === 0x80) {
+              subscribeOptions.onFailure && subscribeOptions.onFailure({
+                invocationContext:  subscribeOptions.invocationContext,
+                errorCode:          errorCode,
+                errorMessage:       format(errorCode)
+              });
+            } else {
+              subscribeOptions.onSuccess && subscribeOptions.onSuccess({
+                invocationContext:  subscribeOptions.invocationContext,
+                grantedQos:         returnCode
+              });
+            }
+          };
+
     wireMessage.topics = filter.constructor === Array ? filter : [filter];
     if(subscribeOptions.qos === undefined) {
       subscribeOptions.qos = 0;
@@ -246,33 +263,17 @@ export default class extends EventEmitter {
       wireMessage.requestedQos[i] = subscribeOptions.qos;
     }
 
-    if(subscribeOptions.onSuccess) {
-      wireMessage.onSuccess = function(grantedQos) {
-        subscribeOptions.onSuccess({
-          invocationContext:  subscribeOptions.invocationContext,
-          grantedQos:         grantedQos
-        });
-      };
-    }
-
-    if(subscribeOptions.onFailure) {
-      wireMessage.onFailure = function(errorCode) {
-        subscribeOptions.onFailure({
-          invocationContext:  subscribeOptions.invocationContext,
-          errorCode:          errorCode,
-          errorMessage:       format(errorCode)
-        });
-      };
-    }
+    wireMessage.on("delivered", onDelivered);
 
     if(subscribeOptions.timeout) {
-      wireMessage.timeOut = new Timeout(this, subscribeOptions.timeout, subscribeOptions.onFailure,
-        [{
+      wireMessage.timeOut = global.setTimeout(() => {
+        wireMessage.removeListener("delivered", onDelivered);
+        subscribeOptions.onFailure({
           invocationContext: subscribeOptions.invocationContext,
           errorCode:         ERROR.SUBSCRIBE_TIMEOUT.code,
           errorMessage:      format(ERROR.SUBSCRIBE_TIMEOUT)
-        }]
-      );
+        });
+      }, (subscribeOptions.timeout || 30) * 1000);
     }
 
     // All subscriptions return a SUBACK.
@@ -288,24 +289,28 @@ export default class extends EventEmitter {
       throw new Error(format(ERROR.INVALID_STATE, ["not connected"]));
     }
 
-    const wireMessage = new WireMessage(MESSAGE_TYPE.UNSUBSCRIBE);
+    const wireMessage = new WireMessage(MESSAGE_TYPE.UNSUBSCRIBE),
+          onDelivered = () => {
+            if(wireMessage.timeOut) {
+              global.clearTimeout(wireMessage.timeOut);
+            }
+            unsubscribeOptions.onSuccess({
+              invocationContext: unsubscribeOptions.invocationContext
+          });
+        };
     wireMessage.topics = filter.constructor === Array ? filter : [filter];
 
-    if(unsubscribeOptions.onSuccess) {
-      wireMessage.callback = function() {
-        unsubscribeOptions.onSuccess({
-          invocationContext: unsubscribeOptions.invocationContext
-        });
-      };
-    }
+    wireMessage.on("delivered", onDelivered);
+
     if(unsubscribeOptions.timeout) {
-      wireMessage.timeOut = new Timeout(this, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
-        [{
+      wireMessage.timeOut = global.setTimeout(() => {
+        wireMessage.removeListener("delivered", onDelivered);
+        unsubscribeOptions.onFailure({
           invocationContext: unsubscribeOptions.invocationContext,
           errorCode:         ERROR.UNSUBSCRIBE_TIMEOUT.code,
           errorMessage:      format(ERROR.UNSUBSCRIBE_TIMEOUT)
-        }]
-      );
+        })
+      }, (unsubscribeOptions.timeout || 30) * 1000);
     }
 
     // All unsubscribes return a SUBACK.
@@ -357,7 +362,7 @@ export default class extends EventEmitter {
     if(this._reconnecting) {
       // disconnect() function is called while reconnect is in progress.
       // Terminate the auto reconnect process.
-      this._reconnectTimeout.cancel();
+      global.clearTimeout(this._reconnectTimeout);
       this._reconnectTimeout = null;
       this._reconnecting = false;
     }
@@ -416,18 +421,22 @@ export default class extends EventEmitter {
     this.socket.on("message", this._onSocketMessage, this);
     this.socket.on("error", this._onSocketError, this);
     this.socket.on("close", this._onSocketClose, this);
+
+    this.sendPinger = new Pinger(this, this.connectOptions.keepAliveInterval);
+    this.receivePinger = new Pinger(this, this.connectOptions.keepAliveInterval);
+
     this.socket.connect({
       url,
       mqttVersion:  this.connectOptions.mqttVersion,
     });
 
-    this.sendPinger = new Pinger(this, this.connectOptions.keepAliveInterval);
-    this.receivePinger = new Pinger(this, this.connectOptions.keepAliveInterval);
     if(this._connectTimeout) {
-      this._connectTimeout.cancel();
+      global.clearTimeout(this._connectTimeout);
       this._connectTimeout = null;
     }
-    this._connectTimeout = new Timeout(this, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
+    this._connectTimeout = global.setTimeout(() => (
+      this._disconnected(ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT))
+    ), (this.connectOptions.timeout || 30) * 1000);
   }
 
   // Schedule a new message to be sent over the Sockets
@@ -543,7 +552,7 @@ export default class extends EventEmitter {
           // otherwise, _handleMessage will notify about delivery
           this.emit("delivered", wireMessage);
         }
-      } else {
+      } else if(!this._sentMessages[wireMessage.messageIdentifier]) {
         this.emit("delivered", wireMessage);
       }
     }
@@ -635,9 +644,9 @@ export default class extends EventEmitter {
     try {
       switch (wireMessage.type) {
         case MESSAGE_TYPE.CONNACK: {
-          this._connectTimeout.cancel();
+          global.clearTimeout(this._connectTimeout);
           if(this._reconnectTimeout) {
-            this._reconnectTimeout.cancel();
+            global.clearTimeout(this._reconnectTimeout);
           }
 
           // If we have started using clean session then clear up the local state.
@@ -687,20 +696,13 @@ export default class extends EventEmitter {
           for(let i = 0, len = sequencedMessages.length; i < len; i++) {
             const sentMessage = sequencedMessages[i];
             if(sentMessage.type == MESSAGE_TYPE.PUBLISH && sentMessage.pubRecReceived) {
-              const pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {messageIdentifier: sentMessage.messageIdentifier});
+              const pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {
+                messageIdentifier: sentMessage.messageIdentifier
+              });
               this._scheduleMessage(pubRelMessage);
             } else {
               this._scheduleMessage(sentMessage);
             }
-          }
-
-          // Execute the connectOptions.onSuccess callback if there is one.
-          // Will also now return if this connection was the result of an automatic
-          // reconnect and which URI was successfully connected to.
-          if(this.connectOptions.onSuccess) {
-            this.connectOptions.onSuccess({
-              invocationContext: this.connectOptions.invocationContext
-            });
           }
 
           let reconnected = false;
@@ -710,7 +712,7 @@ export default class extends EventEmitter {
             this._reconnecting = false;
           }
 
-          // Execute the onConnected callback if there is one.
+          // Fire the connected event.
           this.emit("connected", reconnected, this._uri);
 
           // Process all queued messages now that the connection is established.
@@ -736,7 +738,9 @@ export default class extends EventEmitter {
           // If this is a re flow of a PUBREC after we have restarted receivedMessage will not exist.
           if(sentMessage) {
             sentMessage.pubRecReceived = true;
-            const pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {messageIdentifier: wireMessage.messageIdentifier});
+            const pubRelMessage = new WireMessage(MESSAGE_TYPE.PUBREL, {
+              messageIdentifier: wireMessage.messageIdentifier
+            });
             this.store("Sent:", sentMessage);
             this._scheduleMessage(pubRelMessage);
           }
@@ -751,7 +755,9 @@ export default class extends EventEmitter {
             delete this._receivedMessages[wireMessage.messageIdentifier];
           }
           // Always flow PubComp, we may have previously flowed PubComp but the server lost it and restarted.
-          const pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {messageIdentifier: wireMessage.messageIdentifier});
+          const pubCompMessage = new WireMessage(MESSAGE_TYPE.PUBCOMP, {
+            messageIdentifier: wireMessage.messageIdentifier
+          });
           this._scheduleMessage(pubCompMessage);
 
           break;
@@ -763,36 +769,14 @@ export default class extends EventEmitter {
           this.emit("delivered", sentMessage);
           break;
         }
-        case MESSAGE_TYPE.SUBACK: {
-          const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
-          if(sentMessage) {
-            if(sentMessage.timeOut) {
-              sentMessage.timeOut.cancel();
-            }
-            // This will need to be fixed when we add multiple topic support
-            if(wireMessage.returnCode[0] === 0x80) {
-              if(sentMessage.onFailure) {
-                sentMessage.onFailure(wireMessage.returnCode);
-              }
-            } else if(sentMessage.onSuccess) {
-              sentMessage.onSuccess(wireMessage.returnCode);
-            }
-            delete this._sentMessages[wireMessage.messageIdentifier];
-          }
-          break;
-        }
+        case MESSAGE_TYPE.SUBACK:
         case MESSAGE_TYPE.UNSUBACK: {
           const sentMessage = this._sentMessages[wireMessage.messageIdentifier];
           if(sentMessage) {
-            if(sentMessage.timeOut) {
-              sentMessage.timeOut.cancel();
-            }
-            if(sentMessage.callback) {
-              sentMessage.callback();
-            }
+            // This will need to be fixed when we add multiple topic support
+            this.emit("delivered", sentMessage, wireMessage.returnCode);
             delete this._sentMessages[wireMessage.messageIdentifier];
           }
-
           break;
         }
         case MESSAGE_TYPE.PINGRESP:
@@ -817,7 +801,7 @@ export default class extends EventEmitter {
   /** @ignore */
   _onSocketError(error) {
     if(!this._reconnecting) {
-      this._disconnected(ERROR.SOCKET_ERROR.code, format(ERROR.SOCKET_ERROR, [error.data]));
+      this._disconnected(ERROR.SOCKET_ERROR.code, format(ERROR.SOCKET_ERROR, [error.data.message || error.data]));
     }
   }
 
@@ -902,14 +886,14 @@ export default class extends EventEmitter {
 
     if(errorCode !== undefined && this._reconnecting) {
       // Continue automatic reconnect process
-      this._reconnectTimeout = new Timeout(this, this._reconnectInterval, this._reconnect);
+      this._reconnectTimeout = global.setTimeout(() => this._reconnect(), this._reconnectInterval * 1000);
       return;
     }
 
     this.sendPinger.cancel();
     this.receivePinger.cancel();
     if(this._connectTimeout) {
-      this._connectTimeout.cancel();
+      global.clearTimeout(this._connectTimeout);
       this._connectTimeout = null;
     }
 
@@ -927,44 +911,45 @@ export default class extends EventEmitter {
       // Try the next host.
       this.hostIndex++;
       this._doConnect(this.connectOptions.uris[this.hostIndex]);
-    } else {
-      if(errorCode === undefined) {
-        errorCode = ERROR.OK.code;
-        errorText = format(ERROR.OK);
-      }
+      return;
+    }
+    
+    if(errorCode === undefined) {
+      errorCode = ERROR.OK.code;
+      errorText = format(ERROR.OK);
+    }
 
-      // Run any application callbacks last as they may attempt to reconnect and hence create a new socket.
-      if(this.connected) {
-        this.connected = false;
-        // Execute the connectionLostCallback if there is one, and we were connected.
-        this.emit("connectionLost", {
-          errorCode:    errorCode,
-          errorMessage: errorText,
-          reconnect:    this.connectOptions.reconnect,
-          uri:          this._uri
-        });
-        if(errorCode !== ERROR.OK.code && this.connectOptions.reconnect) {
-          // Start automatic reconnect process for the very first time since last successful connect.
-          this._reconnectInterval = 1;
-          this._reconnect();
+    // Run any application callbacks last as they may attempt to reconnect and hence create a new socket.
+    if(this.connected) {
+      this.connected = false;
+      // Execute the connectionLostCallback if there is one, and we were connected.
+      this.emit("connectionLost", {
+        errorCode:    errorCode,
+        errorMessage: errorText,
+        reconnect:    this.connectOptions.reconnect,
+        uri:          this._uri
+      });
+      if(errorCode !== ERROR.OK.code && this.connectOptions.reconnect) {
+        // Start automatic reconnect process for the very first time since last successful connect.
+        this._reconnectInterval = 1;
+        this._reconnect();
+      }
+    } else {
+      // Otherwise we never had a connection, so indicate that the connect has failed.
+      if(this.connectOptions.mqttVersion === 4 && this.connectOptions.mqttVersionExplicit === false) {
+        this._trace("Failed to connect V4, dropping back to V3");
+        this.connectOptions.mqttVersion = 3;
+        if(this.connectOptions.uris) {
+          this.hostIndex = 0;
+          this._doConnect(this.connectOptions.uris[0]);
+        } else {
+          this._doConnect(this.uri);
         }
       } else {
-        // Otherwise we never had a connection, so indicate that the connect has failed.
-        if(this.connectOptions.mqttVersion === 4 && this.connectOptions.mqttVersionExplicit === false) {
-          this._trace("Failed to connect V4, dropping back to V3");
-          this.connectOptions.mqttVersion = 3;
-          if(this.connectOptions.uris) {
-            this.hostIndex = 0;
-            this._doConnect(this.connectOptions.uris[0]);
-          } else {
-            this._doConnect(this.uri);
-          }
-        } else if(this.connectOptions.onFailure) {
-          this.connectOptions.onFailure({
-            invocationContext:  this.connectOptions.invocationContext,
-            errorCode:          errorCode,
-            errorMessage:       errorText});
-        }
+        this.emit("error", {
+          errorCode:          errorCode,
+          errorMessage:       errorText
+        });
       }
     }
   }

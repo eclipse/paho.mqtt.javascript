@@ -144,7 +144,7 @@ export default class extends EventEmitter {
         }
       })
     ));
-    ["connected", "connectionLost"].forEach((event) => (
+    ["connected", "connectionLost", "error"].forEach((event) => (
       this.client.on(event, (...args) => this.emit(event, ...args))
     ));
     /*
@@ -254,19 +254,11 @@ export default class extends EventEmitter {
      * @param {boolean} connectOptions.cleanSession - if true(default) the client and server
      *                    persistent state is deleted on successful connect.
      * @param {boolean} connectOptions.useSSL - if present and true, use an SSL Websocket connection.
-     * @param {object} connectOptions.invocationContext - passed to the onSuccess callback or onFailure callback.
      * @param {function} connectOptions.onSuccess - called when the connect acknowledgement
      *                    has been received from the server.
      * A single response object parameter is passed to the onSuccess callback containing the following fields:
      * <ol>
      * <li>invocationContext as passed in to the onSuccess method in the connectOptions.
-     * </ol>
-     * @param {function} connectOptions.onFailure - called when the connect request has failed or timed out.
-     * A single response object parameter is passed to the onFailure callback containing the following fields:
-     * <ol>
-     * <li>invocationContext as passed in to the onFailure method in the connectOptions.
-     * <li>errorCode a number indicating the nature of the error.
-     * <li>errorMessage text describing the error.
      * </ol>
      * @param {array} connectOptions.hosts - If present this contains either a set of hostnames or fully qualified
      * WebSocket URIs (ws://iot.eclipse.org:80/ws), that are tried in order in place
@@ -308,9 +300,6 @@ export default class extends EventEmitter {
       keepAliveInterval:   "number",
       cleanSession:        "boolean",
       useSSL:              "boolean",
-      invocationContext:   "object",
-      onSuccess:           "function",
-      onFailure:           "function",
       protocols:           "object",
       hosts:               "object",
       ports:               "object",
@@ -693,7 +682,7 @@ export default class extends EventEmitter {
  * All processing that this Client will ever do has been completed. So, for example,
  * in the case of a Qos=2 message sent by this client, the PubComp flow has been received from the server
  * and the message has been removed from persistent storage before this callback is invoked.
- * Parameters passed to the onMessageDelivered callback are:
+ * Parameters passed to the delivered event are:
  * 
  * @event Client#delivered
  * @type {Message}
@@ -701,7 +690,7 @@ export default class extends EventEmitter {
 
 /**
  * called when a message has arrived in this client.
- * Parameters passed to the onMessageArrived callback are
+ * Parameters passed to the arrived event are
  * 
  * @event Client#arrived
  * @type {Message}
@@ -710,10 +699,20 @@ export default class extends EventEmitter {
 /**
  * called when a connection is successfully made to the server.
  * after a connect() method.
- * Parameters passed to the onConnected callback are
+ * Parameters passed to the connected event are
  * 
  * @event Client#connected
  * @type {object}
  * @property {boolean} reconnect - If true, the connection was the result of a reconnect
  * @property {string} uri - The URI used to connect to the server
  */
+
+ /**
+  * called when the connect request has failed or timed out.
+  * A single response object parameter is passed to the event containing the following fields
+  * 
+  * @event Client#error 
+  * @type {object}
+  * @property {number} errorCode - a number indicating the nature of the error.
+  * @property {string} errorMessage - text describing the error.
+  */

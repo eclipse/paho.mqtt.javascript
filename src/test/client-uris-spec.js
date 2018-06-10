@@ -75,13 +75,17 @@ describe("client-uris", function() {
 	// Leaving this test here to remember this fact in case we add an array of paths to connopts
 	it('should connect and disconnect to a server using connectoptions hosts and ports', function() {
         client = new Paho.Client(testServer, testPort, "testclientid");
+        client.on("connected", onConnectSuccess);
+        client.on("error", onConnectFailure);
         expect(client).not.toBe(null);
 
 		client.onMessageArrived = messageArrived;
         client.onConnectionLost = onDisconnect;
 
 		runs(function() {
-			client.connect({onSuccess:onConnect,hosts:[testServer],ports:[testPort]});
+			client.connect({hosts:[testServer],
+        ports:[testPort]
+      });
 		});
 
 		waitsFor(function() {
@@ -107,13 +111,13 @@ describe("client-uris", function() {
 
   it("should connect and disconnect to a server using connectoptions hosts", function() {
     const client = new Paho.Client(testServer, testPort, "testclientid");
+    client.on("connected", onConnect);
     expect(client).not.toBe(null);
 
     client.on("arrived", messageArrived);
     client.on("connectionLost", onDisconnect);
 
     runs(() => client.connect({
-      onSuccess: onConnect,
       hosts: ["ws://" + testServer + ":" + testPort + testPath],
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL

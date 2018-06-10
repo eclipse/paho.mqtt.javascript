@@ -142,26 +142,18 @@ function connect() {
   logMessage("INFO", "Connecting to Server: [Proto: ", protocol, ", Host: ", hostname, ", Port: ", port, ", Path: ", client.path, ", ID: ", clientId, "]");
 
   // set callback handlers
-  client.onConnectionLost = onConnectionLost;
-  client.onMessageArrived = onMessageArrived;
-  client.onConnected = onConnected;
-
+  client.on("connectionLost", onConnectionLost);
+  client.on("arrived", onMessageArrived);
+  client.on("connected", onConnected);
+  client.on("error", onFail);
+  
 
   var options = {
-    invocationContext: {
-      protocol: protocol,
-      host: hostname,
-      port: port,
-      path: client.path,
-      clientId: clientId
-    },
     timeout: timeout,
     keepAliveInterval: keepAlive,
     cleanSession: cleanSession,
     useSSL: tls,
-    reconnect: automaticReconnect,
-    onSuccess: onConnect,
-    onFailure: onFail
+    reconnect: automaticReconnect
   };
 
   if (user.length > 0) {

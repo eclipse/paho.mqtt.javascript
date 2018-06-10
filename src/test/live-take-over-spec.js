@@ -70,6 +70,7 @@ describe("LiveTakeOver", function() {
 
     //set callbacks
     client.on("arrived", onMessageArrived);
+    client.on("connected", onConnect);
     client.on("connectionLost", onDisconnect);
     client.on("delivered", onMessageDelivered);
 
@@ -77,11 +78,8 @@ describe("LiveTakeOver", function() {
     //connect and verify
     this.connect = function(connectOptions) {
       connectOptions = connectOptions || {};
-      if(!connectOptions.hasOwnProperty("onSuccess")) {
-        connectOptions.onSuccess = onConnect;
-        connectOptions.mqttVersion = testMqttVersion;
-        connectOptions.useSSL = testUseSSL;
-      }
+      connectOptions.mqttVersion = testMqttVersion;
+      connectOptions.useSSL = testUseSSL;
       runs(function() {
         client.connect(connectOptions);
       });

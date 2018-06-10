@@ -38,15 +38,13 @@ describe("client", function() {
   });
 
   it("should connect to a server", function() {
+    client.once("connected", onConnect);
     runs(() => client.connect({
-      onSuccess: onConnect,
       mqttVersion: testMqttVersion,
       useSSL: testUseSSL
     }));
 
-    waitsFor(function() {
-      return connected;
-    }, "the client should connect", 10000);
+    waitsFor(() => connected, "the client should connect", 10000);
 
     runs(() => expect(connected).toBe(true));
   });

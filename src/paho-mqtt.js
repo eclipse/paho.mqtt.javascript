@@ -78,9 +78,7 @@ function onMessageArrived(message) {
 
 client.on("connectionLost", onConnectionLost);
 client.on("arrived", onMessageArrived);
-client.connect({
-  onSuccess:  onConnect
-});
+client.on("connected", onConnect);
 
  */
 
