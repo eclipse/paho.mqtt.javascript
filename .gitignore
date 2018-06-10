@@ -5,3 +5,5 @@ package-lock.json
 .env
 paho.mqtt.testing/
 persistence/
+.settings/
+dist/

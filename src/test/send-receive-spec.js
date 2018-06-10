@@ -1,29 +1,29 @@
-var settings = require('./client-harness');
+/* eslint-disable no-console */
+const settings = require("./client-harness");
 
-
-var testServer = settings.server;
-var testPort = settings.port;
-var testPath = settings.path;
-var testMqttVersion = settings.mqttVersion;
-var topicPrefix = settings.topicPrefix;
-var testUseSSL = settings.useSSL
+const testMqttVersion = settings.mqttVersion,
+      testPath        = settings.path,
+      testPort        = settings.port,
+      testServer      = settings.server,
+      testUseSSL      = settings.useSSL,
+      topicPrefix     = settings.topicPrefix;
 
 //define a default clientID
-var clientId = "testClient1";
+const clientId = "testClient1";
 
-describe('SendReceive', function() {
+describe("SendReceive", function() {
 
   //*************************************************************************
   // Client wrapper - define a client wrapper to ease testing
   //*************************************************************************
-  var MqttClient = function(clientId) {
-    var client = new Paho.Client(testServer, testPort, testPath, clientId);
+  const MqttClient = function(clientId) {
+    const client = new Paho.Client(testServer, testPort, testPath, clientId);
     //states
-    var connected = false;
-    var subscribed = false;
-    var messageReceived = false;
-    var messageDelivered = false;
-    var receivedMessage = null;
+    let connected = false;
+    let subscribed = false;
+    let messageReceived = false;
+    let messageDelivered = false;
+    let receivedMessage = null;
 
     //reset all states
     this.resetStates = function() {
@@ -35,60 +35,54 @@ describe('SendReceive', function() {
     };
 
     //callbacks
-    var onConnect = function() {
+    const onConnect = function() {
       console.log("%s connected", clientId);
       connected = true;
     };
 
-    var onDisconnect = function(response) {
+    const onDisconnect = function() {
       console.log("%s disconnected", clientId);
       connected = false;
     };
 
-    var onSubscribe = function() {
+    const onSubscribe = function() {
       console.log("%s subscribed", clientId);
       subscribed = true;
     };
 
-    var onUnsubscribe = function() {
+    const onUnsubscribe = function() {
       console.log("%s unsubscribed", clientId);
       subscribed = false;
     };
 
-    var onMessageArrived = function(msg) {
-      console.log("%s received msg: %s", clientId, msg.payloadString);
+    const onMessageArrived = function(message) {
+      console.log("%s received msg: %s", clientId, message.payloadString);
       messageReceived = true;
-      receivedMessage = msg;
+      receivedMessage = message;
     };
 
-    var onMessageDelivered = function(msg) {
-      console.log("%s delivered message: %s", clientId, msg.payloadString);
+    const onMessageDelivered = function(message) {
+      console.log("%s delivered message: %s", clientId, message.payloadString);
       messageDelivered = true;
-    }
+    };
 
     //set callbacks
-    client.onMessageArrived = onMessageArrived;
-    client.onConnectionLost = onDisconnect;
-    client.onMessageDelivered = onMessageDelivered;
+    client.on("arrived", onMessageArrived);
+    client.on("connected", onConnect);
+    client.on("connectionLost", onDisconnect);
+    client.on("delivered", onMessageDelivered);
 
     //functions
     //connect and verify
     this.connect = function(connectOptions) {
       connectOptions = connectOptions || {};
-      if (!connectOptions.hasOwnProperty("onSuccess")) {
-        connectOptions.onSuccess = onConnect;
-        connectOptions.mqttVersion = testMqttVersion;
-        connectOptions.useSSL = testUseSSL;
-      }
-      runs(function() {
-        client.connect(connectOptions);
-      });
+      connectOptions.mqttVersion = testMqttVersion;
+      connectOptions.useSSL = testUseSSL;
+      runs(() => client.connect(connectOptions));
 
-      waitsFor(function() {
-        return connected;
-      }, "the client should connect", 10000);
+      waitsFor(() => connected, "the client should connect", 10000);
 
-      runs(function() {
+      runs(() => {
         expect(connected).toBe(true);
         //reset state
         connected = false;
@@ -97,33 +91,25 @@ describe('SendReceive', function() {
 
     //disconnect and verify
     this.disconnect = function() {
-      runs(function() {
-        client.disconnect();
-      });
+      runs(() => client.disconnect());
 
-      waitsFor(function() {
-        return !connected;
-      }, "the client should disconnect", 10000);
+      waitsFor(() => !connected, "the client should disconnect", 10000);
 
-      runs(function() {
-        expect(connected).not.toBe(true);
-      });
+      runs(() => expect(connected).not.toBe(true));
     };
 
     //subscribe and verify
     this.subscribe = function(topic, qos) {
-      runs(function() {
+      runs(() => {
         client.subscribe(topic, {
           qos: qos,
           onSuccess: onSubscribe
         });
       });
 
-      waitsFor(function() {
-        return subscribed;
-      }, "the client should subscribe", 2000);
+      waitsFor(() => subscribed, "the client should subscribe", 2000);
 
-      runs(function() {
+      runs(() => {
         expect(subscribed).toBe(true);
         //reset state
         subscribed = false;
@@ -132,35 +118,29 @@ describe('SendReceive', function() {
 
     //unsubscribe and verify
     this.unsubscribe = function(topic) {
-      runs(function() {
+      runs(() => {
         client.unsubscribe(topic, {
           onSuccess: onUnsubscribe
         });
       });
 
-      waitsFor(function() {
-        return !subscribed;
-      }, "the client should subscribe", 2000);
+      waitsFor(() => !subscribed, "the client should subscribe", 2000);
 
-      runs(function() {
-        expect(subscribed).not.toBe(true);
-      });
+      runs(() => expect(subscribed).not.toBe(true));
     };
 
     //publish and verify
     this.publish = function(topic, qos, payload) {
-      runs(function() {
-        var message = new Paho.Message(payload);
+      runs(() => {
+        const message = new Paho.Message(payload);
         message.destinationName = topic;
         message.qos = qos;
         client.send(message);
-      })
+      });
 
-      waitsFor(function() {
-        return messageDelivered;
-      }, "the client should delivered a message", 10000);
+      waitsFor(() => messageDelivered, "the client should delivered a message", 10000);
 
-      runs(function() {
+      runs(() => {
         //reset state
         messageDelivered = false;
       });
@@ -170,7 +150,7 @@ describe('SendReceive', function() {
     //verify no message received
     this.receiveNone = function() {
       waits(2000);
-      runs(function() {
+      runs(() => {
         expect(messageReceived).toBe(false);
         expect(receivedMessage).toBeNull();
       });
@@ -179,11 +159,9 @@ describe('SendReceive', function() {
     //verify the receive message
     this.receive = function(expectedTopic, publishedQoS, subscribedQoS, expectedPayload) {
 
-      waitsFor(function() {
-        return messageReceived;
-      }, "the client should send and receive a message", 10000);
+      waitsFor(() => messageReceived, "the client should send and receive a message", 10000);
 
-      runs(function() {
+      runs(() => {
         expect(messageReceived).toBe(true);
         expect(receivedMessage).not.toBeNull();
         expect(receivedMessage.qos).toBe(Math.min(publishedQoS, subscribedQoS));
@@ -197,7 +175,7 @@ describe('SendReceive', function() {
         //reset state after each publish
         messageReceived = false;
         receivedMessage = null;
-      })
+      });
     };
   };
 
@@ -205,8 +183,8 @@ describe('SendReceive', function() {
   // Tests
   //*************************************************************************
 
-  it('should connect to a server and disconnect from a server', function() {
-    var client = new MqttClient(clientId);
+  it("should connect to a server and disconnect from a server", function() {
+    const client = new MqttClient(clientId);
 
     //connect and verify
     client.connect({
@@ -219,8 +197,8 @@ describe('SendReceive', function() {
   });
 
 
-  it('should pub/sub using largish messages', function() {
-    var client = new MqttClient(clientId);
+  it("should pub/sub using largish messages", function() {
+    const client = new MqttClient(clientId);
 
     //connect and verify
     client.connect({
@@ -229,8 +207,8 @@ describe('SendReceive', function() {
     });
 
     //subscribe and verify
-    var testTopic = topicPrefix + "pubsub/topic";
-    var subscribedQoS = 0;
+    const testTopic = topicPrefix + "pubsub/topic";
+    const subscribedQoS = 0;
     client.subscribe(testTopic, subscribedQoS);
 
     //unsubscribe and verify
@@ -240,10 +218,10 @@ describe('SendReceive', function() {
     client.subscribe(testTopic, subscribedQoS);
 
     //publish a large message to the topic and verify
-    var publishQoS = 0;
-    var payload = "";
-    var largeSize = 10000;
-    for (var i = 0; i < largeSize; i++) {
+    const largeSize  = 10000,
+          publishQoS = 0;
+    let payload = "";
+    for (let i = 0; i < largeSize; i++) {
       payload += "s";
     }
     client.publish(testTopic, publishQoS, payload);
@@ -256,8 +234,8 @@ describe('SendReceive', function() {
   });
 
 
-  it('should preserve QOS values between publishers and subscribers', function() {
-    var client = new MqttClient(clientId);
+  it("should preserve QOS values between publishers and subscribers", function() {
+    const client = new MqttClient(clientId);
 
     //connect and verify
     client.connect({
@@ -266,16 +244,16 @@ describe('SendReceive', function() {
     });
 
     //subscribe and verify
-    var testTopics = ["pubsub/topic1", "pubsub/topic2", "pubsub/topic3"];
-    var subscribedQoSs = [0, 1, 2];
-    for (var i = 0; i < testTopics.length; i++) {
+    const subscribedQoSs = [0, 1, 2],
+          testTopics     = ["pubsub/topic1", "pubsub/topic2", "pubsub/topic3"];
+    for (let i = 0; i < testTopics.length; i++) {
       client.subscribe(topicPrefix + testTopics[i], subscribedQoSs[i]);
     }
 
     //publish, receive and verify
-    for (var i = 0; i < testTopics.length; i++) {
-      var payload = "msg-" + i;
-      for (var qos = 0; qos < 3; qos++) {
+    for (let i = 0; i < testTopics.length; i++) {
+      const payload = "msg-" + i;
+      for (let qos = 0; qos < 3; qos++) {
         client.publish(topicPrefix + testTopics[i], qos, payload);
         //receive and verify
         client.receive(topicPrefix + testTopics[i], qos, subscribedQoSs[i], payload);
@@ -286,14 +264,14 @@ describe('SendReceive', function() {
     client.disconnect();
   });
 
-  it('should work using multiple publishers and subscribers.', function() {
-    //topic to publish
-    var topic = topicPrefix + "multiplePubSub/topic";
-
+  it("should work using multiple publishers and subscribers.", function() {
     //create publishers and connect
-    var publishers = [];
-    var publishersNum = 2;
-    for (var i = 0; i < publishersNum; i++) {
+    const publishers = [],
+          publishersNum = 2,
+          //topic to publish
+          topic = topicPrefix + "multiplePubSub/topic";
+
+    for (let i = 0; i < publishersNum; i++) {
       publishers[i] = new MqttClient("publisher-" + i);
       publishers[i].connect({
         mqttVersion: testMqttVersion,
@@ -302,10 +280,10 @@ describe('SendReceive', function() {
     }
 
     //create subscribers and connect
-    var subscribedQoS = 0;
-    var subscribers = [];
-    var subscribersNum = 10;
-    for (var i = 0; i < subscribersNum; i++) {
+    const subscribedQoS = 0,
+          subscribers = [],
+          subscribersNum = 10;
+    for (let i = 0; i < subscribersNum; i++) {
       subscribers[i] = new MqttClient("subscriber-" + i);
       subscribers[i].connect({
         mqttVersion: testMqttVersion,
@@ -315,31 +293,31 @@ describe('SendReceive', function() {
     }
 
     //do publish and receive with verify
-    var publishQoS = 0;
-    var pubishMsgNum = 10;
-    for (var m = 0; m < pubishMsgNum; m++) {
-      var payload = "multi-pub-sub-msg-" + m;
-      for (var i = 0; i < publishersNum; i++) {
+    const pubishMsgNum = 10,
+          publishQoS   = 0;
+    for (let m = 0; m < pubishMsgNum; m++) {
+      const payload = "multi-pub-sub-msg-" + m;
+      for (let i = 0; i < publishersNum; i++) {
         publishers[i].publish(topic, publishQoS, payload);
-        for (var j = 0; j < subscribersNum; j++) {
+        for (let j = 0; j < subscribersNum; j++) {
           subscribers[j].receive(topic, publishQoS, subscribedQoS, payload);
         }
       }
     }
 
     //disconnect publishers and subscribers
-    for (var i = 0; i < publishersNum; i++) {
+    for (let i = 0; i < publishersNum; i++) {
       publishers[i].disconnect();
     }
-    for (var i = 0; i < subscribersNum; i++) {
+    for (let i = 0; i < subscribersNum; i++) {
       subscribers[i].disconnect();
     }
 
   });
 
-  it('should clean up before re-connecting if cleanSession flag is set.', function() {
+  it("should clean up before re-connecting if cleanSession flag is set.", function() {
     //connect with cleanSession flag=false and verify
-    var client = new MqttClient("client-1");
+    const client = new MqttClient("client-1");
     client.connect({
       cleanSession: false,
       mqttVersion: testMqttVersion,
@@ -347,20 +325,20 @@ describe('SendReceive', function() {
     });
 
     //subscribe and verify
-    var testTopic = topicPrefix + "cleanSession/topic1";
-    var subscribedQoS = 0;
+    const subscribedQoS = 0,
+          testTopic = topicPrefix + "cleanSession/topic1";
     client.subscribe(testTopic, subscribedQoS);
 
     //publish and verify
-    var publishQoS = 1;
-    var payload = "cleanSession-msg";
+    const payload = "cleanSession-msg",
+          publishQoS = 1;
     client.publish(testTopic, publishQoS, payload);
     client.receive(testTopic, publishQoS, subscribedQoS, payload);
     //disconnect
     client.disconnect();
 
     // Send a message from another client, to our durable subscription.
-    var anotherClient = new MqttClient("anotherClient-1");
+    const anotherClient = new MqttClient("anotherClient-1");
     anotherClient.connect({
       cleanSession: true,
       mqttVersion: testMqttVersion,
@@ -389,4 +367,4 @@ describe('SendReceive', function() {
   });
 
 
-})
+});
