@@ -2168,8 +2168,7 @@ var PahoMQTT = (function (global) {
 		 *                     and the subscrption was made after the message has been published.
 		 * @throws {InvalidState} if the client is not connected.
 		 */
-		 this.publish = function(topic,payload,qos,retained) {
-			 console.log("Publising message to: ", topic);
+		 this.publish = function(topic,payload,qos,retained) {			 
 			 var message ;
 
  			if(arguments.length === 0){
