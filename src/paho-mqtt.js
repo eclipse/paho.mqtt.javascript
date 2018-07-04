@@ -1528,8 +1528,13 @@ var PahoMQTT = (function (global) {
 			if (this._reconnectInterval < 128)
 				this._reconnectInterval = this._reconnectInterval * 2;
 			if (this.connectOptions.uris) {
-				this.hostIndex = 0;
-				this._doConnect(this.connectOptions.uris[0]);
+				if (this.hostIndex < this.connectOptions.uris.length-1) {
+                    // Try the next host.
+                    this.hostIndex++;
+                }else{
+                    this.hostIndex = 0;
+                }
+				this._doConnect(this.connectOptions.uris[this.hostIndex]);
 			} else {
 				this._doConnect(this.uri);
 			}
