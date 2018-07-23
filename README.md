@@ -1,5 +1,7 @@
 # Eclipse Paho JavaScript client
 
+[![Build Status](https://travis-ci.org/eclipse/paho.mqtt.javascript.svg?branch=develop)](https://travis-ci.org/eclipse/paho.mqtt.javascript)
+
 The Paho JavaScript Client is an MQTT browser-based client library written in Javascript that uses WebSockets to connect to an MQTT Broker.
 
 ## Project description:
@@ -15,7 +17,7 @@ Paho reflects the inherent physical and cost constraints of device connectivity.
 - GitHub: [https://github.com/eclipse/paho.mqtt.javascript](https://github.com/eclipse/paho.mqtt.javascript)
 - Twitter: [@eclipsepaho](https://twitter.com/eclipsepaho)
 - Issues: [github.com/eclipse/paho.mqtt.javascript/issues](https://github.com/eclipse/paho.mqtt.javascript/issues)
-- Mailing-list: [https://dev.eclipse.org/mailman/listinfo/paho-dev](https://dev.eclipse.org/mailman/listinfo/paho-dev
+- Mailing-list: [https://dev.eclipse.org/mailman/listinfo/paho-dev](https://dev.eclipse.org/mailman/listinfo/paho-dev)
 
 
 ## Using the Paho Javascript Client
@@ -73,7 +75,7 @@ This requires the use of a broker that supports WebSockets natively, or the use 
 
 ```JS
 // Create a client instance
-client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
+var client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
 
 // set callback handlers
 client.onConnectionLost = onConnectionLost;
@@ -105,3 +107,8 @@ function onMessageArrived(message) {
   console.log("onMessageArrived:"+message.payloadString);
 }
 ```
+
+## Breaking Changes
+
+Previously the Client's Namepsace was `Paho.MQTT`, as of version 1.1.0 (develop branch) this has now been simplified to `Paho`.
+You should be able to simply do a find and replace in your code to resolve this, for example all instances of `Paho.MQTT.Client` will now be `Paho.Client` and `Paho.MQTT.Message` will be `Paho.Message`.

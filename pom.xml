@@ -4,7 +4,7 @@
 	<groupId>org.eclipse.paho</groupId>
 	<artifactId>paho.javascript</artifactId>
 	<packaging>pom</packaging>
-	<version>${paho.version}</version>
+	<version>1.1.0</version>
 	<url>http://www.eclipse.org/paho</url>
 	<licenses>
 		<license>
@@ -13,11 +13,10 @@
 		</license>
 	</licenses>
 	<properties>
-		<paho.version>1.0.3</paho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<build.level>${maven.build.timestamp}</build.level>
-		<download.location>/home/data/httpd/download.eclipse.org/paho/releases/${paho.version}</download.location>
-		<deployfile.name>${project.artifactId}-${paho.version}</deployfile.name>
+		<download.location>/home/data/httpd/download.eclipse.org/paho/releases/${project.version}</download.location>
+		<deployfile.name>${project.artifactId}-${project.version}</deployfile.name>
 	</properties>
 	<scm>
 		<url>http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git</url>
@@ -27,19 +26,6 @@
 	<build>
 		<defaultGoal>process-resources</defaultGoal>
 		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>templating-maven-plugin</artifactId>
-				<version>1.0-alpha-3</version>
-				<executions>
-					<execution>
-						<id>filter-tests</id>
-						<goals>
-							<goal>filter-test-sources</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 		      <groupId>com.samaxes.maven</groupId>
 		      <artifactId>minify-maven-plugin</artifactId>
@@ -240,13 +226,13 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>jshint</id>
-						<phase>compile</phase>
+						<id>eslint</id>
+						<phase>validate</phase>
 						<goals>
 							<goal>exec</goal>
 						</goals>
 						<configuration>
-							<executable>node_modules/jshint/bin/jshint</executable>
+							<executable>node_modules/eslint/bin/eslint.js</executable>
 							<arguments>
 								<argument>src/paho-mqtt.js</argument>
 							</arguments>

@@ -1,3 +1,7 @@
 node_modules
 .npm
 target
+package-lock.json
+.env
+paho.mqtt.testing/
+persistence/

@@ -1,10 +1,19 @@
 {
 	"name": "paho-client",
-	"description": "Pre reqs for the Paho JS client",
-	"dependencies": {
-		"websocket": "1.x.x",
-		"node-localstorage": "1.3.x",
+	"description": "Eclipse Paho JavaScript MQTT client",
+	"version": "1.1.0",
+	"main": "./src/paho-mqtt.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/eclipse/paho.mqtt.javascript.git"
+	},
+	"license": "EPL-1.0",
+	"devDependencies": {
+		"dotenv": "^4.0.0",
+		"eslint": "^4.12.1",
 		"jasmine-node": "1.14.x",
-		"jshint" : "2.9.x"
+		"jsdoc": "^3.5.5",
+		"node-localstorage": "1.3.x",
+		"websocket": "1.x.x"
 	}
 }

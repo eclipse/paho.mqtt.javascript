@@ -5,76 +5,79 @@ var testServer = settings.server;
 var testPort = settings.port;
 var testPath = settings.path;
 var testMqttVersion = settings.mqttVersion;
+var testUseSSL = settings.useSSL
 
 describe('client-uris', function() {
-	var client = this;
-	var connected = false;
-	var subscribed = false;
-	var disconnectError = null;
-	var messageReceived = false;
+  var client = this;
+  var connected = false;
+  var subscribed = false;
+  var disconnectError = null;
+  var messageReceived = false;
 
-	function onConnect() {
-		console.log("connected");
-		disconnectError = null;
-		connected = true;
-	};
-	function onDisconnect(err) {
-	    console.log("disconnected");
-	    disconnectError = err;
-	    connected = false;
-	}
-	function onSubscribe() {
-		console.log("subscribed");
-		subscribed = true;
-	};
+  function onConnect() {
+    console.log("connected");
+    disconnectError = null;
+    connected = true;
+  };
 
-	function messageArrived(response) {
-		console.log("messageArrived");
-		messageReceived = true;
-		//reponse.invocationContext.onMessageArrived = null;
-	};
+  function onDisconnect(err) {
+    console.log("disconnected");
+    disconnectError = err;
+    connected = false;
+  }
 
-	it('should create a new client with a default path', function() {
-		client = new Paho.Client(testServer, testPort, "testclientid");
+  function onSubscribe() {
+    console.log("subscribed");
+    subscribed = true;
+  };
 
-		expect(client).not.toBe(null);
-		expect(client.host).toBe(testServer);
-		expect(client.port).toBe(testPort);
-		expect(client.path).toBe("/mqtt");
+  function messageArrived(response) {
+    console.log("messageArrived");
+    messageReceived = true;
+    //reponse.invocationContext.onMessageArrived = null;
+  };
 
-	});
+  it('should create a new client with a default path', function() {
+    client = new Paho.Client(testServer, testPort, "testclientid");
 
-	it('should create a new client with a path', function() {
-		client = new Paho.Client(testServer, testPort, testPath, "testclientid");
+    expect(client).not.toBe(null);
+    expect(client.host).toBe(testServer);
+    expect(client.port).toBe(testPort);
+    expect(client.path).toBe("/mqtt");
 
-		expect(client).not.toBe(null);
-		expect(client.host).toBe(testServer);
-		expect(client.port).toBe(testPort);
-		expect(client.path).toBe(testPath);
-	});
+  });
 
-	it('should create a new client with a uri', function() {
-		client = new Paho.Client("ws://"+testServer+":"+testPort+testPath, "testclientid");
+  it('should create a new client with a path', function() {
+    client = new Paho.Client(testServer, testPort, testPath, "testclientid");
 
-		expect(client).not.toBe(null);
-		expect(client.host).toBe(testServer);
-		expect(client.port).toBe(testPort);
-		expect(client.path).toBe(testPath);
-	});
+    expect(client).not.toBe(null);
+    expect(client.host).toBe(testServer);
+    expect(client.port).toBe(testPort);
+    expect(client.path).toBe(testPath);
+  });
 
-	it('should fail to create a new client with an invalid ws uri', function() {
-        client = null;
-        var error;
-	    try {
-            client = new Paho.Client("http://example.com", "testclientid");
-        } catch(err) {
-            error = err;
-        }
-        expect(client).toBe(null);
-        expect(error).not.toBe(null);
-	});
+  it('should create a new client with a uri', function() {
+    client = new Paho.Client("ws://" + testServer + ":" + testPort + testPath, "testclientid");
 
-	/*
+    expect(client).not.toBe(null);
+    expect(client.host).toBe(testServer);
+    expect(client.port).toBe(testPort);
+    expect(client.path).toBe(testPath);
+  });
+
+  it('should fail to create a new client with an invalid ws uri', function() {
+    client = null;
+    var error;
+    try {
+      client = new Paho.Client("http://example.com", "testclientid");
+    } catch (err) {
+      error = err;
+    }
+    expect(client).toBe(null);
+    expect(error).not.toBe(null);
+  });
+
+  /*
 	// We don't yet expose setting the path element with the arrays of hosts/ports
 	// If you want a path other than /mqtt, you need to use the array of hosts-as-uris.
 	// Leaving this test here to remember this fact in case we add an array of paths to connopts
@@ -110,35 +113,40 @@ describe('client-uris', function() {
 	});
 	*/
 
-	it('should connect and disconnect to a server using connectoptions hosts', function() {
-        client = new Paho.Client(testServer, testPort, "testclientid");
-        expect(client).not.toBe(null);
+  it('should connect and disconnect to a server using connectoptions hosts', function() {
+    client = new Paho.Client(testServer, testPort, "testclientid");
+    expect(client).not.toBe(null);
 
-		client.onMessageArrived = messageArrived;
-        client.onConnectionLost = onDisconnect;
+    client.onMessageArrived = messageArrived;
+    client.onConnectionLost = onDisconnect;
 
-		runs(function() {
-			client.connect({onSuccess:onConnect,hosts:["ws://"+testServer+":"+testPort+testPath],mqttVersion:testMqttVersion, useSSL: true});
-		});
+    runs(function() {
+      client.connect({
+        onSuccess: onConnect,
+        hosts: ["ws://" + testServer + ":" + testPort + testPath],
+        mqttVersion: testMqttVersion,
+        useSSL: testUseSSL
+      })
+    });
 
-		waitsFor(function() {
-			return connected;
-		}, "the client should connect", 10000);
+    waitsFor(function() {
+      return connected;
+    }, "the client should connect", 10000);
 
-		runs(function() {
-			expect(connected).toBe(true);
-		});
-        runs(function() {
-            client.disconnect();
-        });
-        waitsFor(function() {
-            return !connected;
-        }, "the client should disconnect",1000);
-        runs(function() {
-            expect(connected).toBe(false);
-            expect(disconnectError).not.toBe(null);
-            expect(disconnectError.errorCode).toBe(0);
-        });
-	});
+    runs(function() {
+      expect(connected).toBe(true);
+    });
+    runs(function() {
+      client.disconnect();
+    });
+    waitsFor(function() {
+      return !connected;
+    }, "the client should disconnect", 1000);
+    runs(function() {
+      expect(connected).toBe(false);
+      expect(disconnectError).not.toBe(null);
+      expect(disconnectError.errorCode).toBe(0);
+    });
+  });
 
 })

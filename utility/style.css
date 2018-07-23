@@ -77,6 +77,10 @@ table.tableSection th, table.tableSection td {
     min-height: 250px;
     max-height: 250px;
 }
+.fixed-height-panel-pre {
+    min-height: 250px;
+    max-height: 400px;
+}
 
 .special-checkbox {
   display: block;
