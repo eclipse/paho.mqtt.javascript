@@ -168,7 +168,7 @@
 								<resource>
 									<directory>target</directory>
 									<includes>
-										<include>${deployfile.name}</include>
+										<include>${deployfile.name}.zip</include>
 									</includes>
 								</resource>
 							</resources>

@@ -69,7 +69,7 @@ The client should work in any browser fully supporting WebSockets, [http://caniu
 
 ## Getting Started
 
-The included code below is a very basic sample that connects to a server using WebSockets and subscribes to the topic ```/World```, once subscribed, it then publishes the message ```Hello``` to that topic. Any messages that come into the subscribed topic will be printed to the Javascript console.
+The included code below is a very basic sample that connects to a server using WebSockets and subscribes to the topic ```World```, once subscribed, it then publishes the message ```Hello``` to that topic. Any messages that come into the subscribed topic will be printed to the Javascript console.
 
 This requires the use of a broker that supports WebSockets natively, or the use of a gateway that can forward between WebSockets and TCP.
 
@@ -89,10 +89,10 @@ client.connect({onSuccess:onConnect});
 function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
-  client.subscribe("/World");
-  var message = new Paho.MQTT.Message("Hello");
-  message.topic = "/World";
-  client.publish(message);
+  client.subscribe("World");
+  message = new Paho.MQTT.Message("Hello");
+  message.destinationName = "World";
+  client.send(message);
 }
 
 // called when the client loses its connection
