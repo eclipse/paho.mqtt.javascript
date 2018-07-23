@@ -103,6 +103,19 @@ function onMessageArrived(message) {
 	// which is used to define the module.
 	var version = "@VERSION@-@BUILDLEVEL@";
 
+	/**
+	 * @private
+	 */
+	var localStorage = global.localStorage || (function () {
+		var data = {};
+
+		return {
+			setItem: function (key, item) { data[key] = item; },
+			getItem: function (key) { return data[key]; },
+			removeItem: function (key) { delete data[key]; },
+		};
+	})();
+
 		/**
 	 * Unique message type identifiers, with associated
 	 * associated integer values.
@@ -687,9 +700,8 @@ function onMessageArrived(message) {
 	 * Repeat keepalive requests, monitor responses.
 	 * @ignore
 	 */
-		var Pinger = function(client, self, keepAliveInterval) {
+		var Pinger = function(client, keepAliveInterval) {
 			this._client = client;
-			this._self = self;
 			this._keepAliveInterval = keepAliveInterval*1000;
 			this.isReset = false;
 
@@ -710,19 +722,19 @@ function onMessageArrived(message) {
 					this.isReset = false;
 					this._client._trace("Pinger.doPing", "send PINGREQ");
 					this._client.socket.send(pingReq);
-					this.timeout = this._self.setTimeout(doTimeout(this), this._keepAliveInterval);
+					this.timeout = setTimeout(doTimeout(this), this._keepAliveInterval);
 				}
 			};
 
 			this.reset = function() {
 				this.isReset = true;
-				this._self.clearTimeout(this.timeout);
+				clearTimeout(this.timeout);
 				if (this._keepAliveInterval > 0)
 					this.timeout = setTimeout(doTimeout(this), this._keepAliveInterval);
 			};
 
 			this.cancel = function() {
-				this._self.clearTimeout(this.timeout);
+				clearTimeout(this.timeout);
 			};
 		};
 
@@ -730,8 +742,7 @@ function onMessageArrived(message) {
 	 * Monitor request completion.
 	 * @ignore
 	 */
-		var Timeout = function(client, self, timeoutSeconds, action, args) {
-			this._self = self;
+		var Timeout = function(client, timeoutSeconds, action, args) {
 			if (!timeoutSeconds)
 				timeoutSeconds = 30;
 
@@ -743,7 +754,7 @@ function onMessageArrived(message) {
 			this.timeout = setTimeout(doTimeout(action, client, args), timeoutSeconds * 1000);
 
 			this.cancel = function() {
-				this._self.clearTimeout(this.timeout);
+				clearTimeout(this.timeout);
 			};
 		};
 
@@ -759,9 +770,6 @@ function onMessageArrived(message) {
 		// Check dependencies are satisfied in this browser.
 			if (!("WebSocket" in global && global.WebSocket !== null)) {
 				throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
-			}
-			if (!("localStorage" in global && global.localStorage !== null)) {
-				throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
 			}
 			if (!("ArrayBuffer" in global && global.ArrayBuffer !== null)) {
 				throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
@@ -904,7 +912,7 @@ function onMessageArrived(message) {
 			}
 
 			if (subscribeOptions.timeout) {
-				wireMessage.timeOut = new Timeout(this, self, subscribeOptions.timeout, subscribeOptions.onFailure,
+				wireMessage.timeOut = new Timeout(this, subscribeOptions.timeout, subscribeOptions.onFailure,
 					[{invocationContext:subscribeOptions.invocationContext,
 						errorCode:ERROR.SUBSCRIBE_TIMEOUT.code,
 						errorMessage:format(ERROR.SUBSCRIBE_TIMEOUT)}]);
@@ -929,7 +937,7 @@ function onMessageArrived(message) {
 				wireMessage.callback = function() {unsubscribeOptions.onSuccess({invocationContext:unsubscribeOptions.invocationContext});};
 			}
 			if (unsubscribeOptions.timeout) {
-				wireMessage.timeOut = new Timeout(this, self, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
+				wireMessage.timeOut = new Timeout(this, unsubscribeOptions.timeout, unsubscribeOptions.onFailure,
 					[{invocationContext:unsubscribeOptions.invocationContext,
 						errorCode:ERROR.UNSUBSCRIBE_TIMEOUT.code,
 						errorMessage:format(ERROR.UNSUBSCRIBE_TIMEOUT)}]);
@@ -1051,13 +1059,13 @@ function onMessageArrived(message) {
 			this.socket.onerror = scope(this._on_socket_error, this);
 			this.socket.onclose = scope(this._on_socket_close, this);
 
-			this.sendPinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
-			this.receivePinger = new Pinger(this, self, this.connectOptions.keepAliveInterval);
+			this.sendPinger = new Pinger(this, this.connectOptions.keepAliveInterval);
+			this.receivePinger = new Pinger(this, this.connectOptions.keepAliveInterval);
 			if (this._connectTimeout) {
 				this._connectTimeout.cancel();
 				this._connectTimeout = null;
 			}
-			this._connectTimeout = new Timeout(this, self, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
+			this._connectTimeout = new Timeout(this, this.connectOptions.timeout, this._disconnected,  [ERROR.CONNECT_TIMEOUT.code, format(ERROR.CONNECT_TIMEOUT)]);
 		};
 
 
@@ -1546,7 +1554,7 @@ function onMessageArrived(message) {
 
 			if (errorCode !== undefined && this._reconnecting) {
 				//Continue automatic reconnect process
-				this._reconnectTimeout = new Timeout(this, self, this._reconnectInterval, this._reconnect);
+				this._reconnectTimeout = new Timeout(this, this._reconnectInterval, this._reconnect);
 				return;
 			}
 
@@ -1619,12 +1627,13 @@ function onMessageArrived(message) {
 		ClientImpl.prototype._trace = function () {
 		// Pass trace message back to client's callback function
 			if (this.traceFunction) {
-				for (var i in arguments)
+				var args = Array.prototype.slice.call(arguments);
+				for (var i in args)
 				{
-					if (typeof arguments[i] !== "undefined")
-						arguments.splice(i, 1, JSON.stringify(arguments[i]));
+					if (typeof args[i] !== "undefined")
+						args.splice(i, 1, JSON.stringify(args[i]));
 				}
-				var record = Array.prototype.slice.call(arguments).join("");
+				var record = args.join("");
 				this.traceFunction ({severity: "Debug", message: record	});
 			}
 
@@ -2380,6 +2389,7 @@ function onMessageArrived(message) {
 			Client: Client,
 			Message: Message
 		};
-	})(self);
+	// eslint-disable-next-line no-nested-ternary
+	})(typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
 	return PahoMQTT;
 });
