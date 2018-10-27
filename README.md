@@ -110,5 +110,5 @@ function onMessageArrived(message) {
 
 ## Breaking Changes
 
-Previously the Client's Namepsace was `Paho.MQTT`, as of version 1.1.0 (develop branch) this has now been simplified to `Paho`.
+Previously the Client's Namespace was `Paho.MQTT`, as of version 1.1.0 (develop branch) this has now been simplified to `Paho`.
 You should be able to simply do a find and replace in your code to resolve this, for example all instances of `Paho.MQTT.Client` will now be `Paho.Client` and `Paho.MQTT.Message` will be `Paho.Message`.
