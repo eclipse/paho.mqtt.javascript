@@ -2323,8 +2323,13 @@ function onMessageArrived(message) {
 					get : function () {
 						if (typeof payload === "string")
 							return payload;
-						else
-							return parseUTF8(payload, 0, payload.length);
+						else {
+							try {
+								return parseUTF8(payload, 0, payload.length);
+							} catch (error) {
+								return "<" + typeof payload + ">";
+							}
+						}
 					}
 				},
 				"payloadBytes":{
