@@ -53,6 +53,25 @@
     </nav>
     <!-- Nav Bar End -->
 
+    <!-- Local Storage GDPR Warning -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">Local Storage Warning</div>
+          <div class="panel-body">
+            <p>This page uses your browsers <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage">Local Storage</a> functionality
+            to store MQTT messages whilst they are "inflight". This allows the Paho javascript client to ensure that QoS 1 and QoS 2 messages are successfully delivered even
+              if the network connection or browser fails. If you do not wish for the Local Storage to be used, please do not use this client, or only use QoS 0 to send and 
+              receive messages. If you wish to see the data being stored for yourself, open up your developer console and look for the Local Storage section,
+              as messages are sent and received, you will see entries appearing and disappearing as the messages complete their QoS 1 and QoS 2 flows. 
+              Messages are deleted as soon as they have completed their QoS flow.</p>
+              <p>More information about the Eclipse Privacy and cookie policy can be found <a href="https://www.eclipse.org/legal/privacy.php">Here</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End of Local Storage GDPR Warning -->
+
     <!-- Connection panel -->
     <div class="row">
       <div class="col-md-12">
@@ -112,9 +131,9 @@
                   </div>
                 </div>
 
-                <div class="col-lg-2">
+                <div class="col-lg-1">
                   <div class="form-group">
-                    <label for="keepAliveInput">Keep-Alive</label>
+                    <label for="keepAliveInput">Keepalive</label>
                     <input type="text" class="form-control" id="keepAliveInput" value="60">
                   </div>
                 </div>
@@ -132,12 +151,18 @@
                     <input type="checkbox" class="special-checkbox" id="tlsInput" value="" checked>
                   </div>
                 </div>
-                <div class="col-lg-2">
+                <div class="col-lg-1">
                   <div class="form-group">
                     <label for="cleanSessionInput">Clean Session</label>
                     <input type="checkbox" class="special-checkbox" id="cleanSessionInput" value="" checked>
                   </div>
 
+                </div>
+                <div class="col-lg-1">
+                  <div class="form-group">
+                    <label for="automaticReconnectInput">Automatic Reconnect</label>
+                    <input type="checkbox" class="special-checkbox" id="automaticReconnectInput" value="" checked>
+                  </div>
                 </div>
               </div>
               <hr>
@@ -324,6 +349,21 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+
+    <div class="col-md-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <a class="chevron-toggle" data-toggle="collapse" data-target="#consoleCollapse" href="#collapseOne">
+                        Console
+                        </a>
+        </div>
+        <div class="panel-body collapse in fixed-height-panel-pre" id="consoleCollapse">
+          <pre id="consolePre" class="pre-scrollable"></pre>
         </div>
       </div>
     </div>

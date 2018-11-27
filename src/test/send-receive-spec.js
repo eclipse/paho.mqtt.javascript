@@ -6,354 +6,387 @@ var testPort = settings.port;
 var testPath = settings.path;
 var testMqttVersion = settings.mqttVersion;
 var topicPrefix = settings.topicPrefix;
+var testUseSSL = settings.useSSL
 
 //define a default clientID
-var clientId="testClient1";
+var clientId = "testClient1";
 
 describe('SendReceive', function() {
 
-	//*************************************************************************
-    // Client wrapper - define a client wrapper to ease testing
-	//*************************************************************************
-	var MqttClient= function(clientId){
-	    var client = new Paho.Client(testServer, testPort, testPath, clientId);
-		//states
-		var connected = false;
-	    var subscribed = false;
-	    var messageReceived = false;
-	    var messageDelivered = false;
-	    var receivedMessage = null;
+  //*************************************************************************
+  // Client wrapper - define a client wrapper to ease testing
+  //*************************************************************************
+  var MqttClient = function(clientId) {
+    var client = new Paho.Client(testServer, testPort, testPath, clientId);
+    //states
+    var connected = false;
+    var subscribed = false;
+    var messageReceived = false;
+    var messageDelivered = false;
+    var receivedMessage = null;
 
-		//reset all states
-		this.resetStates=function(){
-		   connected = false;
-	       subscribed = false;
-	       messageReceived = false;
-	       messageDelivered = false;
-	       receivedMessage = null;
-		};
+    //reset all states
+    this.resetStates = function() {
+      connected = false;
+      subscribed = false;
+      messageReceived = false;
+      messageDelivered = false;
+      receivedMessage = null;
+    };
 
-		//callbacks
-		var onConnect=function() {
-			console.log("%s connected",clientId);
-			connected = true;
-		};
+    //callbacks
+    var onConnect = function() {
+      console.log("%s connected", clientId);
+      connected = true;
+    };
 
-		var onDisconnect=function(response) {
-			console.log("%s disconnected",clientId);
-			connected = false;
-		};
+    var onDisconnect = function(response) {
+      console.log("%s disconnected", clientId);
+      connected = false;
+    };
 
-		var onSubscribe=function() {
-			console.log("%s subscribed",clientId);
-			subscribed = true;
-		};
+    var onSubscribe = function() {
+      console.log("%s subscribed", clientId);
+      subscribed = true;
+    };
 
-		var onUnsubscribe=function() {
-			console.log("%s unsubscribed",clientId);
-			subscribed = false;
-		};
+    var onUnsubscribe = function() {
+      console.log("%s unsubscribed", clientId);
+      subscribed = false;
+    };
 
-		var onMessageArrived=function(msg) {
-			console.log("%s received msg: %s",clientId,msg.payloadString);
-			messageReceived = true;
-			receivedMessage = msg;
-		};
+    var onMessageArrived = function(msg) {
+      console.log("%s received msg: %s", clientId, msg.payloadString);
+      messageReceived = true;
+      receivedMessage = msg;
+    };
 
-		var onMessageDelivered=function(msg){
-		   console.log("%s delivered message: %s",clientId,msg.payloadString);
-		   messageDelivered=true;
-		}
+    var onMessageDelivered = function(msg) {
+      console.log("%s delivered message: %s", clientId, msg.payloadString);
+      messageDelivered = true;
+    }
 
-		//set callbacks
-		client.onMessageArrived = onMessageArrived;
-		client.onConnectionLost = onDisconnect;
-		client.onMessageDelivered = onMessageDelivered;
+    //set callbacks
+    client.onMessageArrived = onMessageArrived;
+    client.onConnectionLost = onDisconnect;
+    client.onMessageDelivered = onMessageDelivered;
 
-		//functions
-		//connect and verify
-		this.connect=function(connectOptions){
-		    connectOptions = connectOptions || {};
-			if(!connectOptions.hasOwnProperty("onSuccess")){
-				connectOptions.onSuccess=onConnect;
-				connectOptions.mqttVersion=testMqttVersion;
-				connectOptions.useSSL = true;
-			}
-		    runs(function() {
-			  client.connect(connectOptions);
-		    });
+    //functions
+    //connect and verify
+    this.connect = function(connectOptions) {
+      connectOptions = connectOptions || {};
+      if (!connectOptions.hasOwnProperty("onSuccess")) {
+        connectOptions.onSuccess = onConnect;
+        connectOptions.mqttVersion = testMqttVersion;
+        connectOptions.useSSL = testUseSSL;
+      }
+      runs(function() {
+        client.connect(connectOptions);
+      });
 
-		    waitsFor(function() {
-			  return connected;
-		    }, "the client should connect", 10000);
+      waitsFor(function() {
+        return connected;
+      }, "the client should connect", 10000);
 
-			runs(function() {
-				expect(connected).toBe(true);
-				//reset state
-				connected=false;
-			});
-		};
+      runs(function() {
+        expect(connected).toBe(true);
+        //reset state
+        connected = false;
+      });
+    };
 
-		//disconnect and verify
-		this.disconnect=function(){
-			runs(function() {
-				client.disconnect();
-			});
+    //disconnect and verify
+    this.disconnect = function() {
+      runs(function() {
+        client.disconnect();
+      });
 
-			waitsFor(function() {
-				return !connected;
-			}, "the client should disconnect", 10000);
+      waitsFor(function() {
+        return !connected;
+      }, "the client should disconnect", 10000);
 
-			runs(function() {
-				expect(connected).not.toBe(true);
-			});
-	     };
+      runs(function() {
+        expect(connected).not.toBe(true);
+      });
+    };
 
-		 //subscribe and verify
-		 this.subscribe=function(topic,qos){
-			 runs(function() {
-				client.subscribe(topic, {qos:qos,onSuccess:onSubscribe});
-			});
+    //subscribe and verify
+    this.subscribe = function(topic, qos) {
+      runs(function() {
+        client.subscribe(topic, {
+          qos: qos,
+          onSuccess: onSubscribe
+        });
+      });
 
-			waitsFor(function() {
-				return subscribed;
-			}, "the client should subscribe", 2000);
+      waitsFor(function() {
+        return subscribed;
+      }, "the client should subscribe", 2000);
 
-			runs(function() {
-				expect(subscribed).toBe(true);
-				//reset state
-				subscribed=false;
-			});
-		};
+      runs(function() {
+        expect(subscribed).toBe(true);
+        //reset state
+        subscribed = false;
+      });
+    };
 
-	    //unsubscribe and verify
-		this.unsubscribe=function(topic){
-			runs(function() {
-				client.unsubscribe(topic, {onSuccess:onUnsubscribe});
-			});
+    //unsubscribe and verify
+    this.unsubscribe = function(topic) {
+      runs(function() {
+        client.unsubscribe(topic, {
+          onSuccess: onUnsubscribe
+        });
+      });
 
-			waitsFor(function() {
-				return !subscribed;
-			}, "the client should subscribe", 2000);
+      waitsFor(function() {
+        return !subscribed;
+      }, "the client should subscribe", 2000);
 
-			runs(function() {
-				expect(subscribed).not.toBe(true);
-			});
-		};
+      runs(function() {
+        expect(subscribed).not.toBe(true);
+      });
+    };
 
-		//publish and verify
-		this.publish=function(topic,qos,payload){
-			runs(function() {
-				var message = new Paho.Message(payload);
-				message.destinationName = topic;
-				message.qos=qos;
-				client.send(message);
-			})
+    //publish and verify
+    this.publish = function(topic, qos, payload) {
+      runs(function() {
+        var message = new Paho.Message(payload);
+        message.destinationName = topic;
+        message.qos = qos;
+        client.send(message);
+      })
 
-			waitsFor(function() {
-				return messageDelivered;
-			}, "the client should delivered a message",10000);
+      waitsFor(function() {
+        return messageDelivered;
+      }, "the client should delivered a message", 10000);
 
-			runs(function() {
-			    //reset state
-				messageDelivered=false;
-			});
-		};
-
-
-		//verify no message received
-		this.receiveNone=function(){
-			waits(2000);
-		    runs(function() {
-				expect(messageReceived).toBe(false);
-				expect(receivedMessage).toBeNull();
-		    });
-		};
-
-		//verify the receive message
-		this.receive=function(expectedTopic,publishedQoS,subscribedQoS,expectedPayload){
-
-			waitsFor(function() {
-				return messageReceived;
-			}, "the client should send and receive a message",10000);
-
-			runs(function() {
-				expect(messageReceived).toBe(true);
-				expect(receivedMessage).not.toBeNull();
-				expect(receivedMessage.qos).toBe(Math.min(publishedQoS,subscribedQoS));
-				expect(receivedMessage.destinationName).toBe(expectedTopic);
-				if(typeof expectedPayload === "string"){
-				  expect(receivedMessage.payloadString).toEqual(expectedPayload);
-				}else{
-				  expect(receivedMessage.payloadBytes).toEqual(expectedPayload);
-				}
-
-				//reset state after each publish
-				messageReceived=false;
-				receivedMessage=null;
-			})
-		};
-	};
-
-    //*************************************************************************
-    // Tests
-	//*************************************************************************
-
-	it('should connect to a server and disconnect from a server', function() {
-	    var client= new MqttClient(clientId);
-
-		//connect and verify
-		client.connect({mqttVersion:testMqttVersion, useSSL: true});
-
-		//disconnect and verify
-		client.disconnect();
-	});
+      runs(function() {
+        //reset state
+        messageDelivered = false;
+      });
+    };
 
 
-	it('should pub/sub using largish messages', function() {
-	    var client= new MqttClient(clientId);
+    //verify no message received
+    this.receiveNone = function() {
+      waits(2000);
+      runs(function() {
+        expect(messageReceived).toBe(false);
+        expect(receivedMessage).toBeNull();
+      });
+    };
 
-	    //connect and verify
-		client.connect({mqttVersion:testMqttVersion, useSSL: true});
+    //verify the receive message
+    this.receive = function(expectedTopic, publishedQoS, subscribedQoS, expectedPayload) {
 
-		//subscribe and verify
-		var testTopic=topicPrefix + "pubsub/topic";
-		var subscribedQoS=0;
-		client.subscribe(testTopic,subscribedQoS);
+      waitsFor(function() {
+        return messageReceived;
+      }, "the client should send and receive a message", 10000);
 
-		//unsubscribe and verify
-		client.unsubscribe(testTopic);
+      runs(function() {
+        expect(messageReceived).toBe(true);
+        expect(receivedMessage).not.toBeNull();
+        expect(receivedMessage.qos).toBe(Math.min(publishedQoS, subscribedQoS));
+        expect(receivedMessage.destinationName).toBe(expectedTopic);
+        if (typeof expectedPayload === "string") {
+          expect(receivedMessage.payloadString).toEqual(expectedPayload);
+        } else {
+          expect(receivedMessage.payloadBytes).toEqual(expectedPayload);
+        }
 
-		//subscribe again
-		client.subscribe(testTopic,subscribedQoS);
+        //reset state after each publish
+        messageReceived = false;
+        receivedMessage = null;
+      })
+    };
+  };
 
-		//publish a large message to the topic and verify
-		var publishQoS=0;
-		var payload="";
-		var largeSize=10000;
-		for(var i=0;i<largeSize;i++){
-			 payload+="s";
-		}
-		client.publish(testTopic,publishQoS,payload);
+  //*************************************************************************
+  // Tests
+  //*************************************************************************
 
-		//receive and verify
-		client.receive(testTopic,publishQoS,subscribedQoS,payload);
+  it('should connect to a server and disconnect from a server', function() {
+    var client = new MqttClient(clientId);
 
-		//disconnect and verify
-		client.disconnect();
-	});
+    //connect and verify
+    client.connect({
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    });
+
+    //disconnect and verify
+    client.disconnect();
+  });
 
 
-	it('should preserve QOS values between publishers and subscribers', function() {
-	    var client= new MqttClient(clientId);
+  it('should pub/sub using largish messages', function() {
+    var client = new MqttClient(clientId);
 
-	    //connect and verify
-		client.connect({mqttVersion:testMqttVersion, useSSL: true});
+    //connect and verify
+    client.connect({
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    });
 
-		//subscribe and verify
-		var testTopics=["pubsub/topic1","pubsub/topic2","pubsub/topic3"];
-		var subscribedQoSs=[0,1,2];
-		for(var i=0;i<testTopics.length;i++){
-		  client.subscribe(topicPrefix +testTopics[i],subscribedQoSs[i]);
-		}
+    //subscribe and verify
+    var testTopic = topicPrefix + "pubsub/topic";
+    var subscribedQoS = 0;
+    client.subscribe(testTopic, subscribedQoS);
 
-		//publish, receive and verify
-		for(var i=0;i<testTopics.length;i++){
-		   var payload="msg-"+i;
-		   for(var qos=0;qos<3;qos++){
-		      client.publish(topicPrefix + testTopics[i],qos,payload);
-			  //receive and verify
-		      client.receive(topicPrefix + testTopics[i],qos,subscribedQoSs[i],payload);
-		   }
-		}
+    //unsubscribe and verify
+    client.unsubscribe(testTopic);
 
-		//disconnect and verify
-		client.disconnect();
-	});
+    //subscribe again
+    client.subscribe(testTopic, subscribedQoS);
 
-	it('should work using multiple publishers and subscribers.', function() {
-	    //topic to publish
-	    var topic=topicPrefix + "multiplePubSub/topic";
+    //publish a large message to the topic and verify
+    var publishQoS = 0;
+    var payload = "";
+    var largeSize = 10000;
+    for (var i = 0; i < largeSize; i++) {
+      payload += "s";
+    }
+    client.publish(testTopic, publishQoS, payload);
 
-	    //create publishers and connect
-		var publishers=[];
-		var publishersNum=2;
-		for(var i=0;i<publishersNum;i++){
-		   publishers[i]=new MqttClient("publisher-"+i);
-		   publishers[i].connect({mqttVersion:testMqttVersion, useSSL: true});
-		}
+    //receive and verify
+    client.receive(testTopic, publishQoS, subscribedQoS, payload);
 
-		//create subscribers and connect
-		var subscribedQoS=0;
-		var subscribers=[];
-		var subscribersNum=10;
-		for(var i=0;i<subscribersNum;i++){
-		   subscribers[i]=new MqttClient("subscriber-"+i);
-		   subscribers[i].connect({mqttVersion:testMqttVersion, useSSL: true});
-		   subscribers[i].subscribe(topic,subscribedQoS);
-		}
+    //disconnect and verify
+    client.disconnect();
+  });
 
-		//do publish and receive with verify
-		var publishQoS=0;
-		var pubishMsgNum=10;
-		for (var m = 0; m < pubishMsgNum; m++) {
-		  var payload="multi-pub-sub-msg-"+m;
-		  for(var i=0;i<publishersNum;i++){
-		     publishers[i].publish(topic,publishQoS,payload);
-			 for(var j=0;j<subscribersNum;j++){
-			   subscribers[j].receive(topic,publishQoS,subscribedQoS,payload);
-			 }
-		  }
-		}
 
-		//disconnect publishers and subscribers
-		for(var i=0;i<publishersNum;i++){
-		  publishers[i].disconnect();
-		}
-		for(var i=0;i<subscribersNum;i++){
-		  subscribers[i].disconnect();
-		}
+  it('should preserve QOS values between publishers and subscribers', function() {
+    var client = new MqttClient(clientId);
 
-	});
+    //connect and verify
+    client.connect({
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    });
 
-	it('should clean up before re-connecting if cleanSession flag is set.', function() {
-	    //connect with cleanSession flag=false and verify
-		var client= new MqttClient("client-1");
-		client.connect({cleanSession:false,mqttVersion:testMqttVersion, useSSL: true});
+    //subscribe and verify
+    var testTopics = ["pubsub/topic1", "pubsub/topic2", "pubsub/topic3"];
+    var subscribedQoSs = [0, 1, 2];
+    for (var i = 0; i < testTopics.length; i++) {
+      client.subscribe(topicPrefix + testTopics[i], subscribedQoSs[i]);
+    }
 
-		//subscribe and verify
-		var testTopic=topicPrefix + "cleanSession/topic1";
-		var subscribedQoS=0;
-		client.subscribe(testTopic,subscribedQoS);
+    //publish, receive and verify
+    for (var i = 0; i < testTopics.length; i++) {
+      var payload = "msg-" + i;
+      for (var qos = 0; qos < 3; qos++) {
+        client.publish(topicPrefix + testTopics[i], qos, payload);
+        //receive and verify
+        client.receive(topicPrefix + testTopics[i], qos, subscribedQoSs[i], payload);
+      }
+    }
 
-		//publish and verify
-		var publishQoS=1;
-		var payload="cleanSession-msg";
-		client.publish(testTopic,publishQoS,payload);
-		client.receive(testTopic,publishQoS,subscribedQoS,payload);
-		//disconnect
-		client.disconnect();
+    //disconnect and verify
+    client.disconnect();
+  });
 
-		// Send a message from another client, to our durable subscription.
-		var anotherClient= new MqttClient("anotherClient-1");
-		anotherClient.connect({cleanSession:true,mqttVersion:testMqttVersion, useSSL: true});
-		anotherClient.subscribe(testTopic,subscribedQoS);
-		anotherClient.publish(testTopic,publishQoS,payload);
-		anotherClient.receive(testTopic,publishQoS,subscribedQoS,payload);
-		anotherClient.disconnect();
+  it('should work using multiple publishers and subscribers.', function() {
+    //topic to publish
+    var topic = topicPrefix + "multiplePubSub/topic";
 
-		//reconnect
-		client.connect({cleanSession:true,mqttVersion:testMqttVersion, useSSL: true});
-		//check no msg is received
-		client.receiveNone();
+    //create publishers and connect
+    var publishers = [];
+    var publishersNum = 2;
+    for (var i = 0; i < publishersNum; i++) {
+      publishers[i] = new MqttClient("publisher-" + i);
+      publishers[i].connect({
+        mqttVersion: testMqttVersion,
+        useSSL: testUseSSL
+      });
+    }
 
-		//do another publish and check if msg is received, because subscription should be cancelled
-		client.publish(testTopic,publishQoS,payload);
-		//check no msg is received
-		client.receiveNone();
-		//disconnect
-		client.disconnect();
-	});
+    //create subscribers and connect
+    var subscribedQoS = 0;
+    var subscribers = [];
+    var subscribersNum = 10;
+    for (var i = 0; i < subscribersNum; i++) {
+      subscribers[i] = new MqttClient("subscriber-" + i);
+      subscribers[i].connect({
+        mqttVersion: testMqttVersion,
+        useSSL: testUseSSL
+      });
+      subscribers[i].subscribe(topic, subscribedQoS);
+    }
+
+    //do publish and receive with verify
+    var publishQoS = 0;
+    var pubishMsgNum = 10;
+    for (var m = 0; m < pubishMsgNum; m++) {
+      var payload = "multi-pub-sub-msg-" + m;
+      for (var i = 0; i < publishersNum; i++) {
+        publishers[i].publish(topic, publishQoS, payload);
+        for (var j = 0; j < subscribersNum; j++) {
+          subscribers[j].receive(topic, publishQoS, subscribedQoS, payload);
+        }
+      }
+    }
+
+    //disconnect publishers and subscribers
+    for (var i = 0; i < publishersNum; i++) {
+      publishers[i].disconnect();
+    }
+    for (var i = 0; i < subscribersNum; i++) {
+      subscribers[i].disconnect();
+    }
+
+  });
+
+  it('should clean up before re-connecting if cleanSession flag is set.', function() {
+    //connect with cleanSession flag=false and verify
+    var client = new MqttClient("client-1");
+    client.connect({
+      cleanSession: false,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    });
+
+    //subscribe and verify
+    var testTopic = topicPrefix + "cleanSession/topic1";
+    var subscribedQoS = 0;
+    client.subscribe(testTopic, subscribedQoS);
+
+    //publish and verify
+    var publishQoS = 1;
+    var payload = "cleanSession-msg";
+    client.publish(testTopic, publishQoS, payload);
+    client.receive(testTopic, publishQoS, subscribedQoS, payload);
+    //disconnect
+    client.disconnect();
+
+    // Send a message from another client, to our durable subscription.
+    var anotherClient = new MqttClient("anotherClient-1");
+    anotherClient.connect({
+      cleanSession: true,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    });
+    anotherClient.subscribe(testTopic, subscribedQoS);
+    anotherClient.publish(testTopic, publishQoS, payload);
+    anotherClient.receive(testTopic, publishQoS, subscribedQoS, payload);
+    anotherClient.disconnect();
+
+    //reconnect
+    client.connect({
+      cleanSession: true,
+      mqttVersion: testMqttVersion,
+      useSSL: testUseSSL
+    });
+    //check no msg is received
+    client.receiveNone();
+
+    //do another publish and check if msg is received, because subscription should be cancelled
+    client.publish(testTopic, publishQoS, payload);
+    //check no msg is received
+    client.receiveNone();
+    //disconnect
+    client.disconnect();
+  });
 
 
 })
