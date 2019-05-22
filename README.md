@@ -25,7 +25,7 @@ Paho reflects the inherent physical and cost constraints of device connectivity.
 
 ### Downloading
 
-A zip file containing the full and a minified version the Javascript client can be downloaded from the [Paho downloads page](https://projects.eclipse.org/projects/technology.paho/downloads)
+A zip file containing the full and a minified version the Javascript client can be downloaded from the [Paho downloads page](https://projects.eclipse.org/projects/iot.paho/downloads)
 
 Alternatively the Javascript client can be downloaded directly from the projects git repository: [https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/paho-mqtt.js](https://raw.githubusercontent.com/eclipse/paho.mqtt.javascript/master/src/paho-mqtt.js).
 
