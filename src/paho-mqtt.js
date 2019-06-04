@@ -1817,7 +1817,7 @@ function onMessageArrived(message) {
 					"onConnected":{
 						get: function() { return client.onConnected; },
 						set: function(newOnConnected) {
-							if (typeof newOnConnected === "function")
+							if (newOnConnected === null || typeof newOnConnected === "function")
 								client.onConnected = newOnConnected;
 							else
 								throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnected, "onConnected"]));
@@ -1838,7 +1838,7 @@ function onMessageArrived(message) {
 					"onConnectionLost":{
 						get: function() { return client.onConnectionLost; },
 						set: function(newOnConnectionLost) {
-							if (typeof newOnConnectionLost === "function")
+							if (newOnConnectionLost === null || typeof newOnConnectionLost === "function")
 								client.onConnectionLost = newOnConnectionLost;
 							else
 								throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnConnectionLost, "onConnectionLost"]));
@@ -1847,7 +1847,7 @@ function onMessageArrived(message) {
 					"onMessageDelivered":{
 						get: function() { return client.onMessageDelivered; },
 						set: function(newOnMessageDelivered) {
-							if (typeof newOnMessageDelivered === "function")
+							if (newOnMessageDelivered === null || typeof newOnMessageDelivered === "function")
 								client.onMessageDelivered = newOnMessageDelivered;
 							else
 								throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageDelivered, "onMessageDelivered"]));
@@ -1856,7 +1856,7 @@ function onMessageArrived(message) {
 					"onMessageArrived":{
 						get: function() { return client.onMessageArrived; },
 						set: function(newOnMessageArrived) {
-							if (typeof newOnMessageArrived === "function")
+							if (newOnMessageArrived === null || typeof newOnMessageArrived === "function")
 								client.onMessageArrived = newOnMessageArrived;
 							else
 								throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
@@ -1865,7 +1865,7 @@ function onMessageArrived(message) {
 					"trace":{
 						get: function() { return client.traceFunction; },
 						set: function(trace) {
-							if(typeof trace === "function"){
+							if(trace === null || typeof trace === "function"){
 								client.traceFunction = trace;
 							}else{
 								throw new Error(format(ERROR.INVALID_TYPE, [typeof trace, "onTrace"]));
