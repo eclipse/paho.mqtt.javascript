@@ -106,7 +106,7 @@ function onMessageArrived(message) {
 	/**
 	 * @private
 	 */
-	var localStorage = global.localStorage || (function () {
+	var localStorage = (function () {
 		var data = {};
 
 		return {
@@ -115,6 +115,14 @@ function onMessageArrived(message) {
 			removeItem: function (key) { delete data[key]; },
 		};
 	})();
+	try {
+		if (global.localStorage) {
+			localStorage = global.localStorage;
+		}
+	} catch (err) {
+		// in browsers localStorage access can be disabled / blocked and even
+		// reading the localStorage property will result in an Access denied error
+	}
 
 		/**
 	 * Unique message type identifiers, with associated
