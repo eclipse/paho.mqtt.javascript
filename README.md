@@ -75,7 +75,7 @@ This requires the use of a broker that supports WebSockets natively, or the use 
 
 ```JS
 // Create a client instance
-var client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
+var client = new Paho.Client(location.hostname, Number(location.port), "clientId");
 
 // set callback handlers
 client.onConnectionLost = onConnectionLost;
@@ -90,7 +90,7 @@ function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
   client.subscribe("World");
-  message = new Paho.MQTT.Message("Hello");
+  message = new Paho.Message("Hello");
   message.destinationName = "World";
   client.send(message);
 }
@@ -110,5 +110,5 @@ function onMessageArrived(message) {
 
 ## Breaking Changes
 
-Previously the Client's Namepsace was `Paho.MQTT`, as of version 1.1.0 (develop branch) this has now been simplified to `Paho`.
+Previously the Client's Namepsace was `Paho.MQTT`, as of version 1.1.0 this has now been simplified to `Paho`.
 You should be able to simply do a find and replace in your code to resolve this, for example all instances of `Paho.MQTT.Client` will now be `Paho.Client` and `Paho.MQTT.Message` will be `Paho.Message`.
