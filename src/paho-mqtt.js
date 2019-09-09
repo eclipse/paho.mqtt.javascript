@@ -1055,6 +1055,7 @@ function onMessageArrived(message) {
 				this.connected = false;
 
 
+                this._trace("_doConnect ", wsurl);
 
 				if (this.connectOptions.mqttVersion < 4) {
 					this.socket = new global.WebSocket(wsurl, ["mqttv3.1"]);
@@ -1542,8 +1543,12 @@ function onMessageArrived(message) {
 					if (this._reconnectInterval < 128)
 						this._reconnectInterval = this._reconnectInterval * 2;
 					if (this.connectOptions.uris) {
-						this.hostIndex = 0;
-						this._doConnect(this.connectOptions.uris[0]);
+                        // Loop through all host until we find an working one.
+                        this.hostIndex++;
+                        if (this.hostIndex >= this.connectOptions.uris.length) {
+                            this.hostIndex = 0;
+                        }
+						this._doConnect(this.connectOptions.uris[this.hostIndex]);
 					} else {
 						this._doConnect(this.uri);
 					}
