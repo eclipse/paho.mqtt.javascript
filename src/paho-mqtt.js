@@ -1260,7 +1260,7 @@ function onMessageArrived(message) {
 						this.receiveBuffer = byteArray.subarray(offset);
 					}
 				} catch (error) {
-					var errorStack = ((error.hasOwnProperty("stack") == "undefined") ? error.stack.toString() : "No Error Stack Available");
+					var errorStack = ((error.hasOwnProperty("stack") == "undefined") ? "No Error Stack Available" : error.stack.toString());
 					this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,errorStack]));
 					return;
 				}
@@ -1449,7 +1449,7 @@ function onMessageArrived(message) {
 						this._disconnected(ERROR.INVALID_MQTT_MESSAGE_TYPE.code , format(ERROR.INVALID_MQTT_MESSAGE_TYPE, [wireMessage.type]));
 					}
 				} catch (error) {
-					var errorStack = ((error.hasOwnProperty("stack") == "undefined") ? error.stack.toString() : "No Error Stack Available");
+					var errorStack = ((error.hasOwnProperty("stack") == "undefined") ? "No Error Stack Available" : error.stack.toString());
 					this._disconnected(ERROR.INTERNAL_ERROR.code , format(ERROR.INTERNAL_ERROR, [error.message,errorStack]));
 					return;
 				}
