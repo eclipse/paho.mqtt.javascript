@@ -75,7 +75,7 @@ This requires the use of a broker that supports WebSockets natively, or the use 
 
 ```JS
 // Create a client instance
-var client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
+var client = new Paho.Client(location.hostname, Number(location.port), "clientId");
 
 // set callback handlers
 client.onConnectionLost = onConnectionLost;
