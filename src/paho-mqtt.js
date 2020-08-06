@@ -834,7 +834,7 @@ function onMessageArrived(message) {
 		/* The largest message identifier allowed, may not be larger than 2**16 but
 		 * if set smaller reduces the maximum number of outbound messages allowed.
 		 */
-		ClientImpl.prototype.maxMessageIdentifier = 65536;
+		ClientImpl.prototype.maxMessageIdentifier = 65535;
 		ClientImpl.prototype.connectOptions = null;
 		ClientImpl.prototype.hostIndex = null;
 		ClientImpl.prototype.onConnected = null;
@@ -1187,19 +1187,19 @@ function onMessageArrived(message) {
 	 */
 		ClientImpl.prototype._requires_ack = function (wireMessage) {
 			var messageCount = Object.keys(this._sentMessages).length;
-			if (messageCount > this.maxMessageIdentifier)
+			if (messageCount >= this.maxMessageIdentifier)
 				throw Error ("Too many messages:"+messageCount);
 
 			while(this._sentMessages[this._message_identifier] !== undefined) {
 				this._message_identifier++;
+				if (this._message_identifier === this.maxMessageIdentifier) {
+					this._message_identifier = 1;
+				}
 			}
 			wireMessage.messageIdentifier = this._message_identifier;
 			this._sentMessages[wireMessage.messageIdentifier] = wireMessage;
 			if (wireMessage.type === MESSAGE_TYPE.PUBLISH) {
 				this.store("Sent:", wireMessage);
-			}
-			if (this._message_identifier === this.maxMessageIdentifier) {
-				this._message_identifier = 1;
 			}
 		};
 
