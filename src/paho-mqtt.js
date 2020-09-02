@@ -1574,10 +1574,12 @@ function onMessageArrived(message) {
 			// Cancel all socket callbacks so that they cannot be driven again by this socket.
 				this.socket.onopen = null;
 				this.socket.onmessage = null;
-				this.socket.onerror = null;
 				this.socket.onclose = null;
-				if (this.socket.readyState === 1)
+				if (this.socket.readyState <= 1) {
+					this.socket.onerror = () => {};
 					this.socket.close();
+				}
+				this.socket.onerror = null;
 				delete this.socket;
 			}
 
