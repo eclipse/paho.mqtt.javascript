@@ -1525,6 +1525,7 @@ function onMessageArrived(message) {
    * For each reconnect attempt, will double the reconnect interval
    * up to 128 seconds.
 	 */
+
 		ClientImpl.prototype._reconnect = function () {
 			this._trace("Client._reconnect");
 			if (!this.connected) {
@@ -1534,8 +1535,13 @@ function onMessageArrived(message) {
 				if (this._reconnectInterval < 128)
 					this._reconnectInterval = this._reconnectInterval * 2;
 				if (this.connectOptions.uris) {
-					this.hostIndex = 0;
-					this._doConnect(this.connectOptions.uris[0]);
+					if (this.hostIndex < this.connectOptions.uris.length-1) {
+						// Try the next host.
+						this.hostIndex++;
+					}else{
+						this.hostIndex = 0;
+					}
+					this._doConnect(this.connectOptions.uris[this.hostIndex]);
 				} else {
 					this._doConnect(this.uri);
 				}
