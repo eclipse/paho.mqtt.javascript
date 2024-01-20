@@ -106,14 +106,19 @@ function onMessageArrived(message) {
 	/**
 	 * @private
 	 */
-	var localStorage = global.localStorage || (function () {
-		var data = {};
-
-		return {
-			setItem: function (key, item) { data[key] = item; },
-			getItem: function (key) { return data[key]; },
-			removeItem: function (key) { delete data[key]; },
-		};
+	var localStorage = (function () {
+		try {
+			// When third-party cookies are disabled accessing localStorage will cause an error
+			if (global.localStorage) return global.localStorage;
+		} catch (e) {
+			var data = {};
+	
+			return {
+				setItem: function (key, item) { data[key] = item; },
+				getItem: function (key) { return data[key]; },
+				removeItem: function (key) { delete data[key]; },
+			};
+		}
 	})();
 
 		/**
